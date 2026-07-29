@@ -28,9 +28,9 @@ yours and the commands adapt:
 | Version | Duty cycle | Path hash | Loop detect | Region tree |
 | --- | --- | --- | --- | --- |
 | 1.16+ | `set dutycycle` | `set path.hash.mode` | `set loop.detect` | `region def` (one line) |
-| 1.15 | `set dutycycle` | `set path.hash.mode` | *(withheld)* | `region put` per level |
-| 1.14 | `set af` | `set path.hash.mode` | *(withheld)* | `region put` + `region allowf` |
-| 1.10 – 1.13 | `set af` | *(not supported)* | *(withheld)* | `region put` + `region allowf` |
+| 1.15 | `set dutycycle` | `set path.hash.mode` | `set loop.detect` | `region put` per level |
+| 1.14 | `set af` | `set path.hash.mode` | `set loop.detect` | `region put` + `region allowf` |
+| 1.10 – 1.13 | `set af` | *(not supported)* | *(not supported)* | `region put` + `region allowf` |
 
 `set flood.advert.interval` is sent on every version.
 
@@ -119,22 +119,28 @@ Both live under **Options** and are on by default.
 **Flood advert interval** — `set flood.advert.interval 24`. How often the
 repeater floods an advert to the whole mesh so distant nodes can discover it and
 build a path. Every repeater rebroadcasts these, so the cost is paid mesh-wide;
-24 hours is a reasonable compromise. The firmware accepts **3–168 hours, or 0 to
-switch flood adverts off** — 1 and 2 are rejected outright. Leave the box empty
-and the command isn't sent at all, which is different from sending 0.
+the firmware's own default is 12 hours, and 24 halves that traffic while keeping
+the node discoverable. The documented range is **3–168 hours**; the parser also
+accepts **0 to switch flood adverts off**, and rejects 1 and 2 outright. Leave
+the box empty and the command isn't sent at all, which is different from sending 0.
 
-**Loop detection** — `set loop.detect moderate`. Drops packets the repeater has
-already handled, so a ring of repeaters can't keep passing the same traffic
-round. `moderate` is the default; `strict` suits a dense mesh where you'd rather
-lose a packet than repeat one; `minimal` and `off` are there for completeness.
+**Loop detection** — `set loop.detect moderate`, added in firmware 1.14. Rejects
+a flood packet that already carries this repeater's own id in its path, which is
+what a packet going round in circles looks like. Without it, one node
+re-forwarding mangled packets can start a storm that runs to the 64-hop limit.
 
-> **One gate here is a judgement call, not a documented fact.** The version
-> thresholds elsewhere in this file come from MeshCore's release notes.
-> `set loop.detect` is in current firmware, but which release introduced it
-> could not be confirmed, so it's only offered on the newest tier. Being a
-> version late costs a setting you can add by hand; being early would send a
-> command the repeater rejects, which stops an over-the-air push mid-run. If you
-> know when it landed, please open a PR and widen the gate.
+How many repeats each mode tolerates depends on the path hash size **of the
+packet being judged** — not on this node's `path.hash.mode`, which only governs
+the hashes it stamps on its own adverts:
+
+| Mode | 1-byte path | 2-byte | 3-byte |
+| --- | --- | --- | --- |
+| `off` | never rejects | — | — |
+| `minimal` | 4+ occurrences | 2+ | 1+ |
+| `moderate` | 2+ | 1+ | 1+ |
+| `strict` | 1+ | 1+ | 1+ |
+
+The firmware default is `off`, so sending `moderate` is a deliberate change.
 
 ## Editing the commands
 
@@ -300,7 +306,9 @@ county in `data/regions.js`, run `npm run validate`, open a PR.
 
 ## Sources
 
-Command syntax follows the [MeshCore CLI reference](https://docs.meshcore.io/cli_commands/).
+Command syntax, version gates and value ranges follow the
+[MeshCore CLI reference](https://docs.meshcore.io/cli_commands/)
+([source](https://github.com/meshcore-dev/MeshCore/blob/main/docs/cli_commands.md)).
 This project is community maintained and not affiliated with MeshCore.
 
 ## License

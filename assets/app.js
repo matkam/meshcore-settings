@@ -48,7 +48,7 @@
   // Version gates, from the MeshCore CLI reference:
   //   1.10  region put / allowf / save
   //   1.12  region list {allowed|denied}
-  //   1.14  set path.hash.mode
+  //   1.14  set path.hash.mode, set loop.detect
   //   1.15  set dutycycle (set af deprecated), region put allows flooding by default
   //   1.16  region def
   function caps() {
@@ -64,13 +64,10 @@
       // Long-standing repeater setting, present across every version this site
       // offers.
       floodAdvert: true,
-      // Unlike the gates above, this one is not from a documented version note:
-      // set loop.detect is in current firmware, but which release introduced it
-      // could not be confirmed. Held to the newest tier deliberately — being a
-      // version late only costs a setting the operator can add by hand, while
-      // being early sends a command the repeater rejects, which stops the
-      // over-the-air push mid-run.
-      loopDetect: v >= 116
+      // Same release as path.hash.mode, and not by coincidence: loop detection
+      // counts how often this repeater's own hash appears in a packet's path,
+      // and multibyte path hashes landed in the same version.
+      loopDetect: v >= 114
     };
   }
 
@@ -78,7 +75,7 @@
     116: "Everything current: the whole chain goes in one region def line.",
     115: "region def landed in 1.16, so each name is placed with its own region put. Flooding is allowed as they are created.",
     114: "Predates set dutycycle (1.15), so the duty cycle uses the older set af airtime factor, and each region needs an explicit region allowf.",
-    110: "Predates set dutycycle (1.15) and set path.hash.mode (1.14), so both are handled differently or skipped."
+    110: "Predates set dutycycle (1.15), and set path.hash.mode and set loop.detect (both 1.14), so those are handled differently or skipped."
   };
 
   /* ---------- index ---------- */
@@ -643,12 +640,12 @@
 
     els.loop.disabled = !c.loopDetect;
     els.loopHint.textContent = c.loopDetect
-      ? "Drops packets a repeater has already seen, so a ring of repeaters cannot keep " +
-        "handing the same traffic round. moderate is the sensible default; strict is for a " +
-        "dense mesh where you would rather lose a packet than repeat one."
-      : "Left out on this version. set loop.detect is in current firmware, but which " +
-        "release added it is not documented, so it is only offered on the newest tier — " +
-        "if yours takes it, add it with Edit above.";
+      ? "Rejects a flood packet that already carries this repeater's own id in its path — " +
+        "the signature of one going round in circles. Without it, a single node re-forwarding " +
+        "mangled packets can start a storm that runs to the 64-hop limit. The firmware " +
+        "default is off; how many repeats each mode tolerates depends on the path hash size " +
+        "of the packet being judged, not on the setting above."
+      : "set loop.detect arrived in firmware 1.14, so it is left out entirely on this version.";
 
     var flood = floodValue();
     els.floodHint.textContent = flood === null
@@ -659,8 +656,9 @@
         : (flood < 3 || flood > 168)
           ? "The firmware only accepts 3–168 hours, or 0 to turn flood adverts off. " +
             flood + " will be rejected."
-          : "How often the repeater floods an advert to the whole mesh. 24 hours keeps it " +
-            "discoverable without adding much traffic; the firmware accepts 3–168.";
+          : "How often the repeater floods an advert to the whole mesh. The firmware's own " +
+            "default is 12 hours and it accepts 3–168; 24 halves that traffic while still " +
+            "keeping the node discoverable.";
   }
 
   function renderChain(chain) {
@@ -766,16 +764,19 @@
         floodValue() === 0
           ? "Stops the repeater flooding adverts to the whole mesh. It still answers and still repeats, but nothing outside its immediate neighbours learns it exists on its own."
           : "Floods an advert to the whole mesh every " + floodValue() + " hours, so distant nodes can " +
-            "discover it and build a path. Every repeater rebroadcasts these, so the cost is paid mesh-wide — " +
-            "24 hours is a common compromise between staying discoverable and adding traffic. The firmware accepts 3–168."]);
+            "discover it and build a path. Every repeater rebroadcasts these, so the cost is paid mesh-wide. " +
+            "The firmware defaults to 12 hours and accepts 3–168."]);
     }
 
     if (built.caps.loopDetect && els.loop.value) {
+      // Thresholds are per the CLI reference. They key off the path hash size of
+      // the packet being judged — not this node's path.hash.mode, which only
+      // governs the hashes it stamps on its own adverts.
       var LOOP_WHY = {
-        off: "No loop detection. A packet that comes back round is repeated again.",
-        minimal: "Catches only the most obvious repeats. The lightest option, for a sparse mesh where few repeaters hear each other.",
-        moderate: "Drops packets the repeater has already handled recently, which stops a ring of repeaters passing the same traffic round in circles. The sensible default.",
-        strict: "The most aggressive setting: more likely to drop a legitimate retransmission, but also the least likely to let a loop through. For a dense mesh where repeaters hear each other several ways."
+        off: "No loop detection: a flood packet is forwarded again even if this repeater's own id is already in its path. This is the firmware default.",
+        minimal: "Rejects a flood packet once this repeater's own id already appears 4 times in a 1-byte path, twice in a 2-byte path, or once in a 3-byte path. The most forgiving setting.",
+        moderate: "Rejects a flood packet once this repeater's own id already appears twice in a 1-byte path, or once in a 2- or 3-byte path. A packet that has been through here and come back is dropped rather than repeated.",
+        strict: "Rejects a flood packet the moment this repeater's own id appears in its path at all, whatever the hash size. The least likely to let a loop through, and the most likely to drop a legitimate re-flood."
       };
       items.push(["set loop.detect " + els.loop.value, LOOP_WHY[els.loop.value]]);
     }
