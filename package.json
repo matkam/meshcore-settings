@@ -6,7 +6,11 @@
   "scripts": {
     "validate": "node scripts/validate.mjs",
     "build:counties": "node scripts/build-counties.mjs",
-    "serve": "python3 -m http.server 8000"
+    "serve": "python3 -m http.server 8000",
+    "test": "node tests/run.mjs"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "playwright": "^1.56.0"
+  }
 }

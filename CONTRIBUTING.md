@@ -80,5 +80,6 @@ the existing name.
 ## Before you open the PR
 
 - [ ] `npm run validate` passes
+- [ ] `npm test` passes (`npm install` first — it needs Playwright)
 - [ ] You've checked the names against your local mesh group, not just a map
 - [ ] Cities list covers what people would search for
