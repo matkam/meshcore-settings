@@ -204,6 +204,24 @@ pre:focus-visible {
   color: var(--ink-soft);
 }
 
+.fw-row {
+  padding: 12px 14px;
+  margin-bottom: 20px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.fw-row select {
+  background: var(--panel);
+  max-width: 260px;
+}
+
+.field select:disabled + .hint,
+.field input:disabled + .hint {
+  opacity: 0.85;
+}
+
 /* ---------- search results ---------- */
 
 .combo { position: relative; }

@@ -57,6 +57,17 @@
   <section class="panel" id="output-panel" aria-labelledby="settings-heading" hidden>
     <h2 id="settings-heading"><span class="step">2</span> Paste this into your repeater</h2>
 
+    <div class="field fw-row">
+      <label for="opt-fw">MeshCore firmware version</label>
+      <select id="opt-fw">
+        <option value="116" selected>1.16 or newer</option>
+        <option value="115">1.15</option>
+        <option value="114">1.14</option>
+        <option value="110">1.10 – 1.13</option>
+      </select>
+      <p class="hint" id="fw-hint"></p>
+    </div>
+
     <p class="chain-label">Your region scope</p>
     <ol class="chain" id="chain" aria-label="Region hierarchy"></ol>
 
@@ -77,10 +88,7 @@
         <div class="field">
           <label for="opt-duty">Duty cycle limit (%)</label>
           <input id="opt-duty" type="number" min="1" max="100" step="1" value="100">
-          <p class="hint">
-            The US 902–928&nbsp;MHz ISM band has no duty cycle restriction, so
-            <code>100</code> (no limit) is the normal California setting. Firmware 1.15+.
-          </p>
+          <p class="hint" id="duty-hint"></p>
         </div>
         <div class="field">
           <label for="opt-hash">Advert path hash size</label>
@@ -89,11 +97,7 @@
             <option value="1" selected>1 — 2 bytes (65,536 ids, 32 max flood)</option>
             <option value="2">2 — 3 bytes (16.7M ids, 21 max flood)</option>
           </select>
-          <p class="hint">
-            2&nbsp;bytes is recommended so repeaters stay uniquely identifiable as the
-            mesh grows. Requires firmware 1.14+; nodes on 1.13 and older drop adverts
-            with multi-byte hashes.
-          </p>
+          <p class="hint" id="hash-hint"></p>
         </div>
         <div class="field checkbox">
           <label><input type="checkbox" id="opt-home"> Set home and default region</label>
@@ -150,6 +154,12 @@
       That is why every node defines the whole chain from <code>west</code> down, even though
       it only physically sits in one spot.
     </p>
+    <p>
+      <code>region def</code> arrived in firmware 1.16. Before that the same tree is built one
+      name at a time with <code>region put &lt;name&gt; [parent]</code>, each followed by
+      <code>region allowf &lt;name&gt;</code> to permit flooding. Switch the firmware version above
+      and you'll get that longer form instead — it produces an identical tree.
+    </p>
 
     <h3>Things worth knowing</h3>
     <ul class="notes">
@@ -174,9 +184,11 @@
         commands. Every chain on this site fits in one line.
       </li>
       <li>
-        <strong>Region filtering needs firmware 1.10+</strong>; <code>region def</code> and
-        <code>set dutycycle</code> are newer still. If a command comes back unknown, check your
-        firmware version with <code>ver</code>.
+        <strong>Region filtering needs firmware 1.10+.</strong> Newer commands landed later:
+        <code>set path.hash.mode</code> in 1.14, <code>set dutycycle</code> in 1.15 (replacing
+        <code>set af</code>), and <code>region def</code> in 1.16. Check yours with
+        <code>ver</code> and pick the matching version above — if a command still comes back
+        unknown, you're on older firmware than you selected.
       </li>
       <li>
         <strong>These codes are a community convention, not a standard.</strong> MeshCore does not

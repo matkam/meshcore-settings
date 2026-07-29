@@ -27,7 +27,37 @@
     duty: $("opt-duty"),
     hash: $("opt-hash"),
     home: $("opt-home"),
-    verify: $("opt-verify")
+    verify: $("opt-verify"),
+    fw: $("opt-fw"),
+    fwHint: $("fw-hint"),
+    dutyHint: $("duty-hint"),
+    hashHint: $("hash-hint")
+  };
+
+  /* ---------- firmware capabilities ---------- */
+
+  // Version gates, from the MeshCore CLI reference:
+  //   1.10  region put / allowf / save
+  //   1.12  region list {allowed|denied}
+  //   1.14  set path.hash.mode
+  //   1.15  set dutycycle (set af deprecated)
+  //   1.16  region def
+  function caps() {
+    var v = parseInt(els.fw.value, 10);
+    return {
+      version: v,
+      regionDef: v >= 116,
+      dutycycle: v >= 115,
+      hashMode: v >= 114,
+      regionList: v >= 112
+    };
+  }
+
+  var FW_HINTS = {
+    116: "Everything current: the whole chain goes in one region def line.",
+    115: "region def landed in 1.16, so the chain is built with region put / region allowf pairs instead.",
+    114: "Predates set dutycycle (1.15), so the duty cycle is set with the older set af airtime factor.",
+    110: "Predates set dutycycle (1.15) and set path.hash.mode (1.14), so both are handled differently or skipped."
   };
 
   /* ---------- index ---------- */
@@ -313,28 +343,58 @@
     return v;
   }
 
-  function buildCommands(entry) {
-    var chain = chainOf(entry);
-    var leaf = chain[chain.length - 1].code;
-    var defLine = "region def " + chain.map(function (c) { return c.code; }).join(" ");
+  // Older firmware sets duty cycle indirectly: after each transmission the node
+  // stays silent for airtime * af, giving a long-term duty of about 1/(1+af).
+  function afValue() {
+    var af = Math.round(100 / dutyValue() - 1);
+    if (af < 0) { af = 0; }
+    if (af > 9) { af = 9; }
+    return af;
+  }
 
-    var lines = [
-      "set dutycycle " + dutyValue(),
-      "set path.hash.mode " + els.hash.value,
-      defLine
-    ];
+  function afDuty() {
+    return Math.round(100 / (1 + afValue()));
+  }
+
+  function buildCommands(entry) {
+    var c = caps();
+    var chain = chainOf(entry);
+    var codes = chain.map(function (x) { return x.code; });
+    var leaf = codes[codes.length - 1];
+
+    var lines = [];
+
+    lines.push(c.dutycycle ? "set dutycycle " + dutyValue() : "set af " + afValue());
+    if (c.hashMode) { lines.push("set path.hash.mode " + els.hash.value); }
+
+    // The region block, in whichever form this firmware understands.
+    var regionLines = [];
+    if (c.regionDef) {
+      regionLines.push("region def " + codes.join(" "));
+    } else {
+      codes.forEach(function (code, i) {
+        // No parent argument on the first token: region put defaults to the
+        // wildcard root, which is exactly where the chain starts.
+        regionLines.push(i === 0 ? "region put " + code : "region put " + code + " " + codes[i - 1]);
+        regionLines.push("region allowf " + code);
+      });
+    }
+    lines = lines.concat(regionLines);
+
     if (els.home.checked) {
       lines.push("region home " + leaf);
       lines.push("region default " + leaf);
     }
     lines.push("region save");
 
-    return { lines: lines, defLine: defLine, chain: chain, leaf: leaf };
+    return { lines: lines, regionLines: regionLines, chain: chain, leaf: leaf, caps: c };
   }
 
   /* ---------- render ---------- */
 
   function render() {
+    renderFirmwareHints();
+
     if (!current) {
       els.outputPanel.hidden = true;
       els.clientPanel.hidden = true;
@@ -348,13 +408,38 @@
 
     renderChain(built.chain);
     els.commands.textContent = built.lines.join("\n");
-    renderLineNote(built.defLine);
+    renderLineNote(built);
     renderVerify(built);
     renderExplain(built);
     renderScopes(built.chain);
 
     els.copy.classList.remove("done");
     els.copy.textContent = "Copy";
+  }
+
+  function renderFirmwareHints() {
+    var c = caps();
+
+    els.fwHint.textContent = FW_HINTS[c.version] || "";
+
+    els.duty.disabled = false;
+    if (c.dutycycle) {
+      els.dutyHint.textContent =
+        "The US 902–928 MHz ISM band has no duty cycle restriction, so 100 (no limit) is " +
+        "the normal California setting. Default is 50.";
+    } else {
+      els.dutyHint.textContent =
+        "On this firmware the duty cycle is set indirectly with set af, which allows only " +
+        "1/(1+af) steps. " + dutyValue() + "% rounds to set af " + afValue() +
+        " (about " + afDuty() + "%).";
+    }
+
+    els.hash.disabled = !c.hashMode;
+    els.hashHint.textContent = c.hashMode
+      ? "2 bytes is recommended so repeaters stay uniquely identifiable as the mesh grows. " +
+        "Nodes on 1.13 and older drop adverts with multi-byte hashes."
+      : "set path.hash.mode arrived in firmware 1.14, so it is left out entirely on this " +
+        "version. Adverts use the 1-byte hash.";
   }
 
   function renderChain(chain) {
@@ -370,27 +455,38 @@
     });
   }
 
-  function renderLineNote(defLine) {
-    var len = defLine.length;
-    var over = len > MAX_LINE;
+  function renderLineNote(built) {
+    var longest = built.regionLines.reduce(function (a, b) {
+      return b.length > a.length ? b : a;
+    }, "");
+    var over = longest.length > MAX_LINE;
+
     els.lineNote.className = "line-note" + (over ? " over" : "");
-    els.lineNote.textContent = over
-      ? "This region def line is " + len + " characters, over the " + MAX_LINE +
-        "-character serial limit. Split it across two commands."
-      : "region def line: " + len + " of " + MAX_LINE + " characters.";
+
+    if (over) {
+      els.lineNote.textContent =
+        "The region def line is " + longest.length + " characters, over the " + MAX_LINE +
+        "-character serial limit. Split it across two commands.";
+    } else if (built.caps.regionDef) {
+      els.lineNote.textContent =
+        "region def line: " + longest.length + " of " + MAX_LINE + " characters.";
+    } else {
+      els.lineNote.textContent =
+        built.regionLines.length + " region commands, longest " + longest.length +
+        " of " + MAX_LINE + " characters. Paste them in order — each name needs its " +
+        "parent to already exist.";
+    }
   }
 
   function renderVerify(built) {
     els.verifyBlock.textContent = "";
     if (!els.verify.checked) { return; }
 
-    var lines = [
-      "ver",
-      "region",
-      "region get " + built.leaf,
-      "get dutycycle",
-      "get path.hash.mode"
-    ];
+    var lines = ["ver"];
+    lines.push(built.caps.regionList ? "region list allowed" : "region");
+    lines.push("region get " + built.leaf);
+    lines.push(built.caps.dutycycle ? "get dutycycle" : "get af");
+    if (built.caps.hashMode) { lines.push("get path.hash.mode"); }
 
     var block = document.createElement("div");
     block.className = "code-block";
@@ -414,24 +510,45 @@
     var note = document.createElement("p");
     note.className = "line-note";
     note.textContent =
-      "region prints the whole tree. region get " + built.leaf +
-      " confirms the leaf exists and is flood-allowed (F).";
+      (built.caps.regionList
+        ? "region list allowed prints every region that may flood. "
+        : "region prints the whole tree (serial only on this firmware). ") +
+      "region get " + built.leaf + " confirms the leaf exists and is flood-allowed (F).";
     els.verifyBlock.appendChild(note);
   }
 
   function renderExplain(built) {
     var chainCodes = built.chain.map(function (c) { return c.code; });
-    var items = [
-      ["set dutycycle " + dutyValue(),
-       dutyValue() === 100
-         ? "Removes the transmit duty cycle cap. The US 902–928 MHz ISM band has no duty cycle limit, unlike EU 868 MHz. Default is 50."
-         : "Caps transmit airtime at " + dutyValue() + "%. Default is 50."],
-      ["set path.hash.mode " + els.hash.value,
-       hashExplanation(els.hash.value)],
-      [built.defLine,
-       "Builds the region chain " + chainCodes.join(" → ") +
-       ", each name a child of the one before it. The repeater replies with the resulting tree — read it before saving."]
-    ];
+    var items = [];
+
+    if (built.caps.dutycycle) {
+      items.push(["set dutycycle " + dutyValue(),
+        dutyValue() === 100
+          ? "Removes the transmit duty cycle cap. The US 902–928 MHz ISM band has no duty cycle limit, unlike EU 868 MHz. Default is 50."
+          : "Caps transmit airtime at " + dutyValue() + "%. Default is 50."]);
+    } else {
+      items.push(["set af " + afValue(),
+        afValue() === 0
+          ? "Airtime factor 0 — no enforced silent period after transmitting, so no duty cycle limit. This is the pre-1.15 equivalent of set dutycycle 100."
+          : "Airtime factor " + afValue() + " — after each transmission the node stays silent for " +
+            afValue() + "× the airtime, giving roughly a " + afDuty() + "% duty cycle."]);
+    }
+
+    if (built.caps.hashMode) {
+      items.push(["set path.hash.mode " + els.hash.value, hashExplanation(els.hash.value)]);
+    }
+
+    if (built.caps.regionDef) {
+      items.push([built.regionLines[0],
+        "Builds the region chain " + chainCodes.join(" → ") +
+        ", each name a child of the one before it. The repeater replies with the resulting tree — read it before saving."]);
+    } else {
+      items.push(["region put <name> [parent]  ×" + chainCodes.length,
+        "Builds the same chain " + chainCodes.join(" → ") + " one name at a time. " +
+        "The first, " + chainCodes[0] + ", takes no parent argument, so it lands under the wildcard root."]);
+      items.push(["region allowf <name>  ×" + chainCodes.length,
+        "Permits flooding for each name. region put allows flooding by default, but setting it explicitly is harmless and makes the config self-documenting."]);
+    }
 
     if (els.home.checked) {
       items.push(["region home " + built.leaf,
@@ -517,7 +634,7 @@
 
   /* ---------- options ---------- */
 
-  [els.duty, els.hash, els.home, els.verify].forEach(function (el) {
+  [els.duty, els.hash, els.home, els.verify, els.fw].forEach(function (el) {
     el.addEventListener("change", render);
   });
   els.duty.addEventListener("input", render);
@@ -527,6 +644,7 @@
   fillRegions();
   fillCounties(null);
   fillAreas(null);
+  render();
 
   var initial = byCode[decodeURIComponent(location.hash.replace(/^#/, ""))];
   if (initial) {

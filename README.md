@@ -14,6 +14,40 @@ region save
 
 **Live site:** https://matkam.github.io/meshcore-settings/
 
+## Firmware versions
+
+Not every repeater is on current firmware, so there's a version selector. Pick
+yours and the commands adapt:
+
+| Version | Duty cycle | Path hash | Region tree |
+| --- | --- | --- | --- |
+| 1.16+ | `set dutycycle` | `set path.hash.mode` | `region def` (one line) |
+| 1.15 | `set dutycycle` | `set path.hash.mode` | `region put` + `region allowf` |
+| 1.14 | `set af` | `set path.hash.mode` | `region put` + `region allowf` |
+| 1.10 – 1.13 | `set af` | *(not supported)* | `region put` + `region allowf` |
+
+Same tree, different syntax. On 1.10–1.13 that same North County example becomes:
+
+```
+set af 0
+region put west
+region allowf west
+region put ca west
+region allowf ca
+region put cc ca
+region allowf cc
+region put slo cc
+region allowf slo
+region put prb slo
+region allowf prb
+region save
+```
+
+The duty cycle field stays in percent whichever version you pick — on pre-1.15
+firmware it's converted to the nearest airtime factor, since `set af` only offers
+1/(1+af) steps (100% → `af 0`, 50% → `af 1`, 25% → `af 3`). Check your version on
+the node with `ver`.
+
 Every area has a shareable deep link — [`#prb`](https://matkam.github.io/meshcore-settings/#prb)
 opens the page with North County already selected, which is handy for pasting into
 a group chat when you're helping someone bring a node up.
@@ -32,6 +66,10 @@ California is split into 8 regions covering all 58 counties, with 162 local area
 under them. You can generate settings at any of the three lower levels: pick a
 region for a region-wide chain, a county for a county-wide chain, or a local area
 for the full five-token chain.
+
+On firmware older than 1.16 the same chain is built with `region put <name> [parent]`
+followed by `region allowf <name>` for each level — see
+[Firmware versions](#firmware-versions).
 
 A repeater carries every name in its chain, so scoping a message `prb` keeps it in
 North County, `slo` covers the county, and `west` reaches the whole western mesh.
