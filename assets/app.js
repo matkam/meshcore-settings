@@ -102,15 +102,21 @@
     get: function () { return current ? buildCommands(current) : null; },
     onChange: function (fn) { settingsListeners.push(fn); },
 
-    // Nearest local area to a position, for "where is this repeater?".
-    nearest: function (lat, lon) {
-      var best = null;
+    // Local areas closest to a position, nearest first, for "where is this
+    // repeater?". Centroids are approximate and areas can sit a few km apart, so
+    // callers offer a shortlist rather than a single answer. `spreadKm` drops a
+    // runner-up that is further than that beyond the winner — past which it is no
+    // longer a plausible alternative reading of the same position.
+    nearestAreas: function (lat, lon, count, spreadKm) {
+      var hits = [];
       index.forEach(function (e) {
         if (e.level !== "area") { return; }
-        var km = haversineKm(lat, lon, e.area.lat, e.area.lon);
-        if (!best || km < best.km) { best = { entry: e, km: km }; }
+        hits.push({ entry: e, km: haversineKm(lat, lon, e.area.lat, e.area.lon) });
       });
-      return best;
+      hits.sort(function (a, b) { return a.km - b.km; });
+      if (!hits.length) { return []; }
+      var limit = hits[0].km + (spreadKm == null ? Infinity : spreadKm);
+      return hits.filter(function (h) { return h.km <= limit; }).slice(0, count || 3);
     },
 
     select: function (code) {
