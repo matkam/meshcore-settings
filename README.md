@@ -56,6 +56,54 @@ Every area has a shareable deep link — [`#prb`](https://matkam.github.io/meshc
 opens the page with North County already selected, which is handy for pasting into
 a group chat when you're helping someone bring a node up.
 
+## The map
+
+The picker opens with a map of California. Click a dot for a local area, a
+county for a county-wide scope, or a region label for a region-wide one — the
+three levels of the scope chain, in the three things you can click. Whatever is
+selected is reflected back: the region as a wash across its counties, the county
+as a solid fill, the area as a marked dot. A selection made in the search box or
+the dropdowns shows up on the map too, and vice versa.
+
+It zooms, which the Bay Area needs — a dozen areas sit within a few pixels of
+each other at full extent. Use the buttons, ctrl/⌘ + scroll, or pinch; drag to
+pan once zoomed. A plain scroll wheel is left alone so the page still scrolls
+normally with the pointer over the map. Zooming is just a narrower `viewBox`, so
+nothing is redrawn, and dots and labels hold their size on screen while the
+geography grows under them.
+
+Two deliberate limits on what it claims:
+
+- **County lines are real; area boundaries are not drawn.** The county outlines
+  are Census TIGER boundaries. Local areas are a community convention with no
+  official shape, so they are marked as points. Drawing them as polygons would
+  invent a precision the data doesn't have.
+- **There is no colour per region.** Eight categorical fills on a map this size
+  fail colour-blind separation, and they would compete with the one thing colour
+  should mean here: what *you* have selected. Region identity comes from labels
+  and from hovering instead.
+
+The map is a shortcut, not the only route — everything on it is also reachable
+through the search box and the dropdowns, which are what keyboard and
+screen-reader users get. Nothing is map-only.
+
+`window.RegionMap.showPosition(lat, lon)` drops a marker at a real position, for
+showing where a connected repeater says it is.
+
+### Regenerating the outlines
+
+`data/counties.js` is generated and committed. Adding an area never touches it.
+If the boundaries ever need replacing:
+
+```sh
+npm run build:counties -- path/to/california-counties.geojson
+```
+
+It projects lon/lat into flat viewBox units, simplifies the rings to about 600 m,
+drops specks while keeping the real islands, and writes one SVG path per county.
+The projection constants live in the generated file and are shared by the map and
+the validator, so a coordinate lands in the same place in both.
+
 ## The region scheme
 
 Five levels, matching how a `region def` chain is walked — each token becomes a
@@ -143,11 +191,14 @@ Two things worth knowing:
 | --- | --- |
 | `index.html` | The page |
 | `assets/app.js` | Search, cascading selects, command generation |
+| `assets/map.js` | The map: draws it, handles picking, reflects the selection |
 | `assets/push.js` | Over-the-air flow: connect, log in, send, verify, resume |
 | `assets/vendor/meshcore.js/` | Vendored [meshcore.js](https://github.com/liamcottle/meshcore.js) (MIT), pinned — see its README |
 | `assets/style.css` | Styles, light and dark |
 | `data/regions.js` | **The region tree.** This is the file worth editing. |
-| `scripts/validate.mjs` | Uniqueness / length / depth checks |
+| `data/counties.js` | County outlines for the map — generated, don't hand-edit |
+| `scripts/validate.mjs` | Uniqueness / length / depth / coordinate checks |
+| `scripts/build-counties.mjs` | Regenerates `data/counties.js` from a GeoJSON |
 
 The vendored library is plain ES modules with relative imports, so the browser loads
 it directly — there is still no build step and no package manager.

@@ -105,6 +105,15 @@
       its suggestion instead.
     </p>
 
+    <figure class="map-figure">
+      <div class="map-host" id="map-host"></div>
+      <figcaption class="map-caption">
+        Click a dot for a local area, or a county for a county-wide scope. County
+        lines are real boundaries; local areas are a community convention with no
+        official shape, so they're marked as points.
+      </figcaption>
+    </figure>
+
     <div class="field">
       <label for="search">Search for a city, county or area</label>
       <div class="combo">
@@ -295,7 +304,9 @@
 </footer>
 
 <script src="data/regions.js"></script>
+<script src="data/counties.js"></script>
 <script src="assets/app.js"></script>
+<script src="assets/map.js"></script>
 <script type="module" src="assets/push.js"></script>
 </body>
 </html>

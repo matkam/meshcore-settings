@@ -296,7 +296,7 @@ window.CA_REGIONS = {
           name: "Marin County",
           areas: [
             { code: "srf", name: "Central Marin", cities: ["San Rafael", "Novato", "Larkspur", "San Anselmo", "Fairfax"], lat: 37.974, lon: -122.531 },
-            { code: "smr", name: "Southern Marin", cities: ["Sausalito", "Mill Valley", "Tiburon", "Marin City"], lat: 37.881, lon: -122.510 },
+            { code: "smr", name: "Southern Marin", cities: ["Sausalito", "Mill Valley", "Tiburon", "Marin City"], lat: 37.877, lon: -122.499 },
             { code: "wmr", name: "West Marin", cities: ["Point Reyes Station", "Bolinas", "Stinson Beach", "Inverness", "Tomales"], lat: 38.066, lon: -122.807 },
           ],
         },
