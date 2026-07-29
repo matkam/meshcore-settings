@@ -15,8 +15,9 @@ region def west ca cc slo prb
 region save
 ```
 
-Every one of those is adjustable under **Options**, and the whole block is
-editable if you want to send something else entirely.
+Every one of those is adjustable under **Options** — which also has a free-text
+**Owner info** box for your email, Discord handle or callsign — and the whole block
+is editable if you want to send something else entirely.
 
 **Live site:** https://matkam.github.io/meshcore-settings/
 
@@ -32,7 +33,9 @@ yours and the commands adapt:
 | 1.14 | `set af` | `set path.hash.mode` | `set loop.detect` | `region put` + `region allowf` |
 | 1.10 – 1.13 | `set af` | *(not supported)* | *(not supported)* | `region put` + `region allowf` |
 
-`set flood.advert.interval` is sent on every version.
+`set flood.advert.interval` is sent on every version. `set owner.info` needs 1.12,
+which sits inside the 1.10–1.13 tier — nothing here can tell 1.13 from 1.11, so it
+is offered on every tier and the oldest one says it may come back unknown.
 
 From 1.15 a region is flood-allowed as it's created, so `region allowf` is only
 emitted for 1.14 and older, where the regions would otherwise exist but drop
@@ -114,7 +117,17 @@ the validator, so a coordinate lands in the same place in both.
 
 ## The other settings
 
-Both live under **Options** and are on by default.
+These all live under **Options**. The two intervals are on by default; owner info
+is blank until you type something.
+
+**Owner info** — `set owner.info <text>`, added in firmware 1.12. A free-text box:
+put whatever lets a neighbour reach you about the node — an email address, a Discord
+handle, a callsign, a URL. `|` is the firmware's newline marker, so it shows as a
+line break where the info is displayed. It is readable by anyone who can query the
+repeater, so it is public by design; the hint under the box says so. Leave it empty
+and no command is sent, which leaves whatever the repeater already has alone — there
+is deliberately no way here to send an empty value and wipe it. The box caps at 120
+characters so `set owner.info <text>` stays inside the 160-character serial line.
 
 **Flood advert interval** — `set flood.advert.interval 24`. How often the
 repeater floods an advert to the whole mesh so distant nodes can discover it and
