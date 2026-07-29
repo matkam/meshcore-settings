@@ -244,14 +244,22 @@ function hasSelection() {
   return !!window.SettingsState.get();
 }
 
-// Sending needs both a repeater we're logged in to and an area to send. Either
-// can be missing, so say which.
+// An edited command list can be emptied, which leaves a selection but nothing
+// to send.
+function hasCommands() {
+  const built = window.SettingsState.get();
+  return !!(built && built.lines.length);
+}
+
+// Sending needs a repeater we're logged in to, an area, and commands to send.
+// Any of the three can be missing, so say which.
 function refreshPushButton() {
-  els.btnPush.disabled = busy || !loggedInTo || !hasSelection();
+  els.btnPush.disabled = busy || !loggedInTo || !hasCommands();
   els.btnPush.title = busy ? ""
     : !loggedInTo ? "Log in to the repeater first"
       : !hasSelection() ? "Choose an area below first"
-        : "";
+        : !hasCommands() ? "The command list is empty"
+          : "";
 }
 
 function toHex(bytes) {

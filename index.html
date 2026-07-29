@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>California MeshCore Repeater Settings</title>
-<meta name="description" content="Pick your area in California and get the MeshCore repeater settings to paste in, including region scopes.">
+<meta name="description" content="Pick your area in California and get the MeshCore repeater settings to paste in, including region scopes, flood advert interval and loop detection.">
 <meta name="color-scheme" content="light dark">
 <link rel="stylesheet" href="assets/style.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='13'>📡</text></svg>">
@@ -15,8 +15,9 @@
   <div class="wrap">
     <h1>California MeshCore Repeater Settings</h1>
     <p class="tagline">
-      Duty cycle, path hash mode, and region scopes for your repeater. Connect it and
-      the settings are worked out for you, or pick your area and copy them by hand.
+      Duty cycle, path hash mode, flood advert interval, loop detection and region
+      scopes for your repeater. Connect it and the settings are worked out for you,
+      or pick your area and copy them by hand.
     </p>
   </div>
 </header>
@@ -162,10 +163,17 @@
     <div class="code-block">
       <div class="code-head">
         <span class="code-title">Repeater console</span>
+        <button type="button" id="edit-cmds" class="copy-btn">Edit</button>
         <button type="button" id="copy" class="copy-btn">Copy</button>
       </div>
       <pre id="commands" tabindex="0"></pre>
+      <textarea id="commands-edit" spellcheck="false" autocomplete="off"
+                aria-label="Commands to send, editable" hidden></textarea>
     </div>
+    <p class="edit-note" id="edit-note" hidden>
+      <span id="edit-note-text"></span>
+      <button type="button" id="reset-cmds" class="link-btn">Reset to generated</button>
+    </p>
     <p class="line-note" id="line-note"></p>
 
     <div id="verify-block"></div>
@@ -186,6 +194,22 @@
             <option value="2">2 — 3 bytes (16.7M ids, 21 max flood)</option>
           </select>
           <p class="hint" id="hash-hint"></p>
+        </div>
+        <div class="field">
+          <label for="opt-loop">Loop detection</label>
+          <select id="opt-loop">
+            <option value="">Leave unset (don't send)</option>
+            <option value="off">off</option>
+            <option value="minimal">minimal</option>
+            <option value="moderate" selected>moderate</option>
+            <option value="strict">strict</option>
+          </select>
+          <p class="hint" id="loop-hint"></p>
+        </div>
+        <div class="field">
+          <label for="opt-flood">Flood advert interval (hours)</label>
+          <input id="opt-flood" type="number" min="0" max="168" step="1" value="24">
+          <p class="hint" id="flood-hint"></p>
         </div>
         <div class="field checkbox">
           <label><input type="checkbox" id="opt-home"> Set home and default region</label>
