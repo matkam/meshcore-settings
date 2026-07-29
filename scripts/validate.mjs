@@ -60,6 +60,9 @@ let regionCount = 0;
 let countyCount = 0;
 let areaCount = 0;
 
+const coords = new Map();
+const points = [];
+
 for (const region of data.regions) {
   regionCount += 1;
   const rPath = `region ${region.name ?? region.code}`;
@@ -89,6 +92,27 @@ for (const region of data.regions) {
         warn(`${aPath}: no cities listed, it will be hard to find by search`);
       }
 
+      // Coordinates drive the "detect my location" suggestion, so a wrong one
+      // silently mis-places a repeater. Bounds are California's extent plus a
+      // small margin.
+      if (typeof area.lat !== "number" || typeof area.lon !== "number") {
+        fail(`${aPath}: missing lat/lon`);
+      } else {
+        if (area.lat < 32.3 || area.lat > 42.2) {
+          fail(`${aPath}: lat ${area.lat} is outside California`);
+        }
+        if (area.lon < -124.6 || area.lon > -114.0) {
+          fail(`${aPath}: lon ${area.lon} is outside California`);
+        }
+        const key = area.lat.toFixed(3) + "," + area.lon.toFixed(3);
+        if (coords.has(key)) {
+          fail(`${aPath}: identical coordinates to ${coords.get(key)}`);
+        } else {
+          coords.set(key, aPath);
+        }
+        points.push({ path: aPath, lat: area.lat, lon: area.lon });
+      }
+
       const chain = [...rootTokens, region.code, county.code, area.code];
       const line = `region def ${chain.join(" ")}`;
       if (line.length > maxLine) {
@@ -99,6 +123,30 @@ for (const region of data.regions) {
       }
     }
   }
+}
+
+// Areas closer together than this are hard to tell apart from an advertised
+// position, so nearest-centroid matching between them is close to a coin flip.
+const CLOSE_KM = 4;
+for (let i = 0; i < points.length; i++) {
+  for (let j = i + 1; j < points.length; j++) {
+    const d = haversineKm(points[i], points[j]);
+    if (d < CLOSE_KM) {
+      warn(`${points[i].path} and ${points[j].path} are ${d.toFixed(1)} km apart — ` +
+           `location detection cannot reliably tell them apart`);
+    }
+  }
+}
+
+function haversineKm(a, b) {
+  const R = 6371;
+  const toRad = (d) => (d * Math.PI) / 180;
+  const dLat = toRad(b.lat - a.lat);
+  const dLon = toRad(b.lon - a.lon);
+  const s =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(s));
 }
 
 function report() {

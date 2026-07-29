@@ -522,6 +522,31 @@ pre.tree {
 
 .push-actions { margin: 18px 0 4px; }
 
+.detect {
+  margin: 4px 0 16px;
+  padding: 12px 14px;
+  background: var(--accent-soft);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: 8px;
+}
+
+.detect-line {
+  margin: 0;
+  font-size: 0.87rem;
+  color: var(--ink);
+}
+
+.detect-line:empty { display: none; }
+
+.detect-line + .detect-line { margin-top: 6px; }
+
+.action.small {
+  font-size: 0.84rem;
+  padding: 6px 12px;
+  margin: 10px 0 0;
+  background: var(--panel);
+}
+
 .conn-status {
   margin: 0 0 16px;
   font-size: 0.88rem;
