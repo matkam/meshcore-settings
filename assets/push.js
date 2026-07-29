@@ -35,25 +35,36 @@ const els = {
   detectBox: $("detect-box"),
   detectLoc: $("detect-loc"),
   detectVer: $("detect-ver"),
-  btnUseLoc: $("btn-use-loc")
+  detectChoices: $("detect-choices")
 };
 
 /*
  * A repeater tells us two things we currently ask the user for.
  *
  * Position comes from the contact record's advertised lat/lon, so it needs no
- * login — but it is matched to the nearest area centroid, which is a guess.
- * Some areas genuinely sit a couple of km apart (Yuba City / Marysville), so
- * this is offered as a suggestion, never applied silently.
+ * login — but it is matched against area centroids, which is a guess. Some areas
+ * genuinely sit a couple of km apart (Yuba City / Marysville), and a centroid is
+ * one point standing in for a whole area, so the nearest one is often not the
+ * right one. Hence a shortlist to choose from, never a silent application.
  *
  * Firmware version comes from running `ver` after login. That is the device
  * stating a fact about itself, so it is applied directly.
  */
 const DETECT_NEAR_KM = 25;   // beyond this the match is too loose to suggest
+const DETECT_CHOICES = 3;    // how many candidates to offer
+
+// Everything in the box describes one repeater, so it is cleared as a unit
+// whenever the repeater we are looking at changes.
+function resetDetect() {
+  els.detectChoices.replaceChildren();
+  els.detectChoices.hidden = true;
+  els.detectLoc.textContent = "";
+  els.detectVer.textContent = "";
+  els.detectBox.hidden = true;
+}
 
 function detectLocation(contact) {
-  els.btnUseLoc.hidden = true;
-  els.detectLoc.textContent = "";
+  resetDetect();
 
   // The library hands these back as raw int32 microdegrees, unscaled.
   const lat = contact.advLat / 1e6;
@@ -62,34 +73,58 @@ function detectLocation(contact) {
   // A node that doesn't advertise position reports 0,0.
   if (!contact.advLat && !contact.advLon) {
     els.detectLoc.textContent =
-      "This repeater doesn't advertise a position, so the area above is up to you.";
+      "This repeater doesn't advertise a position, so the area below is up to you.";
     show();
     return;
   }
 
-  const hit = window.SettingsState.nearest(lat, lon);
-  if (!hit) { return; }
+  // Runners-up within the same slop that made the winner plausible: when two
+  // centroids are nearly as close, which one is nearest is close to a coin toss.
+  const near = window.SettingsState.nearestAreas(lat, lon, DETECT_CHOICES, DETECT_NEAR_KM);
+  if (!near.length) { return; }
 
   const where = lat.toFixed(3) + ", " + lon.toFixed(3);
-  if (hit.km > DETECT_NEAR_KM) {
+  if (near[0].km > DETECT_NEAR_KM) {
     els.detectLoc.textContent =
       "Repeater reports " + where + ", but the closest area on this site is " +
-      hit.entry.name + ", " + Math.round(hit.km) + " km away. Too far to guess — pick one above.";
+      near[0].entry.name + ", " + Math.round(near[0].km) + " km away. Too far to guess — pick one below.";
     show();
     return;
   }
 
-  els.detectLoc.textContent =
-    "Repeater reports " + where + " — closest match is " + hit.entry.name +
-    " (" + hit.entry.context + "), " + hit.km.toFixed(1) + " km away.";
-  els.btnUseLoc.textContent = "Use " + hit.entry.name;
-  els.btnUseLoc.hidden = false;
-  els.btnUseLoc.onclick = () => {
-    window.SettingsState.select(hit.entry.code);
-    els.btnUseLoc.hidden = true;
-    els.detectLoc.textContent = "Area set to " + hit.entry.name + " from the repeater's position.";
-  };
+  els.detectLoc.textContent = near.length > 1
+    ? "Repeater reports " + where + " — nearest areas, closest first. These are matched " +
+      "against one point per area, so check the distances against where the node really is:"
+    : "Repeater reports " + where + " — only one area is close to that:";
+
+  near.forEach((hit) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "action small";
+    btn.textContent = hit.entry.name + " · " + fmtKm(hit.km);
+    btn.title = hit.entry.context;
+    btn.setAttribute("aria-pressed", "false");
+    btn.onclick = () => {
+      window.SettingsState.select(hit.entry.code);
+      // The buttons stay: a wrong pick should be correctable without reconnecting.
+      for (const b of els.detectChoices.children) {
+        b.classList.toggle("chosen", b === btn);
+        b.setAttribute("aria-pressed", String(b === btn));
+      }
+      els.detectLoc.textContent = "Area set to " + hit.entry.name + " (" + hit.entry.context +
+        "). Pick another if that isn't where the repeater is.";
+    };
+    els.detectChoices.append(btn);
+  });
+  els.detectChoices.hidden = false;
   show();
+}
+
+// Sub-10 km is where the choice is actually hard, so keep a decimal there. A
+// node sitting on the centroid would otherwise read "0.0 km", which looks broken.
+function fmtKm(km) {
+  if (km < 0.1) { return "under 0.1 km"; }
+  return (km < 10 ? km.toFixed(1) : Math.round(km)) + " km";
 }
 
 // Map a reported firmware version onto the tiers the generator understands.
@@ -172,7 +207,7 @@ function init() {
     resumeFrom = 0;
     refreshPushButton();
     els.progress.hidden = true;
-    els.detectVer.textContent = "";   // version belongs to the old repeater
+    // detectLocation clears the box first, so the old repeater's version goes too.
     const c = selectedContact();
     if (c) { detectLocation(c); }
     setStatus("Log in to this repeater to continue.");
@@ -261,7 +296,8 @@ async function connect(kind) {
 
     fillRepeaters();
     const first = selectedContact();
-    if (first) { detectLocation(first); }
+    // Otherwise anything left over from a previous session would still be showing.
+    if (first) { detectLocation(first); } else { resetDetect(); }
     els.connect.hidden = true;
     els.session.hidden = false;
     els.connStatus.textContent = "Connected over " + (kind === "usb" ? "USB" : "Bluetooth") + ".";

@@ -133,7 +133,7 @@ for (let i = 0; i < points.length; i++) {
     const d = haversineKm(points[i], points[j]);
     if (d < CLOSE_KM) {
       warn(`${points[i].path} and ${points[j].path} are ${d.toFixed(1)} km apart — ` +
-           `location detection cannot reliably tell them apart`);
+           `location detection will offer both and let the operator choose`);
     }
   }
 }
