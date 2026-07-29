@@ -27,8 +27,9 @@ an entry to its `areas` list:
   the towns people would actually type, including unincorporated ones.
 - **`lat` / `lon`** — a representative point for the area, three decimal places.
   A connected repeater's advertised position is matched to the nearest one of
-  these, so put it where the nodes actually are (the main town) rather than at the
-  geometric centre of an empty valley.
+  these, and it's where the map puts your area's dot, so put it where the nodes
+  actually are (the main town) rather than at the geometric centre of an empty
+  valley.
 
 Then:
 
@@ -41,6 +42,13 @@ the generated `region def`, MeshCore's 8-level depth cap, and that coordinates a
 inside California and not duplicated. It warns when two areas are within 4 km,
 since location detection can't reliably tell those apart — that's a warning rather
 than an error because some genuinely are that close.
+
+**It also checks your coordinate is inside the county you filed it under**, using
+the same county outlines the map draws, and tells you which county it actually
+landed in if not. That catches a transposed digit or a copy-pasted neighbour,
+which the "is it in California?" check cannot. A point within about 800 m of the
+county line is accepted without comment — the outlines are simplified to roughly
+that, so nothing sharper is knowable from them.
 
 ## Renaming a code
 

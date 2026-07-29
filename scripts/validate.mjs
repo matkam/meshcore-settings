@@ -110,7 +110,7 @@ for (const region of data.regions) {
         } else {
           coords.set(key, aPath);
         }
-        points.push({ path: aPath, lat: area.lat, lon: area.lon });
+        points.push({ path: aPath, lat: area.lat, lon: area.lon, county: county.name });
       }
 
       const chain = [...rootTokens, region.code, county.code, area.code];
@@ -136,6 +136,112 @@ for (let i = 0; i < points.length; i++) {
            `location detection cannot reliably tell them apart`);
     }
   }
+}
+
+/* ---------- centroids against the county outlines ----------
+ *
+ * data/counties.js carries the real county boundaries the map draws, which
+ * makes "is this coordinate actually in the county it is filed under?" a
+ * question the machine can answer. It catches a transposed digit or a
+ * copy-pasted neighbour, which the bounding-box check above cannot.
+ */
+
+const countyMapSource = readFileSync(join(root, "data/counties.js"), "utf8");
+vm.runInContext(countyMapSource, sandbox, { filename: "data/counties.js" });
+const countyMap = sandbox.window.CA_COUNTY_MAP;
+
+if (!countyMap || !Array.isArray(countyMap.counties)) {
+  fail("window.CA_COUNTY_MAP.counties is missing or not an array — run scripts/build-counties.mjs");
+} else {
+  const { lon0, lat1, k, cos0 } = countyMap.projection;
+  const project = (lat, lon) => [(lon - lon0) * cos0 * k, (lat1 - lat) * k];
+  // The projection is scaled so one viewBox unit is one degree of latitude / k.
+  const KM_PER_UNIT = 111.32 / k;
+
+  // "Los Angeles" in the shapes, "Los Angeles County" in the region tree.
+  const shapes = new Map();
+  for (const c of countyMap.counties) { shapes.set(c.name, parsePath(c.d)); }
+
+  const treeCounties = new Set(points.map((p) => p.county));
+  for (const name of treeCounties) {
+    if (!shapes.has(name.replace(/ County$/, ""))) {
+      fail(`county "${name}" has no outline in data/counties.js`);
+    }
+  }
+
+  // build-counties.mjs simplifies the rings with a tolerance of about 600 m, so
+  // near a convoluted shoreline the drawn line genuinely cannot say which side a
+  // point is on. Inside that band, "outside" means nothing.
+  const SIMPLIFY_SLACK_KM = 0.8;
+  // Past the slack it is worth a look, and this far past it is a mistake rather
+  // than a border-hugging centroid.
+  const OUTSIDE_FAIL_KM = 5;
+
+  for (const p of points) {
+    const own = shapes.get(p.county.replace(/ County$/, ""));
+    if (!own) { continue; }
+    const xy = project(p.lat, p.lon);
+    if (inside(xy, own)) { continue; }
+
+    const offBy = distanceToRings(xy, own) * KM_PER_UNIT;
+    if (offBy <= SIMPLIFY_SLACK_KM) { continue; }
+
+    // Naming the county it actually landed in turns "wrong" into "fix it to this".
+    let actual = null;
+    for (const [name, rings] of shapes) {
+      if (inside(xy, rings)) { actual = name; break; }
+    }
+    const landedIn = actual ? `, which is in ${actual} County` : ", which is offshore or out of state";
+
+    if (offBy > OUTSIDE_FAIL_KM) {
+      fail(`${p.path}: ${p.lat}, ${p.lon} is ${offBy.toFixed(1)} km outside ${p.county}${landedIn}`);
+    } else {
+      warn(`${p.path}: ${p.lat}, ${p.lon} sits ${offBy.toFixed(1)} km outside ${p.county} — ` +
+           `close enough to be the simplified outline, but worth a look`);
+    }
+  }
+}
+
+// "M x,y L x,y ... Z M ..." back into rings of points.
+function parsePath(d) {
+  return d.split("M").filter(Boolean).map((part) =>
+    part.replace(/Z$/, "").split("L").map((pair) => pair.split(",").map(Number)));
+}
+
+// Even-odd ray cast across every ring, so a hole would correctly read as outside.
+function inside([x, y], rings) {
+  let hit = false;
+  for (const ring of rings) {
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const [xi, yi] = ring[i];
+      const [xj, yj] = ring[j];
+      if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) {
+        hit = !hit;
+      }
+    }
+  }
+  return hit;
+}
+
+function distanceToRings(p, rings) {
+  let best = Infinity;
+  for (const ring of rings) {
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      best = Math.min(best, pointToSegment(p, ring[j], ring[i]));
+    }
+  }
+  return best;
+}
+
+function pointToSegment([px, py], a, b) {
+  let [x, y] = a;
+  const dx = b[0] - x;
+  const dy = b[1] - y;
+  if (dx !== 0 || dy !== 0) {
+    const t = ((px - x) * dx + (py - y) * dy) / (dx * dx + dy * dy);
+    if (t > 1) { [x, y] = b; } else if (t > 0) { x += dx * t; y += dy * t; }
+  }
+  return Math.hypot(px - x, py - y);
 }
 
 function haversineKm(a, b) {
