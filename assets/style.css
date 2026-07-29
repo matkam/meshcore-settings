@@ -680,6 +680,13 @@ pre.tree {
 
 .map-svg.is-pointing { cursor: pointer; }
 
+/* Only once there is somewhere to pan to. */
+.map-svg.is-zoomed { cursor: grab; touch-action: none; }
+.map-svg.is-dragging { cursor: grabbing; }
+
+/* At full extent, a touch drag belongs to the page, not the map. */
+.map-svg { touch-action: pan-y; }
+
 .map-county {
   fill: var(--panel);
   stroke: var(--line);
@@ -762,6 +769,35 @@ pre.tree {
   r: calc(var(--dot-r, 3) * 0.9);
   fill: var(--warn);
 }
+
+.map-zoom {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 4;
+}
+
+.map-zoom button {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--ink);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  cursor: pointer;
+  /* The map shows through behind them. */
+  opacity: 0.92;
+}
+
+.map-zoom button:hover:not(:disabled) { border-color: var(--accent); }
+.map-zoom button:disabled { opacity: 0.4; cursor: default; }
 
 .map-tip {
   position: absolute;

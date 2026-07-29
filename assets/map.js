@@ -174,9 +174,64 @@
   tip.hidden = true;
   host.appendChild(tip);
 
+  /* ---------- view, zoom and pan ----------
+   * Zooming an SVG is just a narrower viewBox, so there is no re-rendering and
+   * nothing to redraw — the geometry above is untouched. `view` is the window
+   * onto it, always inside the full extent.
+   */
+
+  var view = { x: vb.x, y: vb.y, width: vb.width, height: vb.height };
+  var MAX_ZOOM = 12;   // enough to pull the Bay Area cluster apart
+
+  function zoom() { return vb.width / view.width; }
+
+  function clampView() {
+    // Never wider than the whole state, and never past its edges: panning into
+    // blank space is disorienting and there is nothing out there.
+    var scale = Math.min(Math.max(zoom(), 1), MAX_ZOOM);
+    view.width = vb.width / scale;
+    view.height = vb.height / scale;
+    view.x = Math.min(Math.max(view.x, vb.x), vb.x + vb.width - view.width);
+    view.y = Math.min(Math.max(view.y, vb.y), vb.y + vb.height - view.height);
+  }
+
+  function applyView() {
+    clampView();
+    svg.setAttribute("viewBox", view.x + " " + view.y + " " + view.width + " " + view.height);
+    // Marks are sized in screen pixels, so their size in map units changes with
+    // the zoom — they stay the same size on screen while the map grows.
+    resize();
+    scheduleLabels();
+    svg.classList.toggle("is-zoomed", zoom() > 1.001);
+    if (btnReset) { btnReset.disabled = zoom() <= 1.001; }
+  }
+
+  // Zoom about a fixed point, so whatever is under the pointer stays there.
+  function zoomAt(factor, mapX, mapY) {
+    var before = zoom();
+    var after = Math.min(Math.max(before * factor, 1), MAX_ZOOM);
+    if (after === before) { return; }
+    var w = vb.width / after;
+    var h = vb.height / after;
+    view.x = mapX - ((mapX - view.x) * w) / view.width;
+    view.y = mapY - ((mapY - view.y) * h) / view.height;
+    view.width = w;
+    view.height = h;
+    applyView();
+  }
+
+  function zoomCentre(factor) {
+    zoomAt(factor, view.x + view.width / 2, view.y + view.height / 2);
+  }
+
+  function resetView() {
+    view = { x: vb.x, y: vb.y, width: vb.width, height: vb.height };
+    applyView();
+  }
+
   /* ---------- sizing ----------
    * Marks are specified in screen pixels but drawn in viewBox units, so the
-   * conversion has to be redone whenever the map changes size.
+   * conversion has to be redone whenever the map changes size or zoom.
    */
 
   var unitsPerPx = 1;
@@ -184,7 +239,7 @@
   function resize() {
     var rendered = svg.getBoundingClientRect().width;
     if (!rendered) { return; }
-    unitsPerPx = vb.width / rendered;
+    unitsPerPx = view.width / rendered;
     gDots.style.setProperty("--dot-r", (DOT_PX * unitsPerPx).toFixed(2));
     gDots.style.setProperty("--dot-r-on", (DOT_SELECTED_PX * unitsPerPx).toFixed(2));
     gMark.style.setProperty("--dot-r", (DOT_PX * unitsPerPx).toFixed(2));
@@ -204,21 +259,26 @@
    * underneath. Re-run on resize, since the label's size in map units changes.
    */
 
-  var LABEL_PAD = 2;       // viewBox units of clearance around the glyph box
-  var LABEL_STEPS = [0, 14, 28, 44, 62];
+  // Screen pixels, like everything else here, so the search behaves the same at
+  // every zoom level rather than flinging labels across a magnified map.
+  var LABEL_PAD_PX = 1.5;
+  var LABEL_STEP_PX = [0, 8, 16, 25, 35];
   var LABEL_DIRS = [
     [0, -1], [0, 1], [-1, 0], [1, 0],
     [-0.7, -0.7], [0.7, -0.7], [-0.7, 0.7], [0.7, 0.7]
   ];
 
   function boxIsClear(box, ignoreLabel) {
+    // Bounds are the whole state, not the current view: a label belongs to the
+    // map, so zooming must not shuffle it to a different place.
     if (box.x < vb.x || box.x + box.width > vb.x + vb.width ||
         box.y < vb.y || box.y + box.height > vb.y + vb.height) {
       return false;
     }
+    var pad = LABEL_PAD_PX * unitsPerPx;
     for (var i = 0; i < areas.length; i++) {
-      if (areas[i].x >= box.x - LABEL_PAD && areas[i].x <= box.x + box.width + LABEL_PAD &&
-          areas[i].y >= box.y - LABEL_PAD && areas[i].y <= box.y + box.height + LABEL_PAD) {
+      if (areas[i].x >= box.x - pad && areas[i].x <= box.x + box.width + pad &&
+          areas[i].y >= box.y - pad && areas[i].y <= box.y + box.height + pad) {
         return false;
       }
     }
@@ -247,11 +307,12 @@
       var best = null;
 
       outer:
-      for (var s = 0; s < LABEL_STEPS.length; s++) {
-        var dirs = LABEL_STEPS[s] === 0 ? [[0, 0]] : LABEL_DIRS;
+      for (var s = 0; s < LABEL_STEP_PX.length; s++) {
+        var step = LABEL_STEP_PX[s] * unitsPerPx;
+        var dirs = step === 0 ? [[0, 0]] : LABEL_DIRS;
         for (var d = 0; d < dirs.length; d++) {
-          var x = baseX + dirs[d][0] * LABEL_STEPS[s];
-          var y = baseY + dirs[d][1] * LABEL_STEPS[s];
+          var x = baseX + dirs[d][0] * step;
+          var y = baseY + dirs[d][1] * step;
           text.setAttribute("x", x);
           text.setAttribute("y", y);
           if (boxIsClear(text.getBBox(), text)) { best = [x, y]; break outer; }
@@ -267,6 +328,14 @@
     }
   }
 
+  // Re-placing on every wheel tick would make the labels twitch, so let the zoom
+  // settle first.
+  var labelTimer = null;
+  function scheduleLabels() {
+    clearTimeout(labelTimer);
+    labelTimer = setTimeout(placeLabels, 120);
+  }
+
   if (window.ResizeObserver) {
     new ResizeObserver(function () { resize(); placeLabels(); }).observe(svg);
   } else {
@@ -274,6 +343,114 @@
   }
   resize();
   placeLabels();
+
+  /* ---------- driving the view ---------- */
+
+  // Wheel alone stays page scrolling — the map is a small thing inside a
+  // document, and swallowing the wheel over it is infuriating. Ctrl/⌘ + wheel is
+  // the browser's own zoom gesture, and a trackpad pinch arrives as exactly that.
+  svg.addEventListener("wheel", function (evt) {
+    if (!evt.ctrlKey && !evt.metaKey) { return; }
+    evt.preventDefault();
+    var at = svgPoint(evt);
+    zoomAt(Math.pow(0.998, evt.deltaY), at.x, at.y);
+  }, { passive: false });
+
+  var pointers = {};              // live pointers by id, for drag and pinch
+  var pointerCount = 0;
+  var dragFrom = null;            // map point grabbed when the drag began
+  var pressAt = null;             // screen point, to tell a click from a drag
+  var dragged = 0;
+  var pinchFrom = null;
+
+  function twoPointers() {
+    var out = [];
+    for (var id in pointers) { out.push(pointers[id]); }
+    return out;
+  }
+
+  svg.addEventListener("pointerdown", function (evt) {
+    if (!pointers[evt.pointerId]) { pointerCount++; }
+    pointers[evt.pointerId] = { x: evt.clientX, y: evt.clientY };
+    pressAt = { x: evt.clientX, y: evt.clientY };
+    dragged = 0;
+
+    if (pointerCount === 2) {
+      var two = twoPointers();
+      pinchFrom = { dist: Math.hypot(two[0].x - two[1].x, two[0].y - two[1].y), zoom: zoom() };
+      dragFrom = null;
+      return;
+    }
+    if (zoom() > 1.001) {
+      dragFrom = svgPoint(evt);
+      svg.setPointerCapture(evt.pointerId);
+      svg.classList.add("is-dragging");
+    }
+  });
+
+  svg.addEventListener("pointermove", function (evt) {
+    if (!pointers[evt.pointerId]) { return; }
+    pointers[evt.pointerId] = { x: evt.clientX, y: evt.clientY };
+    if (pressAt) {
+      dragged = Math.max(dragged, Math.hypot(evt.clientX - pressAt.x, evt.clientY - pressAt.y));
+    }
+
+    if (pinchFrom && pointerCount === 2) {
+      var two = twoPointers();
+      var dist = Math.hypot(two[0].x - two[1].x, two[0].y - two[1].y);
+      var mid = clientPoint((two[0].x + two[1].x) / 2, (two[0].y + two[1].y) / 2);
+      zoomAt((pinchFrom.zoom * (dist / pinchFrom.dist)) / zoom(), mid.x, mid.y);
+      return;
+    }
+
+    if (!dragFrom) { return; }
+    // Move the map so the point grabbed stays under the pointer. Measuring
+    // through the *current* view each time is what makes the drag track the
+    // cursor exactly instead of drifting.
+    var now = svgPoint(evt);
+    view.x += dragFrom.x - now.x;
+    view.y += dragFrom.y - now.y;
+    clampView();
+    svg.setAttribute("viewBox", view.x + " " + view.y + " " + view.width + " " + view.height);
+  });
+
+  function endPointer(evt) {
+    if (pointers[evt.pointerId]) {
+      delete pointers[evt.pointerId];
+      pointerCount--;
+    }
+    if (pointerCount < 2) { pinchFrom = null; }
+    if (pointerCount <= 0) {
+      pointerCount = 0;
+      dragFrom = null;
+      svg.classList.remove("is-dragging");
+    }
+  }
+  svg.addEventListener("pointerup", endPointer);
+  svg.addEventListener("pointercancel", endPointer);
+
+  /* ---------- zoom controls ----------
+   * Real buttons, so zooming works without a trackpad and from the keyboard —
+   * the rest of the map is pointer-only.
+   */
+
+  var controls = document.createElement("div");
+  controls.className = "map-zoom";
+  function control(label, title, fn) {
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = label;
+    btn.title = title;
+    btn.setAttribute("aria-label", title);
+    btn.addEventListener("click", fn);
+    controls.appendChild(btn);
+    return btn;
+  }
+  control("+", "Zoom in", function () { zoomCentre(1.6); });
+  control("−", "Zoom out", function () { zoomCentre(1 / 1.6); });
+  var btnReset = control("⤢", "Show the whole state", resetView);
+  btnReset.disabled = true;
+  host.appendChild(controls);
 
   /* ---------- hover ---------- */
 
@@ -292,15 +469,21 @@
     return best;
   }
 
-  function svgPoint(evt) {
+  function svgPoint(evt) { return clientPoint(evt.clientX, evt.clientY); }
+
+  // Screen coordinates to map units, through whatever the current view is.
+  function clientPoint(clientX, clientY) {
     var rect = svg.getBoundingClientRect();
     return {
-      x: vb.x + ((evt.clientX - rect.left) / rect.width) * vb.width,
-      y: vb.y + ((evt.clientY - rect.top) / rect.height) * vb.height
+      x: view.x + ((clientX - rect.left) / rect.width) * view.width,
+      y: view.y + ((clientY - rect.top) / rect.height) * view.height
     };
   }
 
   svg.addEventListener("pointermove", function (evt) {
+    // Mid-drag the pointer is moving the map, not pointing at things on it.
+    if (dragFrom || pinchFrom) { clearHover(); return; }
+
     var at = svgPoint(evt);
 
     // Order matters. A label is only ever hit dead-on, so landing on one is a
@@ -410,6 +593,10 @@
 
   // Same precedence as hovering, so what you click is what the tooltip promised.
   svg.addEventListener("click", function (evt) {
+    // A pan ends in a click event. Anything past a few pixels was a drag, and
+    // changing the selection because someone moved the map would be maddening.
+    if (dragged > 4) { return; }
+
     var label = hitLabel(evt);
     if (label) { window.SettingsState.select(label.dataset.region); return; }
 

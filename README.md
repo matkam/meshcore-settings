@@ -65,6 +65,13 @@ selected is reflected back: the region as a wash across its counties, the county
 as a solid fill, the area as a marked dot. A selection made in the search box or
 the dropdowns shows up on the map too, and vice versa.
 
+It zooms, which the Bay Area needs — a dozen areas sit within a few pixels of
+each other at full extent. Use the buttons, ctrl/⌘ + scroll, or pinch; drag to
+pan once zoomed. A plain scroll wheel is left alone so the page still scrolls
+normally with the pointer over the map. Zooming is just a narrower `viewBox`, so
+nothing is redrawn, and dots and labels hold their size on screen while the
+geography grows under them.
+
 Two deliberate limits on what it claims:
 
 - **County lines are real; area boundaries are not drawn.** The county outlines
