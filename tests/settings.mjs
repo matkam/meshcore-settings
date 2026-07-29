@@ -83,6 +83,59 @@ check("flood interval still sent on the oldest tier",
   (await lines()).includes("set flood.advert.interval 24"), await cmds());
 await page.selectOption("#opt-fw", "116");
 
+/* ---------- owner info ---------- */
+{
+  check("owner info starts empty", (await page.inputValue("#opt-owner")) === "",
+    await page.inputValue("#opt-owner"));
+  check("an empty box sends nothing", !(await cmds()).includes("owner.info"), await cmds());
+  check("empty is explained as leaving it alone",
+    /keeps whatever it already has/.test(await page.textContent("#owner-hint")),
+    await page.textContent("#owner-hint"));
+
+  await page.fill("#opt-owner", "K6ABC | matt@example.com");
+  await page.waitForTimeout(50);
+  const l = await lines();
+  check("whatever is typed becomes set owner.info",
+    l.includes("set owner.info K6ABC | matt@example.com"), await cmds());
+  check("it sits with the other set commands",
+    l.findIndex((x) => x.startsWith("set owner.info")) < l.findIndex((x) => x.startsWith("region ")),
+    JSON.stringify(l));
+  check("the box holds a useful amount of text",
+    Number(await page.getAttribute("#opt-owner", "maxlength")) >= 100);
+
+  check("it is read back in the verification block",
+    /get owner\.info/.test(await page.textContent("#verify-block")),
+    await page.textContent("#verify-block"));
+  check("and explained", /set owner\.info K6ABC/.test(await page.textContent("#explain")));
+  check("the hint warns that it is public",
+    /public/.test(await page.textContent("#owner-hint")), await page.textContent("#owner-hint"));
+
+  // Surrounding whitespace is not contact information.
+  await page.fill("#opt-owner", "  matt@example.com  ");
+  await page.waitForTimeout(50);
+  check("padding is trimmed", (await lines()).includes("set owner.info matt@example.com"), await cmds());
+
+  await page.fill("#opt-owner", "   ");
+  await page.waitForTimeout(50);
+  check("whitespace alone counts as empty", !(await cmds()).includes("owner.info"), await cmds());
+
+  // set owner.info landed in 1.12, inside the 1.10-1.13 tier, so it is still
+  // offered there — with the caveat spelled out.
+  await page.fill("#opt-owner", "matt@example.com");
+  await page.selectOption("#opt-fw", "110");
+  await page.waitForTimeout(50);
+  check("still sent on the oldest tier",
+    (await lines()).includes("set owner.info matt@example.com"), await cmds());
+  check("which names the version that added it",
+    /1\.12/.test(await page.textContent("#owner-hint")), await page.textContent("#owner-hint"));
+  await page.selectOption("#opt-fw", "116");
+  check("no such caveat on current firmware",
+    !/1\.12/.test(await page.textContent("#owner-hint")), await page.textContent("#owner-hint"));
+
+  await page.fill("#opt-owner", "");
+  await page.waitForTimeout(50);
+}
+
 /* ---------- editing ---------- */
 
 check("editor is hidden until asked for", await page.isHidden("#commands-edit"));

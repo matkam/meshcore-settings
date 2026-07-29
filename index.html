@@ -182,6 +182,12 @@
       <summary>Options</summary>
       <div class="advanced-body">
         <div class="field">
+          <label for="opt-owner">Owner info</label>
+          <input id="opt-owner" type="text" maxlength="120" autocomplete="off"
+                 spellcheck="false" placeholder="you@example.com · @you on Discord · K6ABC">
+          <p class="hint" id="owner-hint"></p>
+        </div>
+        <div class="field">
           <label for="opt-duty">Duty cycle limit (%)</label>
           <input id="opt-duty" type="number" min="1" max="100" step="1" value="100">
           <p class="hint" id="duty-hint"></p>
@@ -299,7 +305,8 @@
       </li>
       <li>
         <strong>Region filtering needs firmware 1.10+.</strong> Newer commands landed later:
-        <code>set path.hash.mode</code> in 1.14, <code>set dutycycle</code> in 1.15 (replacing
+        <code>set owner.info</code> in 1.12, <code>set path.hash.mode</code> in 1.14,
+        <code>set dutycycle</code> in 1.15 (replacing
         <code>set af</code>), and <code>region def</code> in 1.16. Check yours with
         <code>ver</code> and pick the matching version above — if a command still comes back
         unknown, you're on older firmware than you selected.
