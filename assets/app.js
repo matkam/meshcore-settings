@@ -40,7 +40,7 @@
   //   1.10  region put / allowf / save
   //   1.12  region list {allowed|denied}
   //   1.14  set path.hash.mode
-  //   1.15  set dutycycle (set af deprecated)
+  //   1.15  set dutycycle (set af deprecated), region put allows flooding by default
   //   1.16  region def
   function caps() {
     var v = parseInt(els.fw.value, 10);
@@ -48,6 +48,8 @@
       version: v,
       regionDef: v >= 116,
       dutycycle: v >= 115,
+      // 1.15+ flood-allows a region as it is put, so allowf is redundant there.
+      explicitAllowf: v < 115,
       hashMode: v >= 114,
       regionList: v >= 112
     };
@@ -55,8 +57,8 @@
 
   var FW_HINTS = {
     116: "Everything current: the whole chain goes in one region def line.",
-    115: "region def landed in 1.16, so the chain is built with region put / region allowf pairs instead.",
-    114: "Predates set dutycycle (1.15), so the duty cycle is set with the older set af airtime factor.",
+    115: "region def landed in 1.16, so each name is placed with its own region put. Flooding is allowed as they are created.",
+    114: "Predates set dutycycle (1.15), so the duty cycle uses the older set af airtime factor, and each region needs an explicit region allowf.",
     110: "Predates set dutycycle (1.15) and set path.hash.mode (1.14), so both are handled differently or skipped."
   };
 
@@ -376,7 +378,7 @@
         // No parent argument on the first token: region put defaults to the
         // wildcard root, which is exactly where the chain starts.
         regionLines.push(i === 0 ? "region put " + code : "region put " + code + " " + codes[i - 1]);
-        regionLines.push("region allowf " + code);
+        if (c.explicitAllowf) { regionLines.push("region allowf " + code); }
       });
     }
     lines = lines.concat(regionLines);
@@ -545,9 +547,12 @@
     } else {
       items.push(["region put <name> [parent]  ×" + chainCodes.length,
         "Builds the same chain " + chainCodes.join(" → ") + " one name at a time. " +
-        "The first, " + chainCodes[0] + ", takes no parent argument, so it lands under the wildcard root."]);
-      items.push(["region allowf <name>  ×" + chainCodes.length,
-        "Permits flooding for each name. region put allows flooding by default, but setting it explicitly is harmless and makes the config self-documenting."]);
+        "The first, " + chainCodes[0] + ", takes no parent argument, so it lands under the wildcard root." +
+        (built.caps.explicitAllowf ? "" : " Each region is flood-allowed as it is created.")]);
+      if (built.caps.explicitAllowf) {
+        items.push(["region allowf <name>  ×" + chainCodes.length,
+          "Permits flooding for each name. On this firmware region put does not do it for you, so without these the regions exist but drop scoped traffic."]);
+      }
     }
 
     if (els.home.checked) {

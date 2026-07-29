@@ -22,9 +22,13 @@ yours and the commands adapt:
 | Version | Duty cycle | Path hash | Region tree |
 | --- | --- | --- | --- |
 | 1.16+ | `set dutycycle` | `set path.hash.mode` | `region def` (one line) |
-| 1.15 | `set dutycycle` | `set path.hash.mode` | `region put` + `region allowf` |
+| 1.15 | `set dutycycle` | `set path.hash.mode` | `region put` per level |
 | 1.14 | `set af` | `set path.hash.mode` | `region put` + `region allowf` |
 | 1.10 – 1.13 | `set af` | *(not supported)* | `region put` + `region allowf` |
+
+From 1.15 a region is flood-allowed as it's created, so `region allowf` is only
+emitted for 1.14 and older, where the regions would otherwise exist but drop
+scoped traffic.
 
 Same tree, different syntax. On 1.10–1.13 that same North County example becomes:
 

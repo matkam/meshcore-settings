@@ -156,9 +156,10 @@
     </p>
     <p>
       <code>region def</code> arrived in firmware 1.16. Before that the same tree is built one
-      name at a time with <code>region put &lt;name&gt; [parent]</code>, each followed by
-      <code>region allowf &lt;name&gt;</code> to permit flooding. Switch the firmware version above
-      and you'll get that longer form instead — it produces an identical tree.
+      name at a time with <code>region put &lt;name&gt; [parent]</code>. On 1.15 that is all you
+      need — regions are flood-allowed as they're created. On 1.14 and older each one also
+      needs an explicit <code>region allowf &lt;name&gt;</code>. Switch the firmware version above
+      and you'll get the right form; the resulting tree is identical either way.
     </p>
 
     <h3>Things worth knowing</h3>
