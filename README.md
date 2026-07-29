@@ -108,10 +108,15 @@ Firefox support neither API**, so copy-paste stays the primary path for everyone
 Once connected, the repeater can answer both questions the page otherwise asks you:
 
 - **Location** comes from the advertised lat/lon in the companion's contact record,
-  so it needs no login. It's matched to the nearest area centroid and offered as a
-  **suggestion you click to accept** — never applied silently. Nearest-centroid
-  matching is a guess, and some areas genuinely sit a few km apart (Yuba City and
-  Marysville face each other across the river). A match further than 25 km is
+  so it needs no login. Each area is represented by a single centroid, so the
+  nearest one is a guess rather than an answer — some areas genuinely sit a few km
+  apart (Yuba City and Marysville face each other across the river), and a large
+  area's centroid can be well away from where a node actually is. So the page
+  offers a **shortlist of up to three, closest first, with distances** and you
+  click the right one; nothing is applied silently. Runners-up are only listed
+  while they're within 25 km of the closest match, so a genuinely isolated area
+  offers just itself. The choices stay on screen after you pick, so a wrong guess
+  is one click to correct. If even the closest match is further than 25 km it's
   reported but not offered, and a node that doesn't advertise a position says so.
 - **Firmware version** comes from running `ver` after login, which replies
   `<version> (Build: <date>)`. That's the device stating a fact about itself, so the
