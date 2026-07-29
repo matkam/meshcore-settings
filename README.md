@@ -165,6 +165,35 @@ Before opening a PR:
 npm run validate
 ```
 
+## Deployment and PR previews
+
+GitHub Pages serves one site per repo, so everything lives on the `gh-pages`
+branch: production at the root, and each open PR at `/pr-<number>/`.
+
+| Trigger | Publishes to |
+| --- | --- |
+| push to `main` | site root |
+| PR opened / updated | `/pr-<number>/`, linked in a PR comment |
+| PR closed | preview directory deleted |
+
+Both paths run `.github/scripts/publish.sh`, which is careful about the one thing
+that could go wrong: a root publish replaces the root **but never touches `pr-*`**,
+and a preview publish touches only its own directory. Publishes are serialised
+through a shared concurrency group and retry on a rejected push, since both can
+target the branch at once.
+
+Previews are served over HTTPS, which matters — Web Serial and Web Bluetooth
+require a secure context, so the push panel is fully testable from a preview URL.
+All asset paths are relative, so a copy under `pr-12/` runs unmodified.
+
+Previews are skipped for PRs from forks: a fork's token is read-only and cannot
+publish. The alternative, `pull_request_target`, would run fork code with a write
+token, which is not worth a preview.
+
+> **Repo setting this depends on:** Settings → Pages → Source must be
+> **Deploy from a branch**, branch `gh-pages`, folder `/ (root)`. The workflows
+> only push the branch; GitHub serves it.
+
 ## Adding or fixing an area
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). Short version: add an entry to the right
