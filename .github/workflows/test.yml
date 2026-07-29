@@ -1,0 +1,35 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # The site itself has no dependencies. This is Playwright, for the tests.
+      - run: npm install
+
+      # Chromium only — the suites drive Web Serial and Web Bluetooth, which
+      # Firefox and WebKit don't implement, so there is nothing to gain there.
+      - run: npx playwright install --with-deps chromium
+
+      - run: npm run validate
+
+      - run: npm test
+
+      # Worth having when a UI test fails on a machine nobody can look at.
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: screenshots
+          path: tests/screenshots/
+          if-no-files-found: ignore

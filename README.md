@@ -247,6 +247,7 @@ Two things worth knowing:
 | `data/regions.js` | **The region tree.** This is the file worth editing. |
 | `data/counties.js` | County outlines for the map — generated, don't hand-edit |
 | `scripts/validate.mjs` | Uniqueness / length / depth / coordinate checks |
+| `tests/` | Browser tests — see [Tests](#tests) |
 | `scripts/build-counties.mjs` | Regenerates `data/counties.js` from a GeoJSON |
 
 The vendored library is plain ES modules with relative imports, so the browser loads
@@ -268,6 +269,42 @@ Before opening a PR:
 
 ```sh
 npm run validate
+```
+
+## Tests
+
+Browser tests, driven by Playwright against a simulated companion radio, so the
+over-the-air flow is exercised without hardware:
+
+```sh
+npm install          # Playwright — the site itself still has no dependencies
+npm test             # all suites
+npm test -- map      # just one
+```
+
+`npm test` serves the repo on a random free port and runs each suite in its own
+process, so one broken suite can't take the others' results with it. On CI they
+run against every PR, and screenshots are uploaded when something fails.
+
+| Suite | What it covers |
+| --- | --- |
+| `basic` | Search, cascading selects, deep links, copy |
+| `firmware` | Command output on each of the four version tiers |
+| `detect` | Reading position and firmware from a connected repeater |
+| `flow` | Landing on the page cold and working through it |
+| `push` | Sending over the air, stopping at a failure, resuming |
+| `map` | Drawing, hover, picking at all three levels, zoom and pan |
+| `settings` | Loop detection, flood advert interval, editing the commands |
+
+`tests/sim.mjs` is the fake device: it answers the companion protocol over a
+stubbed Web Serial port, so a test can specify what the repeater reports and how
+it replies to each command.
+
+If Playwright can't find a browser — some environments pre-install one whose
+build number doesn't match the npm package — point it at the binary:
+
+```sh
+CHROMIUM_PATH=/path/to/chrome npm test
 ```
 
 ## Deployment and PR previews
