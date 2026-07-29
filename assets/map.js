@@ -34,8 +34,13 @@
   var DOT_SELECTED_PX = 5;
   var LABEL_PX = 11;
   // The pointer only has to be closest, not accurate — see the nearest-dot
-  // lookup below. This is how far "closest" is still allowed to be.
-  var HIT_PX = 22;
+  // lookup below. This is how far "closest" is still allowed to be, so a dot
+  // owns a disc twice this wide.
+  //
+  // It has to stay modest. There are 162 dots: at 22 the discs covered four
+  // fifths of the state's land area, which left most of the map unable to hover
+  // or click the county it was over.
+  var HIT_PX = 12;
 
   // Region labels are placed automatically, but a few land badly: the Bay Area's
   // areas cluster so tightly that its label needs pushing out over the water, and
@@ -141,8 +146,10 @@
     var nudge = LABEL_NUDGE[region.code] || [0, 0];
 
     var text = document.createElementNS(SVG_NS, "text");
-    text.setAttribute("x", cx + nudge[0]);
-    text.setAttribute("y", cy + nudge[1]);
+    text.dataset.baseX = cx + nudge[0];
+    text.dataset.baseY = cy + nudge[1];
+    text.setAttribute("x", text.dataset.baseX);
+    text.setAttribute("y", text.dataset.baseY);
     text.setAttribute("class", "map-label");
     text.dataset.region = region.code;
     text.textContent = region.code.toUpperCase();
@@ -186,12 +193,87 @@
     gLabels.style.setProperty("--label-size", (LABEL_PX * unitsPerPx).toFixed(2));
   }
 
+  /* ---------- keeping labels off the dots ----------
+   * A label that covers a dot makes that area unreachable: the label is hit
+   * first, by design, so that a label among dots stays clickable. Yuba City and
+   * Marysville sat under SV, and Temecula under SOC.
+   *
+   * Nudging those by hand would fix today and break the next time somebody adds
+   * an area near a label, so the label looks for its own clear spot instead —
+   * starting from where it wants to be and spiralling out until nothing is
+   * underneath. Re-run on resize, since the label's size in map units changes.
+   */
+
+  var LABEL_PAD = 2;       // viewBox units of clearance around the glyph box
+  var LABEL_STEPS = [0, 14, 28, 44, 62];
+  var LABEL_DIRS = [
+    [0, -1], [0, 1], [-1, 0], [1, 0],
+    [-0.7, -0.7], [0.7, -0.7], [-0.7, 0.7], [0.7, 0.7]
+  ];
+
+  function boxIsClear(box, ignoreLabel) {
+    if (box.x < vb.x || box.x + box.width > vb.x + vb.width ||
+        box.y < vb.y || box.y + box.height > vb.y + vb.height) {
+      return false;
+    }
+    for (var i = 0; i < areas.length; i++) {
+      if (areas[i].x >= box.x - LABEL_PAD && areas[i].x <= box.x + box.width + LABEL_PAD &&
+          areas[i].y >= box.y - LABEL_PAD && areas[i].y <= box.y + box.height + LABEL_PAD) {
+        return false;
+      }
+    }
+    // Labels must not stack on each other either.
+    var others = gLabels.querySelectorAll(".map-label");
+    for (var j = 0; j < others.length; j++) {
+      if (others[j] === ignoreLabel || !others[j].dataset.placed) { continue; }
+      var b = others[j].getBBox();
+      if (box.x < b.x + b.width && box.x + box.width > b.x &&
+          box.y < b.y + b.height && box.y + box.height > b.y) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function placeLabels() {
+    var labels = gLabels.querySelectorAll(".map-label");
+    var i;
+    for (i = 0; i < labels.length; i++) { delete labels[i].dataset.placed; }
+
+    for (i = 0; i < labels.length; i++) {
+      var text = labels[i];
+      var baseX = parseFloat(text.dataset.baseX);
+      var baseY = parseFloat(text.dataset.baseY);
+      var best = null;
+
+      outer:
+      for (var s = 0; s < LABEL_STEPS.length; s++) {
+        var dirs = LABEL_STEPS[s] === 0 ? [[0, 0]] : LABEL_DIRS;
+        for (var d = 0; d < dirs.length; d++) {
+          var x = baseX + dirs[d][0] * LABEL_STEPS[s];
+          var y = baseY + dirs[d][1] * LABEL_STEPS[s];
+          text.setAttribute("x", x);
+          text.setAttribute("y", y);
+          if (boxIsClear(text.getBBox(), text)) { best = [x, y]; break outer; }
+        }
+      }
+
+      // Nowhere is clear — put it back where it belongs and accept the overlap
+      // rather than flinging it into the ocean.
+      if (!best) { best = [baseX, baseY]; }
+      text.setAttribute("x", best[0]);
+      text.setAttribute("y", best[1]);
+      text.dataset.placed = "1";
+    }
+  }
+
   if (window.ResizeObserver) {
-    new ResizeObserver(resize).observe(svg);
+    new ResizeObserver(function () { resize(); placeLabels(); }).observe(svg);
   } else {
-    window.addEventListener("resize", resize);
+    window.addEventListener("resize", function () { resize(); placeLabels(); });
   }
   resize();
+  placeLabels();
 
   /* ---------- hover ---------- */
 
@@ -227,7 +309,7 @@
     var label = hitLabel(evt);
     if (label) {
       var region = regionByCode(label.dataset.region);
-      setHover({ kind: "region", code: label.dataset.region, el: label,
+      setHover({ kind: "region", code: label.dataset.region, els: [label],
                  label: region.name, sub: "Click for a region-wide scope" }, evt);
       return;
     }
@@ -236,7 +318,12 @@
     // the pointer was aiming for, and it only has to be the closest.
     var dot = nearestDot(at.x, at.y);
     if (dot) {
-      setHover({ kind: "area", code: dot.area.code, el: dot.el,
+      // The dot's county lights up too. Selecting an area selects its county as
+      // part of the chain, so this previews what a click actually does — and it
+      // means the county under the pointer responds everywhere, rather than only
+      // in the gaps between dots.
+      setHover({ kind: "area", code: dot.area.code,
+                 els: [dot.el, countyEls[dot.county.code]],
                  label: dot.area.name, sub: dot.county.name + " · " + dot.region.name }, evt);
       return;
     }
@@ -244,7 +331,7 @@
     var path = evt.target.closest ? evt.target.closest(".map-county") : null;
     if (path && path.dataset.county) {
       var entry = byCountyCode(path.dataset.county);
-      setHover({ kind: "county", code: path.dataset.county, el: path,
+      setHover({ kind: "county", code: path.dataset.county, els: [path],
                  label: entry.county.name, sub: entry.region.name + " · click for a county-wide scope" }, evt);
       return;
     }
@@ -271,7 +358,9 @@
   function setHover(next, evt) {
     if (!hovered || hovered.code !== next.code) {
       clearMarks("is-hover");
-      if (next.el) { next.el.classList.add("is-hover"); }
+      (next.els || []).forEach(function (el) {
+        if (el) { el.classList.add("is-hover"); }
+      });
       hovered = next;
     }
     // textContent, not innerHTML: these names come from a data file that
