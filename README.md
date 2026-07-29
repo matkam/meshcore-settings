@@ -93,15 +93,40 @@ Region names live in one flat namespace on a node, so codes must be unique acros
 the entire file — `npm run validate` enforces that, along with the 160-character
 serial line limit and MeshCore's 8-level depth cap.
 
+## Pushing settings over the air
+
+On browsers with Web Serial or Web Bluetooth (Chrome/Edge desktop, plus Chrome on
+Android for Bluetooth), the page can talk to a MeshCore companion node directly and
+apply the settings itself: pick a repeater from the companion's contacts, log in
+with its admin password, and the generated commands are sent one at a time.
+
+The panel is feature-detected and simply doesn't appear otherwise — **iOS and
+Firefox support neither API**, so copy-paste stays the primary path for everyone.
+
+Two things worth knowing:
+
+- Each command is a separate LoRa round trip. The flow **stops at the first
+  failure** and resumes from that line rather than continuing, because a partly
+  applied region chain leaves the repeater holding some names and silently dropping
+  traffic for the rest. On 1.16+ the whole chain is one `region def` packet, which
+  is a real reliability advantage over the ten-packet `region put` sequence.
+- The admin password never leaves the browser except over USB/BLE to your own
+  companion node, and is never written to storage or the URL. There is no server.
+
 ## Layout
 
 | Path | What it is |
 | --- | --- |
 | `index.html` | The page |
-| `assets/app.js` | Search, cascading selects, command generation. No dependencies. |
+| `assets/app.js` | Search, cascading selects, command generation |
+| `assets/push.js` | Over-the-air flow: connect, log in, send, verify, resume |
+| `assets/vendor/meshcore.js/` | Vendored [meshcore.js](https://github.com/liamcottle/meshcore.js) (MIT), pinned — see its README |
 | `assets/style.css` | Styles, light and dark |
 | `data/regions.js` | **The region tree.** This is the file worth editing. |
 | `scripts/validate.mjs` | Uniqueness / length / depth checks |
+
+The vendored library is plain ES modules with relative imports, so the browser loads
+it directly — there is still no build step and no package manager.
 
 ## Running it locally
 

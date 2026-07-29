@@ -465,6 +465,142 @@ pre.tree {
   line-height: 1.6;
 }
 
+/* ---------- push panel ---------- */
+
+.step.alt { background: var(--warn); }
+
+.badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--warn);
+  background: var(--warn-bg);
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+
+.warn-box {
+  background: var(--warn-bg);
+  border: 1px solid color-mix(in srgb, var(--warn) 35%, transparent);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin: 16px 0;
+  font-size: 0.9rem;
+}
+
+.warn-box strong { color: var(--warn); }
+
+.action {
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  padding: 9px 18px;
+  margin: 0 8px 8px 0;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.action:hover:not(:disabled) { border-color: var(--accent); }
+
+.action:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.action.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+@media (prefers-color-scheme: dark) {
+  .action.primary { color: #0d1a16; }
+}
+
+.action.quiet { color: var(--ink-soft); }
+
+.push-actions { margin: 18px 0 4px; }
+
+.conn-status {
+  margin: 0 0 16px;
+  font-size: 0.88rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.progress {
+  list-style: none;
+  margin: 18px 0 10px;
+  padding: 0;
+  counter-reset: cmd;
+}
+
+.progress .prog {
+  position: relative;
+  padding: 8px 0 8px 30px;
+  border-top: 1px solid var(--line);
+  counter-increment: cmd;
+}
+
+.progress .prog::before {
+  content: counter(cmd);
+  position: absolute;
+  left: 0;
+  top: 9px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  background: var(--line);
+  color: var(--ink-soft);
+}
+
+.progress .ok::before {
+  content: "✓";
+  background: var(--accent);
+  color: #fff;
+}
+
+.progress .fail::before {
+  content: "!";
+  background: var(--warn);
+  color: #fff;
+}
+
+.progress .active::before {
+  content: "…";
+  background: var(--ink-soft);
+  color: #fff;
+}
+
+.prog-cmd {
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  background: none;
+  padding: 0;
+}
+
+.progress .todo .prog-cmd { color: var(--ink-soft); }
+
+.prog-reply {
+  margin: 6px 0 0;
+  padding: 8px 10px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  color: var(--ink-soft);
+}
+
+.line-note.ok { color: var(--accent); font-weight: 600; }
+
 /* ---------- footer ---------- */
 
 .site-footer {

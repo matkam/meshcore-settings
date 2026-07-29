@@ -117,6 +117,66 @@
     <div class="explain" id="explain"></div>
   </section>
 
+  <section class="panel" id="push-panel" aria-labelledby="push-heading" hidden>
+    <h2 id="push-heading">
+      <span class="step alt">⚡</span> Push straight to the repeater
+      <span class="badge">experimental</span>
+    </h2>
+
+    <p>
+      Your browser can talk to a MeshCore companion node directly, so these settings
+      can go over the air instead of through copy-paste. You'll need the repeater's
+      admin password, and the companion has to already know the repeater as a contact.
+    </p>
+
+    <div class="warn-box">
+      <strong>Read this first.</strong> Each command is a separate LoRa round trip. If
+      one is lost partway through, the repeater is left half-configured — it will hold
+      some region names and silently drop traffic for the rest. This flow stops at the
+      first failure and lets you resume, but the copy-paste block above is still the
+      more predictable path. Nothing is sent until you press the button.
+    </div>
+
+    <div id="push-connect">
+      <button type="button" id="btn-usb" class="action">Connect over USB</button>
+      <button type="button" id="btn-ble" class="action">Connect over Bluetooth</button>
+      <p class="hint" id="push-support"></p>
+    </div>
+
+    <div id="push-session" hidden>
+      <p class="conn-status" id="conn-status"></p>
+
+      <div class="field">
+        <label for="sel-repeater">Repeater</label>
+        <select id="sel-repeater"></select>
+        <p class="hint" id="repeater-hint"></p>
+      </div>
+
+      <div class="field">
+        <label for="admin-pw">Admin password</label>
+        <input id="admin-pw" type="password" maxlength="15" autocomplete="off"
+               spellcheck="false" placeholder="max 15 characters">
+        <p class="hint">
+          Stays in this browser tab — it goes to your companion node over USB or
+          Bluetooth and then encrypted over the air. This site has no server and never
+          saves the password or puts it in the URL. The only third-party code on the
+          page is the
+          <a href="https://github.com/liamcottle/meshcore.js">meshcore.js</a> library,
+          vendored at a pinned commit.
+        </p>
+      </div>
+
+      <div class="push-actions">
+        <button type="button" id="btn-login" class="action">Log in</button>
+        <button type="button" id="btn-push" class="action primary" disabled>Send settings</button>
+        <button type="button" id="btn-disconnect" class="action quiet">Disconnect</button>
+      </div>
+
+      <ol class="progress" id="push-progress" hidden></ol>
+      <p class="line-note" id="push-status"></p>
+    </div>
+  </section>
+
   <section class="panel" id="client-panel" aria-labelledby="client-heading" hidden>
     <h2 id="client-heading"><span class="step">3</span> Set the scope on your phone</h2>
     <p>
@@ -216,5 +276,6 @@
 
 <script src="data/regions.js"></script>
 <script src="assets/app.js"></script>
+<script type="module" src="assets/push.js"></script>
 </body>
 </html>

@@ -94,6 +94,14 @@
   /* ---------- selection state ---------- */
 
   var current = null;
+  var settingsListeners = [];
+
+  // Consumed by push.js so the over-the-air flow sends exactly what the
+  // copy block shows.
+  window.SettingsState = {
+    get: function () { return current ? buildCommands(current) : null; },
+    onChange: function (fn) { settingsListeners.push(fn); }
+  };
 
   function selectEntry(entry, opts) {
     current = entry;
@@ -417,6 +425,8 @@
 
     els.copy.classList.remove("done");
     els.copy.textContent = "Copy";
+
+    settingsListeners.forEach(function (fn) { fn(built); });
   }
 
   function renderFirmwareHints() {
