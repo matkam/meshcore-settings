@@ -135,11 +135,24 @@ function show() { els.detectBox.hidden = false; }
 const hasSerial = typeof navigator !== "undefined" && !!navigator.serial;
 const hasBle = typeof navigator !== "undefined" && !!navigator.bluetooth;
 
+let conn = null;
+let contacts = [];
+let loggedInTo = null;  // hex public key of the repeater we authenticated with
+let resumeFrom = 0;     // index into the command list to restart at
+let busy = false;
+
+// Declared above the call below: init() reads this state, and `let` bindings
+// are not hoisted the way function declarations are.
+//
 // Without either API there is nothing to offer — leave the panel hidden so the
 // copy-paste flow is all anyone sees.
 if (hasSerial || hasBle) { init(); }
 
 function init() {
+  // Available from the start: connecting is how the selections below get filled
+  // in, so gating this on a selection would invert the flow.
+  els.panel.hidden = false;
+
   els.btnUsb.hidden = !hasSerial;
   els.btnBle.hidden = !hasBle;
   els.support.textContent = hasSerial && hasBle
@@ -157,7 +170,7 @@ function init() {
   els.repeater.addEventListener("change", () => {
     loggedInTo = null;
     resumeFrom = 0;
-    els.btnPush.disabled = true;
+    refreshPushButton();
     els.progress.hidden = true;
     els.detectVer.textContent = "";   // version belongs to the old repeater
     const c = selectedContact();
@@ -166,21 +179,16 @@ function init() {
   });
 
   window.SettingsState.onChange(() => {
-    els.panel.hidden = false;
+    // Always refresh: a selection can appear while a send is in flight.
+    refreshPushButton();
+    // But don't discard resume position mid-send.
     if (busy) { return; }
     resumeFrom = 0;
     els.progress.hidden = true;
   });
 
-  // app.js may already have rendered a deep-linked area before this ran.
-  if (window.SettingsState.get()) { els.panel.hidden = false; }
+  refreshPushButton();
 }
-
-let conn = null;
-let contacts = [];
-let loggedInTo = null;  // hex public key of the repeater we authenticated with
-let resumeFrom = 0;     // index into the command list to restart at
-let busy = false;
 
 /* ---------- helpers ---------- */
 
@@ -192,9 +200,23 @@ function setStatus(text, kind) {
 function setBusy(on) {
   busy = on;
   els.btnLogin.disabled = on;
-  els.btnPush.disabled = on || !loggedInTo;
   els.btnUsb.disabled = on;
   els.btnBle.disabled = on;
+  refreshPushButton();
+}
+
+function hasSelection() {
+  return !!window.SettingsState.get();
+}
+
+// Sending needs both a repeater we're logged in to and an area to send. Either
+// can be missing, so say which.
+function refreshPushButton() {
+  els.btnPush.disabled = busy || !loggedInTo || !hasSelection();
+  els.btnPush.title = busy ? ""
+    : !loggedInTo ? "Log in to the repeater first"
+      : !hasSelection() ? "Choose an area below first"
+        : "";
 }
 
 function toHex(bytes) {
@@ -315,10 +337,10 @@ function fillRepeaters() {
 function onDisconnected() {
   els.connect.hidden = false;
   els.session.hidden = true;
-  els.btnPush.disabled = true;
   loggedInTo = null;
   resumeFrom = 0;
   conn = null;
+  refreshPushButton();
   setStatus("Device disconnected.", "over");
 }
 
@@ -362,6 +384,13 @@ async function login() {
     setStatus("Login failed: " + why, "over");
   } finally {
     setBusy(false);
+  }
+
+  // After setBusy, so the button is already in its final state when this points
+  // at what is still missing.
+  if (loggedInTo && !hasSelection()) {
+    setStatus("Logged in to " + contact.advName +
+              ". Now choose an area below — from the suggestion above, or by hand.");
   }
 }
 
