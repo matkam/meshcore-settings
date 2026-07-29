@@ -13,7 +13,8 @@ an entry to its `areas` list:
 {
   code: "prb",
   name: "North County",
-  cities: ["Paso Robles", "Atascadero", "Templeton", "San Miguel", "Shandon"]
+  cities: ["Paso Robles", "Atascadero", "Templeton", "San Miguel", "Shandon"],
+  lat: 35.627, lon: -120.691
 },
 ```
 
@@ -24,6 +25,10 @@ an entry to its `areas` list:
 - **`cities`** — search aliases only. These never appear in the generated
   commands; they exist so someone can type "Paso Robles" and land on `prb`. List
   the towns people would actually type, including unincorporated ones.
+- **`lat` / `lon`** — a representative point for the area, three decimal places.
+  A connected repeater's advertised position is matched to the nearest one of
+  these, so put it where the nodes actually are (the main town) rather than at the
+  geometric centre of an empty valley.
 
 Then:
 
@@ -32,7 +37,10 @@ npm run validate
 ```
 
 It checks code uniqueness, character set, the 160-character serial line limit on
-the generated `region def`, and MeshCore's 8-level depth cap.
+the generated `region def`, MeshCore's 8-level depth cap, and that coordinates are
+inside California and not duplicated. It warns when two areas are within 4 km,
+since location detection can't reliably tell those apart — that's a warning rather
+than an error because some genuinely are that close.
 
 ## Renaming a code
 

@@ -31,8 +31,105 @@ const els = {
   repeaterHint: $("repeater-hint"),
   password: $("admin-pw"),
   progress: $("push-progress"),
-  status: $("push-status")
+  status: $("push-status"),
+  detectBox: $("detect-box"),
+  detectLoc: $("detect-loc"),
+  detectVer: $("detect-ver"),
+  btnUseLoc: $("btn-use-loc")
 };
+
+/*
+ * A repeater tells us two things we currently ask the user for.
+ *
+ * Position comes from the contact record's advertised lat/lon, so it needs no
+ * login — but it is matched to the nearest area centroid, which is a guess.
+ * Some areas genuinely sit a couple of km apart (Yuba City / Marysville), so
+ * this is offered as a suggestion, never applied silently.
+ *
+ * Firmware version comes from running `ver` after login. That is the device
+ * stating a fact about itself, so it is applied directly.
+ */
+const DETECT_NEAR_KM = 25;   // beyond this the match is too loose to suggest
+
+function detectLocation(contact) {
+  els.btnUseLoc.hidden = true;
+  els.detectLoc.textContent = "";
+
+  // The library hands these back as raw int32 microdegrees, unscaled.
+  const lat = contact.advLat / 1e6;
+  const lon = contact.advLon / 1e6;
+
+  // A node that doesn't advertise position reports 0,0.
+  if (!contact.advLat && !contact.advLon) {
+    els.detectLoc.textContent =
+      "This repeater doesn't advertise a position, so the area above is up to you.";
+    show();
+    return;
+  }
+
+  const hit = window.SettingsState.nearest(lat, lon);
+  if (!hit) { return; }
+
+  const where = lat.toFixed(3) + ", " + lon.toFixed(3);
+  if (hit.km > DETECT_NEAR_KM) {
+    els.detectLoc.textContent =
+      "Repeater reports " + where + ", but the closest area on this site is " +
+      hit.entry.name + ", " + Math.round(hit.km) + " km away. Too far to guess — pick one above.";
+    show();
+    return;
+  }
+
+  els.detectLoc.textContent =
+    "Repeater reports " + where + " — closest match is " + hit.entry.name +
+    " (" + hit.entry.context + "), " + hit.km.toFixed(1) + " km away.";
+  els.btnUseLoc.textContent = "Use " + hit.entry.name;
+  els.btnUseLoc.hidden = false;
+  els.btnUseLoc.onclick = () => {
+    window.SettingsState.select(hit.entry.code);
+    els.btnUseLoc.hidden = true;
+    els.detectLoc.textContent = "Area set to " + hit.entry.name + " from the repeater's position.";
+  };
+  show();
+}
+
+// Map a reported firmware version onto the tiers the generator understands.
+function firmwareTier(major, minor) {
+  if (major > 1) { return "116"; }
+  if (minor >= 16) { return "116"; }
+  if (minor === 15) { return "115"; }
+  if (minor === 14) { return "114"; }
+  return "110";
+}
+
+async function detectFirmware(contact) {
+  els.detectVer.textContent = "Asking the repeater its firmware version…";
+  show();
+
+  let reply;
+  try {
+    reply = await runCli(contact.publicKey, "ver");
+  } catch (e) {
+    els.detectVer.textContent =
+      "Couldn't read the firmware version (" + describe(e) + ") — set it manually above.";
+    return;
+  }
+
+  // `ver` replies "<version> (Build: <date>)"; take the first version-looking token.
+  const m = reply.match(/(\d+)\.(\d+)(?:\.(\d+))?/);
+  if (!m) {
+    els.detectVer.textContent =
+      'Repeater said "' + reply.trim() + '", which has no recognisable version — set it manually.';
+    return;
+  }
+
+  const tier = firmwareTier(parseInt(m[1], 10), parseInt(m[2], 10));
+  const labels = { 116: "1.16 or newer", 115: "1.15", 114: "1.14", 110: "1.10 – 1.13" };
+  window.SettingsState.setFirmware(tier);
+  els.detectVer.textContent =
+    "Repeater reports " + reply.trim() + " — firmware set to " + labels[tier] + ".";
+}
+
+function show() { els.detectBox.hidden = false; }
 
 // Truthiness rather than `in` — some browsers expose the property as undefined.
 const hasSerial = typeof navigator !== "undefined" && !!navigator.serial;
@@ -62,6 +159,9 @@ function init() {
     resumeFrom = 0;
     els.btnPush.disabled = true;
     els.progress.hidden = true;
+    els.detectVer.textContent = "";   // version belongs to the old repeater
+    const c = selectedContact();
+    if (c) { detectLocation(c); }
     setStatus("Log in to this repeater to continue.");
   });
 
@@ -138,6 +238,8 @@ async function connect(kind) {
     contacts = await withTimeout(conn.getContacts(), 20000, "contact list");
 
     fillRepeaters();
+    const first = selectedContact();
+    if (first) { detectLocation(first); }
     els.connect.hidden = true;
     els.session.hidden = false;
     els.connStatus.textContent = "Connected over " + (kind === "usb" ? "USB" : "Bluetooth") + ".";
@@ -250,6 +352,8 @@ async function login() {
     loggedInTo = toHex(contact.publicKey);
     resumeFrom = 0;
     setStatus("Logged in to " + contact.advName + ".", "ok");
+    // Now that we're authenticated, ask the repeater what it's running.
+    await detectFirmware(contact);
   } catch (e) {
     // login() rejects with "timeout" or bare undefined depending on the failure.
     const why = !e ? "no response — wrong password, or the repeater is out of reach"

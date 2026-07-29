@@ -97,11 +97,49 @@
   var settingsListeners = [];
 
   // Consumed by push.js so the over-the-air flow sends exactly what the
-  // copy block shows.
+  // copy block shows, and so a connected repeater can drive the selections.
   window.SettingsState = {
     get: function () { return current ? buildCommands(current) : null; },
-    onChange: function (fn) { settingsListeners.push(fn); }
+    onChange: function (fn) { settingsListeners.push(fn); },
+
+    // Nearest local area to a position, for "where is this repeater?".
+    nearest: function (lat, lon) {
+      var best = null;
+      index.forEach(function (e) {
+        if (e.level !== "area") { return; }
+        var km = haversineKm(lat, lon, e.area.lat, e.area.lon);
+        if (!best || km < best.km) { best = { entry: e, km: km }; }
+      });
+      return best;
+    },
+
+    select: function (code) {
+      var entry = byCode[code];
+      if (!entry) { return false; }
+      els.search.value = entry.name;
+      selectEntry(entry);
+      return true;
+    },
+
+    setFirmware: function (tier) {
+      if (!els.fw.querySelector('option[value="' + tier + '"]')) { return false; }
+      els.fw.value = tier;
+      render();
+      return true;
+    },
+
+    firmwareTier: function () { return els.fw.value; }
   };
+
+  function haversineKm(lat1, lon1, lat2, lon2) {
+    var R = 6371;
+    var toRad = function (d) { return (d * Math.PI) / 180; };
+    var dLat = toRad(lat2 - lat1);
+    var dLon = toRad(lon2 - lon1);
+    var s = Math.pow(Math.sin(dLat / 2), 2) +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.pow(Math.sin(dLon / 2), 2);
+    return 2 * R * Math.asin(Math.sqrt(s));
+  }
 
   function selectEntry(entry, opts) {
     current = entry;

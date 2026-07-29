@@ -103,6 +103,25 @@ with its admin password, and the generated commands are sent one at a time.
 The panel is feature-detected and simply doesn't appear otherwise — **iOS and
 Firefox support neither API**, so copy-paste stays the primary path for everyone.
 
+### Filling in the selections from the repeater
+
+Once connected, the repeater can answer both questions the page otherwise asks you:
+
+- **Location** comes from the advertised lat/lon in the companion's contact record,
+  so it needs no login. It's matched to the nearest area centroid and offered as a
+  **suggestion you click to accept** — never applied silently. Nearest-centroid
+  matching is a guess, and some areas genuinely sit a few km apart (Yuba City and
+  Marysville face each other across the river). A match further than 25 km is
+  reported but not offered, and a node that doesn't advertise a position says so.
+- **Firmware version** comes from running `ver` after login, which replies
+  `<version> (Build: <date>)`. That's the device stating a fact about itself, so the
+  version selector is set directly. An unparseable reply is reported and the
+  selector left alone.
+
+Area centroids live alongside each area in `data/regions.js`. `npm run validate`
+checks they're inside California, that no two are identical, and warns when two are
+close enough that detection can't reliably tell them apart.
+
 Two things worth knowing:
 
 - Each command is a separate LoRa round trip. The flow **stops at the first
