@@ -142,6 +142,41 @@ the hashes it stamps on its own adverts:
 
 The firmware default is `off`, so sending `moderate` is a deliberate change.
 
+## What kind of site is it?
+
+Location tells the generator *where* you are. It doesn't tell it **whose local
+traffic should cross you** — and for one kind of repeater that's a real decision.
+The principle, from the
+[PNW region strategy](https://gessaman.com/meshcore/regions/), is that **RF reach
+is not a scope boundary**: a mountaintop node is heard far beyond the areas it
+carries tags for, but it only forwards traffic matching a tag it holds, and the
+non-matching neighbour that hears it won't re-forward. A local message pushed
+into non-matching territory dies one hop later.
+
+So **Options → What kind of site is this?** offers three answers:
+
+| Answer | Chain | For |
+| --- | --- | --- |
+| **Home, neighbourhood, urban, or a high site serving one area** (default) | full ancestry | Almost everything |
+| **Dedicated long-haul link** | `west ca` only | A relay between distant areas that shouldn't carry either end's chatter |
+| **High site bridging two areas** | full ancestry **+ a second area's chain** | A site that genuinely joins two communities |
+
+Note what this deliberately does **not** do: it never strips tags from a small
+node. Limited range is not a reason to carry less — a neighbourhood repeater
+needs the same full ancestry as a backbone one. Omitting a tag doesn't reduce
+your load meaningfully (wide-scope traffic is rare by design); it just cuts off
+the devices that reach the mesh through you, and leaves a hole in coverage for
+the neighbours behind you. Only the long-haul case drops tags, and only because
+carrying none of the local ones is the whole point of a long-haul link.
+
+Bridging is deliberately awkward to reach and labelled *use sparingly*: if many
+high sites carry two local tags, local scoping stops meaning anything.
+
+One thing this site doesn't model at all: **channel scope is a separate choice
+from the tags a repeater carries.** Carry the full ancestry on the node, then
+scope each channel to match how far that conversation should travel. Metro-level
+scope is the right default for local chat, not the widest tag available.
+
 ## Editing the commands
 
 The generated block has an **Edit** button. Anything you type there becomes what
@@ -185,6 +220,10 @@ these. What actually matters is that the repeaters around you use the same names
 The codes here follow the widely used `west` / `ca` top-level tags and stay short
 and lowercase, but **check with your local mesh group before deploying**, and open
 a PR if your area is missing or named wrong.
+
+Region names never appear in packets — a scoped packet carries two 16-bit
+transport codes derived from the region's key, so a code's length has no effect on
+airtime. Codes are short for legibility at the console, nothing more.
 
 Region names live in one flat namespace on a node, so codes must be unique across
 the entire file — `npm run validate` enforces that, along with the 160-character
@@ -295,6 +334,7 @@ run against every PR, and screenshots are uploaded when something fails.
 | `push` | Sending over the air, stopping at a failure, resuming |
 | `map` | Drawing, hover, picking at all three levels, zoom and pan |
 | `settings` | Loop detection, flood advert interval, editing the commands |
+| `role` | Site role: long-haul truncation, bridging, shared-ancestry dedup |
 
 `tests/sim.mjs` is the fake device: it answers the companion protocol over a
 stubbed Web Serial port, so a test can specify what the repeater reports and how

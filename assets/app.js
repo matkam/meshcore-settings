@@ -40,7 +40,12 @@
     editBtn: $("edit-cmds"),
     editNote: $("edit-note"),
     editNoteText: $("edit-note-text"),
-    resetBtn: $("reset-cmds")
+    resetBtn: $("reset-cmds"),
+    role: $("opt-role"),
+    roleHint: $("role-hint"),
+    bridge: $("opt-bridge"),
+    bridgeField: $("bridge-field"),
+    bridgeHint: $("bridge-hint")
   };
 
   /* ---------- firmware capabilities ---------- */
@@ -278,6 +283,24 @@
     o.value = value;
     o.textContent = label;
     return o;
+  }
+
+  // Every area in the state, grouped by county, for the bridge case. A second
+  // tag is only ever a peer area — bridging is about two local communities, not
+  // about reaching further up the tree.
+  function fillBridge() {
+    els.bridge.appendChild(option("", "Choose the other area…"));
+    DATA.regions.forEach(function (region) {
+      region.counties.forEach(function (county) {
+        if (!county.areas || !county.areas.length) { return; }
+        var group = document.createElement("optgroup");
+        group.label = county.name + " · " + region.name;
+        county.areas.forEach(function (a) {
+          group.appendChild(option(a.code, a.name));
+        });
+        els.bridge.appendChild(group);
+      });
+    });
   }
 
   function fillRegions() {
@@ -536,9 +559,50 @@
     return v;
   }
 
+  /* ---------- site role ----------
+   *
+   * From the PNW region strategy's treatment of backbone and high-site
+   * repeaters. The principle it turns on is that RF reach is not a scope
+   * boundary: a mountaintop node is heard far past the areas it carries tags
+   * for, but it only ever forwards traffic matching a tag it holds, and a
+   * non-matching neighbour will not re-forward it. So the question a high site
+   * has to answer is not where it is, but whose local traffic should cross it.
+   *
+   * Note what this deliberately does NOT do: it does not strip tags from small
+   * nodes. Limited range is not a reason to carry less. A neighbourhood repeater
+   * should hold the same full ancestry as a backbone one — omitting a tag only
+   * cuts off the devices that reach the mesh through it, and the wide-scope
+   * traffic it then relays is rare by design.
+   */
+
+  function role() { return els.role.value; }
+
+  // The chains this node should carry. Usually one; a bridge carries two.
+  function chainsFor(entry) {
+    var primary = chainOf(entry);
+
+    if (role() === "longhaul") {
+      // Strategy 1: ancestry to the state level and no further, so state-wide
+      // and mesh-wide traffic crosses the link but neither end's local chatter
+      // does. ROOT is west + ca.
+      return [primary.slice(0, ROOT.length)];
+    }
+
+    if (role() === "bridge") {
+      var second = byCode[els.bridge.value];
+      // An unset or nonsensical second area is just the ordinary case.
+      if (second && second.code !== entry.code) {
+        return [primary, chainOf(second)];
+      }
+    }
+
+    return [primary];
+  }
+
   function buildCommands(entry) {
     var c = caps();
-    var chain = chainOf(entry);
+    var chains = chainsFor(entry);
+    var chain = chains[0];
     var codes = chain.map(function (x) { return x.code; });
     var leaf = codes[codes.length - 1];
 
@@ -553,18 +617,31 @@
       lines.push("set loop.detect " + els.loop.value);
     }
 
-    // The region block, in whichever form this firmware understands.
+    // The region block, in whichever form this firmware understands. One chain
+    // normally; a bridge site emits a second, and shares the ancestry the two
+    // have in common rather than repeating it.
     var regionLines = [];
-    if (c.regionDef) {
-      regionLines.push("region def " + codes.join(" "));
-    } else {
-      codes.forEach(function (code, i) {
-        // No parent argument on the first token: region put defaults to the
-        // wildcard root, which is exactly where the chain starts.
-        regionLines.push(i === 0 ? "region put " + code : "region put " + code + " " + codes[i - 1]);
+    var placed = {};
+    chains.forEach(function (ch) {
+      var chCodes = ch.map(function (x) { return x.code; });
+      if (c.regionDef) {
+        // A separate def line per chain: the cursor resets to the root between
+        // commands, and re-stating a name only updates its parent to the same
+        // value, so the two lines compose without clobbering each other.
+        regionLines.push("region def " + chCodes.join(" "));
+        return;
+      }
+      chCodes.forEach(function (code, i) {
+        if (placed[code]) { return; }
+        placed[code] = true;
+        // No parent argument on the first token, so it lands under the reserved
+        // root entry `*`. That root is not a wildcard: it does not match
+        // configured names, it is the bucket the firmware uses for unscoped
+        // flood traffic. Scoped traffic only matches regions the node carries.
+        regionLines.push(i === 0 ? "region put " + code : "region put " + code + " " + chCodes[i - 1]);
         if (c.explicitAllowf) { regionLines.push("region allowf " + code); }
       });
-    }
+    });
     lines = lines.concat(regionLines);
 
     if (els.home.checked) {
@@ -573,7 +650,8 @@
     }
     lines.push("region save");
 
-    return { lines: lines, regionLines: regionLines, chain: chain, leaf: leaf, caps: c };
+    return { lines: lines, regionLines: regionLines, chain: chain, chains: chains,
+             leaf: leaf, caps: c, role: role() };
   }
 
   /* ---------- render ---------- */
@@ -637,6 +715,23 @@
         "Nodes on 1.13 and older drop adverts with multi-byte hashes."
       : "set path.hash.mode arrived in firmware 1.14, so it is left out entirely on this " +
         "version. Adverts use the 1-byte hash.";
+
+    els.bridgeField.hidden = role() !== "bridge";
+    els.roleHint.textContent = role() === "longhaul"
+      ? "Carries " + ROOT.join(" and ") + " only. State-wide and mesh-wide traffic crosses the " +
+        "link; neither end's local chatter does. For a dedicated relay between distant areas, " +
+        "not for a high site that serves somewhere."
+      : role() === "bridge"
+        ? "Carries a second area's chain as well, so local traffic crosses between the two. " +
+          "Use it sparingly — if many high sites do this, local scoping stops meaning anything."
+        : "The normal answer, and the right one for almost everything: carry the full chain. " +
+          "A short-range node needs it as much as a mountaintop does — dropping a tag only cuts " +
+          "off the devices that reach the mesh through you.";
+
+    els.bridgeHint.textContent = els.bridge.value
+      ? "Both areas' traffic will cross this repeater. The areas either side still won't " +
+        "re-forward each other's, so it stops one hop past you."
+      : "Pick the other area this site genuinely bridges. Until then it behaves as a normal site.";
 
     els.loop.disabled = !c.loopDetect;
     els.loopHint.textContent = c.loopDetect
@@ -703,7 +798,9 @@
 
     var lines = ["ver"];
     lines.push(built.caps.regionList ? "region list allowed" : "region");
-    lines.push("region get " + built.leaf);
+    built.chains.forEach(function (ch) {
+      lines.push("region get " + ch[ch.length - 1].code);
+    });
     lines.push(built.caps.dutycycle ? "get dutycycle" : "get af");
     if (built.caps.hashMode) { lines.push("get path.hash.mode"); }
     if (built.caps.floodAdvert && floodValue() !== null) { lines.push("get flood.advert.interval"); }
@@ -759,6 +856,23 @@
       items.push(["set path.hash.mode " + els.hash.value, hashExplanation(els.hash.value)]);
     }
 
+    if (built.role === "longhaul") {
+      items.push(["(no local tags)",
+        "This site is set up as a dedicated long-haul link, so the chain stops at " +
+        ROOT.join(" / ") + ". It relays state-wide and mesh-wide traffic between distant areas " +
+        "without carrying either end's local conversation. RF reach is not a scope boundary: a " +
+        "local message forwarded into non-matching territory dies one hop later, because the next " +
+        "repeater does not carry the tag."]);
+    } else if (built.role === "bridge" && built.chains.length > 1) {
+      var other = built.chains[1];
+      items.push(["region " + (built.caps.regionDef ? "def" : "put") + " … " +
+                  other[other.length - 1].code,
+        "A second chain, so this site carries " + other[other.length - 1].label +
+        " as well as " + built.chain[built.chain.length - 1].label +
+        ". Local traffic for both crosses this repeater. The repeaters either side still won't " +
+        "re-forward each other's, so it travels one hop into the neighbouring area and stops."]);
+    }
+
     if (built.caps.floodAdvert && floodValue() !== null) {
       items.push(["set flood.advert.interval " + floodValue(),
         floodValue() === 0
@@ -788,7 +902,7 @@
     } else {
       items.push(["region put <name> [parent]  ×" + chainCodes.length,
         "Builds the same chain " + chainCodes.join(" → ") + " one name at a time. " +
-        "The first, " + chainCodes[0] + ", takes no parent argument, so it lands under the wildcard root." +
+        "The first, " + chainCodes[0] + ", takes no parent argument, so it lands under the reserved root *." +
         (built.caps.explicitAllowf ? "" : " Each region is flood-allowed as it is created.")]);
       if (built.caps.explicitAllowf) {
         items.push(["region allowf <name>  ×" + chainCodes.length,
@@ -882,7 +996,8 @@
 
   /* ---------- options ---------- */
 
-  [els.duty, els.hash, els.home, els.verify, els.fw, els.loop, els.flood].forEach(function (el) {
+  [els.duty, els.hash, els.home, els.verify, els.fw, els.loop, els.flood,
+   els.role, els.bridge].forEach(function (el) {
     el.addEventListener("change", render);
   });
   els.duty.addEventListener("input", render);
@@ -891,6 +1006,7 @@
   /* ---------- boot ---------- */
 
   fillRegions();
+  fillBridge();
   fillCounties(null);
   fillAreas(null);
   render();
