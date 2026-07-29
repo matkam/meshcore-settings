@@ -547,6 +547,24 @@ pre.tree {
   background: var(--panel);
 }
 
+.detect-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* The gap does the spacing here; .action's own margins would double it up. */
+.detect-choices .action { margin: 0; }
+
+.detect-choices .action.chosen {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  font-weight: 700;
+}
+
+.detect-choices + .detect-line { margin-top: 10px; }
+
 .conn-status {
   margin: 0 0 16px;
   font-size: 0.88rem;
