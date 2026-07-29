@@ -1,16 +1,22 @@
 # California MeshCore Repeater Settings
 
 A static site that turns "where is your repeater?" into the settings you paste
-into its console — duty cycle, advert path hash mode, and the region scope chain.
+into its console — duty cycle, advert path hash mode, flood advert interval,
+loop detection, and the region scope chain.
 
 Pick North County SLO, for example, and you get:
 
 ```
 set dutycycle 100
 set path.hash.mode 1
+set flood.advert.interval 24
+set loop.detect moderate
 region def west ca cc slo prb
 region save
 ```
+
+Every one of those is adjustable under **Options**, and the whole block is
+editable if you want to send something else entirely.
 
 **Live site:** https://matkam.github.io/meshcore-settings/
 
@@ -19,12 +25,14 @@ region save
 Not every repeater is on current firmware, so there's a version selector. Pick
 yours and the commands adapt:
 
-| Version | Duty cycle | Path hash | Region tree |
-| --- | --- | --- | --- |
-| 1.16+ | `set dutycycle` | `set path.hash.mode` | `region def` (one line) |
-| 1.15 | `set dutycycle` | `set path.hash.mode` | `region put` per level |
-| 1.14 | `set af` | `set path.hash.mode` | `region put` + `region allowf` |
-| 1.10 – 1.13 | `set af` | *(not supported)* | `region put` + `region allowf` |
+| Version | Duty cycle | Path hash | Loop detect | Region tree |
+| --- | --- | --- | --- | --- |
+| 1.16+ | `set dutycycle` | `set path.hash.mode` | `set loop.detect` | `region def` (one line) |
+| 1.15 | `set dutycycle` | `set path.hash.mode` | *(withheld)* | `region put` per level |
+| 1.14 | `set af` | `set path.hash.mode` | *(withheld)* | `region put` + `region allowf` |
+| 1.10 – 1.13 | `set af` | *(not supported)* | *(withheld)* | `region put` + `region allowf` |
+
+`set flood.advert.interval` is sent on every version.
 
 From 1.15 a region is flood-allowed as it's created, so `region allowf` is only
 emitted for 1.14 and older, where the regions would otherwise exist but drop
@@ -103,6 +111,41 @@ It projects lon/lat into flat viewBox units, simplifies the rings to about 600 m
 drops specks while keeping the real islands, and writes one SVG path per county.
 The projection constants live in the generated file and are shared by the map and
 the validator, so a coordinate lands in the same place in both.
+
+## The other settings
+
+Both live under **Options** and are on by default.
+
+**Flood advert interval** — `set flood.advert.interval 24`. How often the
+repeater floods an advert to the whole mesh so distant nodes can discover it and
+build a path. Every repeater rebroadcasts these, so the cost is paid mesh-wide;
+24 hours is a reasonable compromise. The firmware accepts **3–168 hours, or 0 to
+switch flood adverts off** — 1 and 2 are rejected outright. Leave the box empty
+and the command isn't sent at all, which is different from sending 0.
+
+**Loop detection** — `set loop.detect moderate`. Drops packets the repeater has
+already handled, so a ring of repeaters can't keep passing the same traffic
+round. `moderate` is the default; `strict` suits a dense mesh where you'd rather
+lose a packet than repeat one; `minimal` and `off` are there for completeness.
+
+> **One gate here is a judgement call, not a documented fact.** The version
+> thresholds elsewhere in this file come from MeshCore's release notes.
+> `set loop.detect` is in current firmware, but which release introduced it
+> could not be confirmed, so it's only offered on the newest tier. Being a
+> version late costs a setting you can add by hand; being early would send a
+> command the repeater rejects, which stops an over-the-air push mid-run. If you
+> know when it landed, please open a PR and widen the gate.
+
+## Editing the commands
+
+The generated block has an **Edit** button. Anything you type there becomes what
+gets copied and what gets sent over the air — the site stops being in charge.
+
+Edits survive: changing the area, the firmware version or any option afterwards
+updates the generated version behind the scenes but **never overwrites what you
+typed**. A note says the two have diverged, and *Reset to generated* puts it
+back. The 160-character serial limit is checked against your text too, and an
+emptied list disables sending rather than sending nothing.
 
 ## The region scheme
 

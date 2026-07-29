@@ -31,7 +31,16 @@
     fw: $("opt-fw"),
     fwHint: $("fw-hint"),
     dutyHint: $("duty-hint"),
-    hashHint: $("hash-hint")
+    hashHint: $("hash-hint"),
+    loop: $("opt-loop"),
+    loopHint: $("loop-hint"),
+    flood: $("opt-flood"),
+    floodHint: $("flood-hint"),
+    commandsEdit: $("commands-edit"),
+    editBtn: $("edit-cmds"),
+    editNote: $("edit-note"),
+    editNoteText: $("edit-note-text"),
+    resetBtn: $("reset-cmds")
   };
 
   /* ---------- firmware capabilities ---------- */
@@ -51,7 +60,17 @@
       // 1.15+ flood-allows a region as it is put, so allowf is redundant there.
       explicitAllowf: v < 115,
       hashMode: v >= 114,
-      regionList: v >= 112
+      regionList: v >= 112,
+      // Long-standing repeater setting, present across every version this site
+      // offers.
+      floodAdvert: true,
+      // Unlike the gates above, this one is not from a documented version note:
+      // set loop.detect is in current firmware, but which release introduced it
+      // could not be confirmed. Held to the newest tier deliberately — being a
+      // version late only costs a setting the operator can add by hand, while
+      // being early sends a command the repeater rejects, which stops the
+      // over-the-air push mid-run.
+      loopDetect: v >= 116
     };
   }
 
@@ -99,7 +118,15 @@
   // Consumed by push.js so the over-the-air flow sends exactly what the
   // copy block shows, and so a connected repeater can drive the selections.
   window.SettingsState = {
-    get: function () { return current ? buildCommands(current) : null; },
+    // What is on screen, which is not always what the generator produced — see
+    // the edit block below. Everything downstream (copy, the over-the-air push)
+    // reads this, so an edited command list is the one that actually gets sent.
+    get: function () {
+      if (!current) { return null; }
+      var built = buildCommands(current);
+      if (edited !== null) { built.lines = editedLines(); built.edited = true; }
+      return built;
+    },
     onChange: function (fn) { settingsListeners.push(fn); },
 
     // Local areas closest to a position, nearest first, for "where is this
@@ -136,6 +163,96 @@
 
     firmwareTier: function () { return els.fw.value; }
   };
+
+  /* ---------- editing the commands ----------
+   *
+   * `edited` is null while the block is just showing what the generator made.
+   * Once someone types, it holds their text and becomes the source of truth for
+   * copying and for the over-the-air push.
+   *
+   * Changing the area or the options after that does NOT overwrite it. Throwing
+   * away something a person typed is never worth the tidiness — the generated
+   * version is one click away, and until then a note says plainly that the two
+   * have diverged.
+   */
+
+  var edited = null;
+
+  function editedLines() {
+    return edited.split("\n")
+      .map(function (l) { return l.trim(); })
+      .filter(function (l) { return l.length > 0; });
+  }
+
+  function isEditing() { return !els.commandsEdit.hidden; }
+
+  function setEditing(on) {
+    els.commandsEdit.hidden = !on;
+    els.commands.hidden = on;
+    els.editBtn.textContent = on ? "Done" : "Edit";
+    els.editBtn.setAttribute("aria-pressed", String(on));
+    if (on) {
+      els.commandsEdit.value = edited === null ? els.commands.textContent : edited;
+      autoGrow();
+      els.commandsEdit.focus();
+    }
+  }
+
+  // The textarea has no scrollbar of its own: the command list is short, and a
+  // box that scrolls inside a page that scrolls is a nuisance.
+  function autoGrow() {
+    els.commandsEdit.style.height = "auto";
+    els.commandsEdit.style.height = els.commandsEdit.scrollHeight + "px";
+  }
+
+  function renderEditNote() {
+    if (edited === null) {
+      els.editNote.hidden = true;
+      return;
+    }
+    var lines = editedLines();
+    // The 160-character serial limit applies to whatever is actually sent, not
+    // just to what the generator wrote, so it is checked here too.
+    var longest = lines.reduce(function (a, b) { return b.length > a.length ? b : a; }, "");
+    els.editNote.hidden = false;
+    els.editNote.className = "edit-note" + (longest.length > MAX_LINE ? " over" : "");
+
+    if (!lines.length) {
+      els.editNoteText.textContent = "The command list is empty, so there is nothing to copy or send.";
+    } else if (longest.length > MAX_LINE) {
+      els.editNoteText.textContent =
+        "Your longest line is " + longest.length + " characters, over the " + MAX_LINE +
+        "-character serial limit. Split it across two commands.";
+    } else {
+      els.editNoteText.textContent =
+        "These are your edits, not the generated commands — " + lines.length +
+        (lines.length === 1 ? " line" : " lines") + " will be copied and sent.";
+    }
+  }
+
+  function stopEditing() {
+    edited = null;
+    if (isEditing()) { setEditing(false); }
+    render();
+  }
+
+  els.editBtn.addEventListener("click", function () {
+    if (isEditing()) {
+      setEditing(false);
+    } else {
+      setEditing(true);
+    }
+  });
+
+  els.commandsEdit.addEventListener("input", function () {
+    edited = els.commandsEdit.value;
+    autoGrow();
+    renderEditNote();
+    // The push panel watches this to keep its own state honest.
+    settingsListeners.forEach(function (fn) { fn(window.SettingsState.get()); });
+  });
+
+  els.resetBtn.addEventListener("click", stopEditing);
 
   function haversineKm(lat1, lon1, lat2, lon2) {
     var R = 6371;
@@ -410,6 +527,18 @@
     return Math.round(100 / (1 + afValue()));
   }
 
+  // Hours between flood adverts. The firmware takes 3-168, or 0 to stop sending
+  // them; 1 and 2 are rejected outright. An empty box means "don't touch it",
+  // which is a different thing from 0.
+  function floodValue() {
+    if (els.flood.value.trim() === "") { return null; }
+    var v = parseInt(els.flood.value, 10);
+    if (isNaN(v)) { return null; }
+    if (v < 0) { v = 0; }
+    if (v > 168) { v = 168; }
+    return v;
+  }
+
   function buildCommands(entry) {
     var c = caps();
     var chain = chainOf(entry);
@@ -420,6 +549,12 @@
 
     lines.push(c.dutycycle ? "set dutycycle " + dutyValue() : "set af " + afValue());
     if (c.hashMode) { lines.push("set path.hash.mode " + els.hash.value); }
+    if (c.floodAdvert && floodValue() !== null) {
+      lines.push("set flood.advert.interval " + floodValue());
+    }
+    if (c.loopDetect && els.loop.value) {
+      lines.push("set loop.detect " + els.loop.value);
+    }
 
     // The region block, in whichever form this firmware understands.
     var regionLines = [];
@@ -461,7 +596,14 @@
     els.clientPanel.hidden = false;
 
     renderChain(built.chain);
+    // Only the generated view is refreshed. An edit in progress is left exactly
+    // as typed, and the note explains that it no longer matches the selection.
     els.commands.textContent = built.lines.join("\n");
+    if (edited === null && isEditing()) {
+      els.commandsEdit.value = built.lines.join("\n");
+      autoGrow();
+    }
+    renderEditNote();
     renderLineNote(built);
     renderVerify(built);
     renderExplain(built);
@@ -470,7 +612,9 @@
     els.copy.classList.remove("done");
     els.copy.textContent = "Copy";
 
-    settingsListeners.forEach(function (fn) { fn(built); });
+    // Listeners get what will actually be sent, edits included.
+    var shown = window.SettingsState.get();
+    settingsListeners.forEach(function (fn) { fn(shown); });
   }
 
   function renderFirmwareHints() {
@@ -496,6 +640,27 @@
         "Nodes on 1.13 and older drop adverts with multi-byte hashes."
       : "set path.hash.mode arrived in firmware 1.14, so it is left out entirely on this " +
         "version. Adverts use the 1-byte hash.";
+
+    els.loop.disabled = !c.loopDetect;
+    els.loopHint.textContent = c.loopDetect
+      ? "Drops packets a repeater has already seen, so a ring of repeaters cannot keep " +
+        "handing the same traffic round. moderate is the sensible default; strict is for a " +
+        "dense mesh where you would rather lose a packet than repeat one."
+      : "Left out on this version. set loop.detect is in current firmware, but which " +
+        "release added it is not documented, so it is only offered on the newest tier — " +
+        "if yours takes it, add it with Edit above.";
+
+    var flood = floodValue();
+    els.floodHint.textContent = flood === null
+      ? "Blank, so the repeater's existing interval is left alone."
+      : flood === 0
+        ? "0 stops flood adverts entirely. The repeater will still answer, but it won't " +
+          "announce itself to the whole mesh."
+        : (flood < 3 || flood > 168)
+          ? "The firmware only accepts 3–168 hours, or 0 to turn flood adverts off. " +
+            flood + " will be rejected."
+          : "How often the repeater floods an advert to the whole mesh. 24 hours keeps it " +
+            "discoverable without adding much traffic; the firmware accepts 3–168.";
   }
 
   function renderChain(chain) {
@@ -543,6 +708,8 @@
     lines.push("region get " + built.leaf);
     lines.push(built.caps.dutycycle ? "get dutycycle" : "get af");
     if (built.caps.hashMode) { lines.push("get path.hash.mode"); }
+    if (built.caps.floodAdvert && floodValue() !== null) { lines.push("get flood.advert.interval"); }
+    if (built.caps.loopDetect && els.loop.value) { lines.push("get loop.detect"); }
 
     var block = document.createElement("div");
     block.className = "code-block";
@@ -592,6 +759,25 @@
 
     if (built.caps.hashMode) {
       items.push(["set path.hash.mode " + els.hash.value, hashExplanation(els.hash.value)]);
+    }
+
+    if (built.caps.floodAdvert && floodValue() !== null) {
+      items.push(["set flood.advert.interval " + floodValue(),
+        floodValue() === 0
+          ? "Stops the repeater flooding adverts to the whole mesh. It still answers and still repeats, but nothing outside its immediate neighbours learns it exists on its own."
+          : "Floods an advert to the whole mesh every " + floodValue() + " hours, so distant nodes can " +
+            "discover it and build a path. Every repeater rebroadcasts these, so the cost is paid mesh-wide — " +
+            "24 hours is a common compromise between staying discoverable and adding traffic. The firmware accepts 3–168."]);
+    }
+
+    if (built.caps.loopDetect && els.loop.value) {
+      var LOOP_WHY = {
+        off: "No loop detection. A packet that comes back round is repeated again.",
+        minimal: "Catches only the most obvious repeats. The lightest option, for a sparse mesh where few repeaters hear each other.",
+        moderate: "Drops packets the repeater has already handled recently, which stops a ring of repeaters passing the same traffic round in circles. The sensible default.",
+        strict: "The most aggressive setting: more likely to drop a legitimate retransmission, but also the least likely to let a loop through. For a dense mesh where repeaters hear each other several ways."
+      };
+      items.push(["set loop.detect " + els.loop.value, LOOP_WHY[els.loop.value]]);
     }
 
     if (built.caps.regionDef) {
@@ -662,7 +848,9 @@
   /* ---------- copy ---------- */
 
   els.copy.addEventListener("click", function () {
-    var text = els.commands.textContent;
+    // Copy what is on screen, which is the edited text when there is one.
+    var built = window.SettingsState.get();
+    var text = built ? built.lines.join("\n") : els.commands.textContent;
     var done = function () {
       els.copy.textContent = "Copied";
       els.copy.classList.add("done");
@@ -693,10 +881,11 @@
 
   /* ---------- options ---------- */
 
-  [els.duty, els.hash, els.home, els.verify, els.fw].forEach(function (el) {
+  [els.duty, els.hash, els.home, els.verify, els.fw, els.loop, els.flood].forEach(function (el) {
     el.addEventListener("change", render);
   });
   els.duty.addEventListener("input", render);
+  els.flood.addEventListener("input", render);
 
   /* ---------- boot ---------- */
 
