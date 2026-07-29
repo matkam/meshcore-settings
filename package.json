@@ -1,0 +1,11 @@
+{
+  "name": "meshcore-settings",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pick your area in California, get MeshCore repeater settings including region scopes.",
+  "scripts": {
+    "validate": "node scripts/validate.mjs",
+    "serve": "python3 -m http.server 8000"
+  },
+  "license": "MIT"
+}
