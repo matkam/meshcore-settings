@@ -173,7 +173,7 @@ this?** — with three answers:
 | --- | --- | --- |
 | **Home, neighbourhood, urban, or a high site serving one area** (default) | full ancestry | Almost everything |
 | **Dedicated long-haul link** | `west ca` only | A relay between distant areas that shouldn't carry either end's chatter |
-| **High site bridging two areas** | full ancestry **+ a second area's chain** | A site that genuinely joins two communities |
+| **High site bridging several areas** | full ancestry **+ a chain per extra area** | A site that genuinely joins two or more communities |
 
 Note what this deliberately does **not** do: it never strips tags from a small
 node. Limited range is not a reason to carry less — a neighbourhood repeater
@@ -183,8 +183,15 @@ the devices that reach the mesh through you, and leaves a hole in coverage for
 the neighbours behind you. Only the long-haul case drops tags, and only because
 carrying none of the local ones is the whole point of a long-haul link.
 
-Bridging is deliberately awkward to reach and labelled *use sparingly*: if many
-high sites carry two local tags, local scoping stops meaning anything.
+Bridging takes as many areas as the site really covers. The source describes it
+as *dual* metro affiliation, but its metro tag sits at roughly our county level —
+our local areas are finer, so one mountaintop can legitimately cover three or
+four. It's still labelled *use sparingly*, and the hint says so more loudly past
+three: if many high sites carry many local tags, local scoping stops meaning
+anything.
+
+Shared ancestry is placed once, not per chain, which matters on pre-1.16
+firmware where every name is a separate `region put`.
 
 One thing this site doesn't model at all: **channel scope is a separate choice
 from the tags a repeater carries.** Carry the full ancestry on the node, then

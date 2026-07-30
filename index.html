@@ -147,14 +147,18 @@
       <select id="opt-role">
         <option value="local" selected>Home, neighbourhood, urban, or a high site serving one area</option>
         <option value="longhaul">Dedicated long-haul link (no local tags)</option>
-        <option value="bridge">High site deliberately bridging two areas</option>
+        <option value="bridge">High site deliberately bridging several areas</option>
       </select>
       <p class="hint" id="role-hint"></p>
     </div>
 
     <div class="field" id="bridge-field" hidden>
-      <label for="opt-bridge">Second area to carry</label>
-      <select id="opt-bridge"></select>
+      <label for="opt-bridge">Other areas this site carries</label>
+      <div class="bridge-add">
+        <select id="opt-bridge"></select>
+        <button type="button" id="add-bridge" class="action small">Add</button>
+      </div>
+      <ul class="bridge-list" id="bridge-list" aria-label="Extra areas carried"></ul>
       <p class="hint" id="bridge-hint"></p>
     </div>
   </section>
