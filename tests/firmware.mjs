@@ -1,5 +1,5 @@
 import { chromium } from "playwright";
-import { launchOptions, shot } from "./harness.mjs";
+import { launchOptions, shot, tick, untick } from "./harness.mjs";
 
 const SITE = process.env.SITE || "http://127.0.0.1:8765/";
 const browser = await chromium.launch(launchOptions);
@@ -79,7 +79,7 @@ check("home/default on old fw", withHome.slice(-3).join("\n"),
 await page.uncheck("#opt-home");
 
 // county-level chain on old firmware (4 tokens)
-await page.selectOption("#sel-area", []);
+await untick(page, "prb");
 check("county-level on 1.10", await cmds(), [
   "set af 0", "set flood.advert.interval 24",
   "region put west", "region allowf west",
@@ -97,7 +97,7 @@ console.log("hash re-enabled:", !(await page.isDisabled("#opt-hash")));
 
 // screenshot of the old-firmware view
 await page.selectOption("#opt-fw", "110");
-await page.selectOption("#sel-area", "prb");
+await tick(page, "prb");
 await page.evaluate(() => { document.querySelector("details.advanced").open = false; });
 await page.screenshot({ path: shot("fw-old.png"), clip: { x: 0, y: 180, width: 1000, height: 1250 } });
 

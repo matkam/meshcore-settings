@@ -167,35 +167,72 @@ pre:focus-visible {
   outline-offset: 2px;
 }
 
-/* These are multi-selects, so they render as list boxes rather than dropdowns —
-   padding that suits one line looks wrong around seven. */
-.selects select[multiple] {
-  padding: 4px;
-  height: auto;
+.picker-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
 }
 
-.selects select[multiple] option {
-  padding: 4px 7px;
-  border-radius: 4px;
-}
-
-/* The browser's own selected-row grey reads as "disabled" next to the accent
-   the rest of the page uses for the current selection. */
-.selects select[multiple] option:checked {
-  background: var(--accent-soft) linear-gradient(0deg, var(--accent-soft) 0%, var(--accent-soft) 100%);
-  color: var(--accent);
+.pseudo-label {
+  display: block;
+  font-size: 0.82rem;
   font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
 }
 
-.selects {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
+/* The tags are a hierarchy, so the picker is one — ticking a region reveals its
+   counties, ticking a county reveals its areas. Scrolls rather than growing
+   without limit once a few are open. */
+.picker {
+  max-height: 420px;
+  overflow-y: auto;
+  padding: 6px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
 }
 
-@media (max-width: 620px) {
-  .selects { grid-template-columns: 1fr; }
+.pick-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-weight: 400;
+  color: var(--ink);
+  cursor: pointer;
 }
+
+.pick-row:hover { background: var(--accent-soft); }
+.pick-row input { flex: none; margin: 0; }
+.pick-name { flex: 1; }
+
+/* The code is what actually goes on the air, so it is worth seeing while you
+   choose rather than only afterwards in the command block. */
+.pick-code {
+  flex: none;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+
+.pick-row.lvl-region { font-weight: 600; font-size: 0.95rem; }
+.pick-row.lvl-county { font-size: 0.9rem; }
+.pick-row.lvl-area { font-size: 0.88rem; }
+
+/* One rule per level of nesting, which doubles as the separator between a
+   parent and the things under it. */
+.pick-children {
+  margin: 2px 0 6px 12px;
+  padding-left: 10px;
+  border-left: 2px solid var(--line);
+}
+
+.pick-row input:checked + .pick-name { font-weight: 600; color: var(--accent); }
+.pick-row input:checked ~ .pick-code { color: var(--accent); }
 
 .or {
   margin: 18px 0 14px;

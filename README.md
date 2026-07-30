@@ -157,15 +157,24 @@ The firmware default is `off`, so sending `moderate` is a deliberate change.
 
 ## Carrying more than one tag
 
-All three pickers take **multiple selections**, and the deepest level with
-anything ticked is what gets configured: areas if any are ticked, otherwise
-counties, otherwise regions.
+The picker is a **tree of checkboxes**: tick a region and its counties appear
+beneath it, tick a county and its areas appear beneath that. The tags are a
+hierarchy, so showing one keeps the list short and makes the shape of what
+you're configuring visible. Each row shows the code that will actually go on the
+air.
 
-Picking several at that level is how one repeater comes to carry several tags —
-which is exactly what a high site bridging two communities needs, with no
-separate mode to say so. The county list is drawn from every selected region and
-the area list from every selected county, so a site can bridge across a county
-or region line without anything special.
+**You carry exactly what you tick**, plus the ancestry each pick implies. Tick
+several and the repeater carries them all — which is what a high site bridging
+two communities needs, with no separate mode to say so, and no restriction on
+staying inside one county or region.
+
+There is no "deepest level wins" rule to learn. Ticking a county *and* an area
+inside it isn't a contradiction: the area's chain already contains the county, so
+the redundant chain is simply dropped when the commands are built.
+
+*Clear* empties the picker; ticking otherwise adds rather than replaces. Picking
+from the search box, the map or a connected repeater replaces the whole set and
+scrolls the result into view.
 
 The principle behind it, from the
 [PNW region strategy](https://gessaman.com/meshcore/regions/), is that **RF reach

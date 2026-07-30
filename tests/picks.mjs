@@ -1,5 +1,5 @@
 import { chromium } from "playwright";
-import { launchOptions } from "./harness.mjs";
+import { launchOptions, tick, untick, clearPicks, isTicked, picks } from "./harness.mjs";
 
 const SITE = process.env.SITE || "http://127.0.0.1:8765/";
 const browser = await chromium.launch(launchOptions);
@@ -18,36 +18,32 @@ await page.goto(SITE, { waitUntil: "networkidle" });
 const cmds = async () => (await page.textContent("#commands")).trim();
 const lines = async () => (await cmds()).split("\n");
 const defs = async () => (await lines()).filter((l) => l.startsWith("region def"));
-const opts = (sel) => page.$$eval(sel, (s) => s[0].options.length);
+const rows = (level) => page.$$eval(`.pick-row.lvl-${level}`, (n) => n.length);
 
-async function pick(region, county, area) {
-  await page.selectOption("#sel-region", region);
-  await page.waitForTimeout(120);
-  if (county) { await page.selectOption("#sel-county", county); await page.waitForTimeout(120); }
-  if (area) { await page.selectOption("#sel-area", area); await page.waitForTimeout(120); }
+// Ticking adds, so a scenario that wants only these picks says so.
+async function only(...codes) {
+  await clearPicks(page);
+  await tick(page, ...codes);
 }
 
 /* ---------- one of each level ---------- */
 
-await pick(["cc"]);
+await only("cc");
 check("a region alone gives a region chain",
   (await defs())[0] === "region def west ca cc", await cmds());
 check("nothing is generated before anything is picked", true);
 
-await page.selectOption("#sel-county", ["slo"]);
-await page.waitForTimeout(120);
+await tick(page, "slo");
 check("adding a county deepens the chain",
   (await defs())[0] === "region def west ca cc slo", await cmds());
 
-await page.selectOption("#sel-area", ["prb"]);
-await page.waitForTimeout(120);
+await tick(page, "prb");
 check("adding an area deepens it again",
   (await defs())[0] === "region def west ca cc slo prb", await cmds());
 
 /* ---------- several at the deepest level ---------- */
 
-await page.selectOption("#sel-area", ["prb", "slc"]);
-await page.waitForTimeout(150);
+await tick(page, "slc");
 check("two areas share their ancestry on one line",
   (await defs())[0] === "region def west ca cc slo prb|slo slc", await cmds());
 check("one def line, not two", (await defs()).length === 1, JSON.stringify(await defs()));
@@ -56,16 +52,16 @@ const verifyText = await page.textContent("#verify-block");
 check("both leaves are verified",
   verifyText.includes("region get prb") && verifyText.includes("region get slc"), verifyText);
 check("carrying several is explained where they are picked",
-  /Carrying 2 tags/.test(await page.textContent("#pick-note")),
+  /Carrying 2 places/.test(await page.textContent("#pick-note")),
   await page.textContent("#pick-note"));
 
 /* ---------- across a county, and across a region ---------- */
 
-await pick(["cc", "sfb"], ["slo", "ala"], ["prb", "oak"]);
-check("the county list draws from every selected region", (await opts("#sel-county")) > 12,
-  String(await opts("#sel-county")));
-check("the area list draws from every selected county",
-  (await page.$$eval("#sel-area option", (o) => o.map((x) => x.value))).includes("oak"));
+await only("cc", "sfb", "slo", "ala", "prb", "oak");
+check("counties from every ticked region are shown", (await rows("county")) > 12,
+  String(await rows("county")));
+check("areas from every ticked county are shown",
+  (await page.$$eval('.picker input[data-code="oak"]', (n) => n.length)) === 1);
 {
   const line = (await defs())[0];
   check("a cross-county pick jumps back to the shared region",
@@ -75,34 +71,40 @@ check("the area list draws from every selected county",
 
 /* ---------- the deepest level with anything ticked is what counts ---------- */
 
-await page.selectOption("#sel-area", []);
-await page.waitForTimeout(150);
-check("clearing the areas falls back to the counties",
+await untick(page, "prb", "oak");
+check("unticking the areas falls back to the counties",
   (await defs()).length === 1 && (await defs())[0].includes("slo") && (await defs())[0].includes("ala") &&
   !(await cmds()).includes("prb"), await cmds());
 
-await page.selectOption("#sel-county", []);
-await page.waitForTimeout(150);
+await untick(page, "slo", "ala");
 // Order follows the option order, which is the order they appear in the data
 // file — sfb before cc — not the order they were clicked.
-check("clearing the counties falls back to the regions",
+check("unticking the counties falls back to the regions",
   (await defs())[0] === "region def west ca sfb|ca cc", (await defs())[0]);
 
-await page.selectOption("#sel-region", []);
-await page.waitForTimeout(150);
+await clearPicks(page);
 check("clearing everything hides the output", await page.isHidden("#output-panel"));
 
 /* ---------- the serial limit still applies ---------- */
 
 {
-  const allRegions = await page.$$eval("#sel-region option", (o) => o.map((x) => x.value));
-  await pick(allRegions);
-  const counties = await page.$$eval("#sel-county option", (o) => o.map((x) => x.value));
-  await page.selectOption("#sel-county", counties);
-  await page.waitForTimeout(150);
-  const areas = await page.$$eval("#sel-area option", (o) => o.map((x) => x.value));
-  await page.selectOption("#sel-area", areas);
-  await page.waitForTimeout(250);
+  // The tree rebuilds on every tick, so the nodes have to be re-queried each
+  // time rather than collected once and clicked in a loop.
+  await clearPicks(page);
+  async function tickAll(level) {
+    for (;;) {
+      const next = await page.$$eval(`.pick-row.lvl-${level} input:not(:checked)`,
+        (n) => (n.length ? n[0].dataset.code : null));
+      if (!next) { break; }
+      await page.check(`.picker input[data-code="${next}"]`);
+      await page.waitForTimeout(30);
+    }
+  }
+  await tickAll("region");
+  await tickAll("county");
+  const areas = await page.$$eval(".pick-row.lvl-area input", (n) => n.map((x) => x.dataset.code));
+  await tickAll("area");
+  await page.waitForTimeout(300);
   const many = await defs();
   check("a line that would overflow starts a new command", many.length > 1, String(many.length));
   check("every def line stays inside the serial limit",
@@ -114,7 +116,7 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
 /* ---------- pre-1.16, where each name is placed by hand ---------- */
 
 {
-  await pick(["cc", "sfb"], ["slo", "ala"], ["prb", "oak"]);
+  await only("cc", "sfb", "slo", "ala", "prb", "oak");
   await page.selectOption("#opt-fw", "110");
   await page.waitForTimeout(150);
   const puts = (await lines()).filter((l) => l.startsWith("region put"));
@@ -136,10 +138,9 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
   await page.goto(SITE + "#prb", { waitUntil: "networkidle" });
   check("a single deep link still works",
     (await defs())[0] === "region def west ca cc slo prb", await cmds());
-  await page.selectOption("#sel-area", ["prb", "slc"]);
-  await page.waitForTimeout(150);
+  await tick(page, "slc");
   check("picking several writes them all to the hash",
-    (await page.evaluate(() => location.hash)) === "#prb,slc",
+    /^#(prb,slc|cc,slo,prb,slc)$/.test(await page.evaluate(() => location.hash)),
     await page.evaluate(() => location.hash));
 }
 
@@ -150,8 +151,7 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
   await page.click("#edit-cmds");
   await page.fill("#commands-edit", "set dutycycle 7\nregion save");
   await page.waitForTimeout(120);
-  await page.selectOption("#sel-area", ["prb", "slc"]);
-  await page.waitForTimeout(150);
+  await tick(page, "slc");
   check("changing the picks does not overwrite an edit",
     (await page.inputValue("#commands-edit")).includes("set dutycycle 7"),
     await page.inputValue("#commands-edit"));
@@ -165,9 +165,12 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
   const line = (await defs())[0];
   check("a multi deep link restores every pick",
     line.includes("prb") && line.includes("oak") && (await defs()).length === 1, line);
-  check("and selects the levels above them",
-    (await page.$$eval("#sel-region option:checked", (o) => o.map((x) => x.value))).length === 2,
-    JSON.stringify(await page.$$eval("#sel-region option:checked", (o) => o.map((x) => x.value))));
+  check("ticking a parent is what reveals its children",
+    (await rows("county")) > 0 && (await rows("area")) > 0,
+    `${await rows("county")} counties, ${await rows("area")} areas`);
+  check("and ticks the levels above them, so the rows are visible",
+    (await page.$$eval(".pick-row.lvl-region input:checked", (n) => n.length)) === 2,
+    JSON.stringify(await page.$$eval(".picker input:checked", (n) => n.map((x) => x.dataset.code))));
 }
 
 // The map has to show every pick, not just the first.
@@ -180,6 +183,32 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
   check("and every county they sit in",
     (await page.$$eval(".map-county.is-on", (n) => n.length)) === 2,
     String(await page.$$eval(".map-county.is-on", (n) => n.length)));
+}
+
+/* ---------- getting back out ---------- */
+{
+  await page.goto(SITE, { waitUntil: "networkidle" });
+  check("Clear is hidden until something is picked", await page.isHidden("#clear-picks"));
+
+  // A pick made by search can be far down a scrolling list, so it has to be
+  // brought into view or it looks as though nothing happened.
+  await page.fill("#search", "Big Bear");
+  await page.waitForSelector("#results li");
+  await page.click("#results li");
+  await page.waitForTimeout(300);
+  check("a pick made by search is scrolled into view",
+    (await page.$eval(".picker", (e) => e.scrollTop)) > 0);
+  check("and ticks its ancestors so the row is reachable",
+    (await picks(page)).join(",") === "soc,sbd,bbl", (await picks(page)).join(","));
+  check("Clear appears once something is picked", await page.isVisible("#clear-picks"));
+
+  await page.click("#clear-picks");
+  await page.waitForTimeout(200);
+  check("Clear empties the picker", (await picks(page)).length === 0);
+  check("and hides the output", await page.isHidden("#output-panel"));
+  check("and drops the hash, so a reload starts fresh",
+    (await page.evaluate(() => location.hash)) === "",
+    await page.evaluate(() => location.hash));
 }
 
 check("no role selector remains", (await page.$$("#opt-role")).length === 0);
