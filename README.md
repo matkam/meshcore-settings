@@ -173,7 +173,7 @@ this?** — with three answers:
 | --- | --- | --- |
 | **Home, neighbourhood, urban, or a high site serving one area** (default) | full ancestry | Almost everything |
 | **Dedicated long-haul link** | `west ca` only | A relay between distant areas that shouldn't carry either end's chatter |
-| **High site bridging several areas** | full ancestry **+ a chain per extra area** | A site that genuinely joins two or more communities |
+| **High site bridging several areas** | full ancestry **+ a branch per extra area** | A site that genuinely joins two or more communities |
 
 Note what this deliberately does **not** do: it never strips tags from a small
 node. Limited range is not a reason to carry less — a neighbourhood repeater
@@ -183,15 +183,34 @@ the devices that reach the mesh through you, and leaves a hole in coverage for
 the neighbours behind you. Only the long-haul case drops tags, and only because
 carrying none of the local ones is the whole point of a long-haul link.
 
-Bridging takes as many areas as the site really covers. The source describes it
-as *dual* metro affiliation, but its metro tag sits at roughly our county level —
+Bridging takes as many as the site really covers. The source describes it as
+*dual* metro affiliation, but its metro tag sits at roughly our county level —
 our local areas are finer, so one mountaintop can legitimately cover three or
 four. It's still labelled *use sparingly*, and the hint says so more loudly past
 three: if many high sites carry many local tags, local scoping stops meaning
 anything.
 
-Shared ancestry is placed once, not per chain, which matters on pre-1.16
-firmware where every name is a separate `region put`.
+The extras are always **peers of what you picked**: a county-wide site bridges
+other counties, an area bridges other areas. Carrying a finer tag elsewhere than
+you carry at home isn't what bridging means. They're listed **nearest first with
+distances**, because the places a site bridges are the ones next to it.
+
+### One line, not several
+
+`region def` walks a cursor, and the `name|jump` form creates `name` under the
+cursor then moves the cursor to `jump`. So branches share their ancestry instead
+of repeating it in a second command:
+
+```
+region def west ca cc slo prb|ca sfb ala oak|ca nco hum eka
+```
+
+That builds North County, hops back to `ca`, carries on into Oakland's chain,
+hops back again and into Humboldt Bay's. Each jump goes to the deepest name the
+next branch shares with where the cursor already is. The 160-character serial
+limit still applies, so a line that would overflow starts a fresh command from
+the root — and on pre-1.16 firmware, where there's no `region def` at all, it
+falls back to one `region put` per name with shared ancestry placed once.
 
 One thing this site doesn't model at all: **channel scope is a separate choice
 from the tags a repeater carries.** Carry the full ancestry on the node, then
