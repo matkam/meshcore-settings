@@ -622,25 +622,33 @@
   var selCounty = document.getElementById("sel-county");
   var selArea = document.getElementById("sel-area");
 
+  // The selects take several picks each, so everything chosen is marked, not
+  // just the first — otherwise a site bridging two areas would show one dot.
+  function picked(sel) {
+    return Array.prototype.filter.call(sel.options, function (o) { return o.selected; })
+      .map(function (o) { return o.value; })
+      .filter(Boolean);
+  }
+
   function refresh() {
     clearMarks("is-on");
     clearMarks("is-in-region");
 
-    var region = selRegion.value;
-    var county = selCounty.value;
-    var area = selArea.value;
-
-    if (region) {
+    picked(selRegion).forEach(function (region) {
       var inRegion = gCounties.querySelectorAll('[data-region="' + region + '"]');
       for (var i = 0; i < inRegion.length; i++) { inRegion[i].classList.add("is-in-region"); }
       var label = gLabels.querySelector('[data-region="' + region + '"]');
       if (label) { label.classList.add("is-on"); }
-    }
-    if (county && countyEls[county]) { countyEls[county].classList.add("is-on"); }
-    if (area) {
+    });
+
+    picked(selCounty).forEach(function (county) {
+      if (countyEls[county]) { countyEls[county].classList.add("is-on"); }
+    });
+
+    picked(selArea).forEach(function (area) {
       var el = dotEl(area);
       if (el) { el.classList.add("is-on"); }
-    }
+    });
   }
 
   [selRegion, selCounty, selArea].forEach(function (sel) {

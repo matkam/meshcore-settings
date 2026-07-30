@@ -167,6 +167,26 @@ pre:focus-visible {
   outline-offset: 2px;
 }
 
+/* These are multi-selects, so they render as list boxes rather than dropdowns —
+   padding that suits one line looks wrong around seven. */
+.selects select[multiple] {
+  padding: 4px;
+  height: auto;
+}
+
+.selects select[multiple] option {
+  padding: 4px 7px;
+  border-radius: 4px;
+}
+
+/* The browser's own selected-row grey reads as "disabled" next to the accent
+   the rest of the page uses for the current selection. */
+.selects select[multiple] option:checked {
+  background: var(--accent-soft) linear-gradient(0deg, var(--accent-soft) 0%, var(--accent-soft) 100%);
+  color: var(--accent);
+  font-weight: 600;
+}
+
 .selects {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -715,64 +735,7 @@ pre.tree {
 
 /* The second question in the panel, after location. Set off a little so it does
    not read as a fourth dropdown in the region/county/area row. */
-/* A <span> rather than a <label>: it names a group of checkboxes, not one
-   control, so it has no single `for` target. */
-.pseudo-label {
-  display: block;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--ink-soft);
-  margin-bottom: 6px;
-}
 
-/* Everything visible at once and scrollable, rather than a picker that hides
-   what is already chosen. */
-.bridge-picker {
-  max-height: 260px;
-  overflow-y: auto;
-  padding: 10px 12px;
-  background: var(--bg);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-}
-
-.bridge-option {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  padding: 4px 2px;
-  font-size: 0.88rem;
-  font-weight: 400;
-  color: var(--ink);
-  cursor: pointer;
-  border-radius: 4px;
-}
-
-.bridge-option:hover { background: var(--accent-soft); }
-.bridge-option input { flex: none; margin: 0; }
-.bridge-name { flex: 1; }
-
-.bridge-where {
-  display: block;
-  font-size: 0.76rem;
-  color: var(--ink-soft);
-}
-
-/* The distance is what makes the ordering legible — without it, "nearest
-   first" just looks like an arbitrary order. */
-.bridge-km {
-  flex: none;
-  font-size: 0.78rem;
-  color: var(--ink-soft);
-  font-variant-numeric: tabular-nums;
-}
-
-.site-role {
-  margin-top: 18px;
-  padding-top: 18px;
-  border-top: 1px solid var(--line);
-}
 
 .map-figure {
   margin: 0 0 22px;

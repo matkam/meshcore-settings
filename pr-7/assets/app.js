@@ -43,12 +43,7 @@
     editNote: $("edit-note"),
     editNoteText: $("edit-note-text"),
     resetBtn: $("reset-cmds"),
-    role: $("opt-role"),
-    roleHint: $("role-hint"),
-    bridgePicker: $("bridge-picker"),
-    bridgeLabel: $("bridge-label"),
-    bridgeField: $("bridge-field"),
-    bridgeHint: $("bridge-hint")
+    pickNote: $("pick-note")
   };
 
   /* ---------- firmware capabilities ---------- */
@@ -276,16 +271,43 @@
   }
 
   function selectEntry(entry, opts) {
-    current = entry;
-    syncSelects();
+    selectEntries([entry], opts);
+  }
+
+  // Selecting replaces what was picked rather than adding to it: search, the
+  // map and a connected repeater all mean "this one", and the multi-selects are
+  // where a set is built up deliberately.
+  function selectEntries(entries, opts) {
+    if (!entries.length) { return; }
+    current = entries[0];
+
+    // Every entry has to be reachable, so the levels above it are selected too.
+    var regions = [], counties = [], areas = [];
+    entries.forEach(function (e) {
+      if (regions.indexOf(e.region.code) === -1) { regions.push(e.region.code); }
+      if (e.county && counties.indexOf(e.county.code) === -1) { counties.push(e.county.code); }
+      if (e.area && areas.indexOf(e.area.code) === -1) { areas.push(e.area.code); }
+    });
+
+    setValues(els.region, regions);
+    fillCounties(counties);
+    fillAreas(areas);
     render();
+
     if (!opts || !opts.keepHash) {
-      var hash = "#" + entry.code;
-      if (location.hash !== hash) history.replaceState(null, "", hash);
+      var hash = "#" + entries.map(function (e) { return e.code; }).join(",");
+      if (location.hash !== hash) { history.replaceState(null, "", hash); }
     }
   }
 
-  /* ---------- selects ---------- */
+  /* ---------- selects ----------
+   *
+   * All three are multi-select. The deepest level with anything ticked is what
+   * gets configured: areas if any are picked, otherwise counties, otherwise
+   * regions. Picking several at that level is how one repeater comes to carry
+   * several tags — which is what a high site bridging two communities needs, and
+   * it needs no separate mode to say so.
+   */
 
   function option(value, label) {
     var o = document.createElement("option");
@@ -294,65 +316,80 @@
     return o;
   }
 
+  function values(sel) {
+    return Array.prototype.filter.call(sel.options, function (o) { return o.selected; })
+      .map(function (o) { return o.value; });
+  }
+
+  function setValues(sel, codes) {
+    Array.prototype.forEach.call(sel.options, function (o) {
+      o.selected = codes.indexOf(o.value) !== -1;
+    });
+  }
+
   function fillRegions() {
-    els.region.appendChild(option("", "Choose a region…"));
-    DATA.regions.forEach(function (r) {
-      els.region.appendChild(option(r.code, r.name));
-    });
+    DATA.regions.forEach(function (r) { els.region.appendChild(option(r.code, r.name)); });
   }
 
-  function fillCounties(region, selected) {
+  // Counties of every selected region, areas of every selected county — so a
+  // site can bridge across a county or region line without changing anything.
+  function fillCounties(keep) {
+    var regions = values(els.region);
     els.county.textContent = "";
-    els.county.disabled = !region;
-    els.county.appendChild(option("", region ? "Region-wide" : "—"));
-    if (!region) { return; }
-    region.counties.forEach(function (c) {
-      els.county.appendChild(option(c.code, c.name));
+    els.county.disabled = !regions.length;
+    regions.forEach(function (code) {
+      byCode[code].region.counties.forEach(function (c) {
+        els.county.appendChild(option(c.code, c.name));
+      });
     });
-    els.county.value = selected || "";
+    setValues(els.county, keep || []);
   }
 
-  function fillAreas(county, selected) {
+  function fillAreas(keep) {
+    var counties = values(els.county);
     els.area.textContent = "";
-    els.area.disabled = !county;
-    els.area.appendChild(option("", county ? "County-wide" : "—"));
-    if (!county) { return; }
-    (county.areas || []).forEach(function (a) {
-      els.area.appendChild(option(a.code, a.name));
+    els.area.disabled = !counties.length;
+    counties.forEach(function (code) {
+      (byCode[code].county.areas || []).forEach(function (a) {
+        els.area.appendChild(option(a.code, a.name));
+      });
     });
-    els.area.value = selected || "";
+    setValues(els.area, keep || []);
   }
 
-  function syncSelects() {
-    if (!current) { return; }
-    els.region.value = current.region.code;
-    fillCounties(current.region, current.county ? current.county.code : "");
-    fillAreas(current.county, current.area ? current.area.code : "");
+  // What is actually being configured, deepest level first.
+  function chosen() {
+    var codes = values(els.area);
+    if (!codes.length) { codes = values(els.county); }
+    if (!codes.length) { codes = values(els.region); }
+    return codes.map(function (c) { return byCode[c]; }).filter(Boolean);
   }
 
   els.region.addEventListener("change", function () {
-    var region = DATA.regions.filter(function (r) { return r.code === els.region.value; })[0];
-    if (!region) {
-      current = null;
-      fillCounties(null);
-      fillAreas(null);
-      render();
-      return;
-    }
-    selectEntry(byCode[region.code]);
+    // Keep whatever is still reachable from the regions that remain selected.
+    var wasC = values(els.county);
+    var wasA = values(els.area);
+    fillCounties(wasC);
+    fillAreas(wasA);
+    onPicked();
   });
 
   els.county.addEventListener("change", function () {
-    if (!current) { return; }
-    var code = els.county.value;
-    selectEntry(code ? byCode[code] : byCode[current.region.code]);
+    fillAreas(values(els.area));
+    onPicked();
   });
 
-  els.area.addEventListener("change", function () {
-    if (!current || !current.county) { return; }
-    var code = els.area.value;
-    selectEntry(code ? byCode[code] : byCode[current.county.code]);
-  });
+  els.area.addEventListener("change", onPicked);
+
+  function onPicked() {
+    var picks = chosen();
+    current = picks[0] || null;
+    render();
+    if (current) {
+      var hash = "#" + picks.map(function (e) { return e.code; }).join(",");
+      if (location.hash !== hash) { history.replaceState(null, "", hash); }
+    }
+  }
 
   /* ---------- search ---------- */
 
@@ -550,143 +587,16 @@
     return v;
   }
 
-  /* ---------- site role ----------
+  /* ---------- what this repeater carries ----------
    *
-   * From the PNW region strategy's treatment of backbone and high-site
-   * repeaters. The principle it turns on is that RF reach is not a scope
-   * boundary: a mountaintop node is heard far past the areas it carries tags
-   * for, but it only ever forwards traffic matching a tag it holds, and a
-   * non-matching neighbour will not re-forward it. So the question a high site
-   * has to answer is not where it is, but whose local traffic should cross it.
-   *
-   * Note what this deliberately does NOT do: it does not strip tags from small
-   * nodes. Limited range is not a reason to carry less. A neighbourhood repeater
-   * should hold the same full ancestry as a backbone one — omitting a tag only
-   * cuts off the devices that reach the mesh through it, and the wide-scope
-   * traffic it then relays is rare by design.
+   * One chain per thing selected at the deepest chosen level. Usually that is
+   * one; a high site that covers several areas simply picks several, and the
+   * PNW region strategy's point stands either way — RF reach is not a scope
+   * boundary, so a repeater only forwards traffic matching a tag it actually
+   * holds, and what it holds is exactly this.
    */
-
-  function role() { return els.role.value; }
-
-  // Extra places a bridging site carries, beyond the one it is filed under.
-  // The PNW document describes bridging two metros, but its metro tag sits at
-  // roughly our county level — our local areas are finer, so one mountaintop can
-  // genuinely cover three or four of them. The count is not capped; the hint
-  // says when it is getting out of hand.
-  var bridges = [];
-
-  // The chains this node should carry: the one it sits in, plus any it bridges.
-  function chainsFor(entry) {
-    var primary = chainOf(entry);
-
-    if (role() === "longhaul") {
-      // Strategy 1: ancestry to the state level and no further, so state-wide
-      // and mesh-wide traffic crosses the link but neither end's local chatter
-      // does. ROOT is west + ca.
-      return [primary.slice(0, ROOT.length)];
-    }
-
-    if (role() === "bridge") {
-      var chains = [primary];
-      bridges.forEach(function (code) {
-        var extra = byCode[code];
-        // Its own area is already the primary chain, so adding it is a no-op.
-        if (extra && extra.code !== entry.code) { chains.push(chainOf(extra)); }
-      });
-      return chains;
-    }
-
-    return [primary];
-  }
-
-  // Extras are always peers of what is selected: a county-wide site bridges
-  // other counties, an area bridges other areas. Offering a finer tag than the
-  // primary one would have the site carry a deeper chain somewhere else than it
-  // does at home, which is not what bridging means.
-  var LEVEL_WORD = { region: "regions", county: "counties", area: "local areas" };
-
-  // Areas carry a centroid; a county or region is taken as the middle of the
-  // areas inside it, which is enough to sort by.
-  function centroidOf(entry) {
-    if (entry.area) { return { lat: entry.area.lat, lon: entry.area.lon }; }
-    var areas = [];
-    (entry.county ? [entry.county] : entry.region.counties).forEach(function (c) {
-      (c.areas || []).forEach(function (a) { areas.push(a); });
-    });
-    if (!areas.length) { return null; }
-    return {
-      lat: areas.reduce(function (t, a) { return t + a.lat; }, 0) / areas.length,
-      lon: areas.reduce(function (t, a) { return t + a.lon; }, 0) / areas.length
-    };
-  }
-
-  // Nearest first. A site bridges the places next to it, so the ones worth
-  // ticking should be the ones you do not have to scroll for.
-  function peers() {
-    if (!current) { return []; }
-    var from = centroidOf(current);
-    return index
-      .filter(function (e) { return e.level === current.level && e.code !== current.code; })
-      .map(function (e) {
-        var at = centroidOf(e);
-        return { entry: e, km: at && from ? haversineKm(from.lat, from.lon, at.lat, at.lon) : Infinity };
-      })
-      .sort(function (a, b) { return a.km - b.km; });
-  }
-
-  // Rebuilt from the selection: the list of candidates changes with its level,
-  // and any pick that is no longer a peer stops being carried.
-  function renderBridgePicker() {
-    var candidates = peers();
-    var valid = {};
-    candidates.forEach(function (hit) { valid[hit.entry.code] = true; });
-    bridges = bridges.filter(function (c) { return valid[c]; });
-
-    els.bridgePicker.textContent = "";
-    els.bridgeLabel.textContent = current
-      ? "Which other " + LEVEL_WORD[current.level] + " does it cover?"
-      : "Which others does it cover?";
-
-    candidates.forEach(function (hit) {
-      var e = hit.entry;
-      var label = document.createElement("label");
-      label.className = "bridge-option";
-
-      var box = document.createElement("input");
-      box.type = "checkbox";
-      box.value = e.code;
-      box.checked = bridges.indexOf(e.code) !== -1;
-      box.addEventListener("change", function () {
-        bridges = box.checked
-          ? bridges.concat([e.code])
-          : bridges.filter(function (c) { return c !== e.code; });
-        render();
-      });
-
-      var text = document.createElement("span");
-      text.className = "bridge-name";
-      text.textContent = e.name;
-      // Names repeat across the state — there are two South Countys — and the
-      // list is sorted by distance rather than grouped, so each row has to say
-      // where it is.
-      if (e.level !== "region") {
-        var where = document.createElement("span");
-        where.className = "bridge-where";
-        where.textContent = e.level === "area" ? e.county.name : e.region.name;
-        text.appendChild(where);
-      }
-
-      var away = document.createElement("span");
-      away.className = "bridge-km";
-      away.textContent = isFinite(hit.km)
-        ? (hit.km < 10 ? hit.km.toFixed(1) : Math.round(hit.km)) + " km"
-        : "";
-
-      label.appendChild(box);
-      label.appendChild(text);
-      label.appendChild(away);
-      els.bridgePicker.appendChild(label);
-    });
+  function chainsFor() {
+    return chosen().map(chainOf);
   }
 
   // Whatever the owner typed, as one serial-safe line's worth of text. Empty
@@ -751,7 +661,7 @@
 
   function buildCommands(entry) {
     var c = caps();
-    var chains = chainsFor(entry);
+    var chains = chainsFor();
     var chain = chains[0];
     var codes = chain.map(function (x) { return x.code; });
     var leaf = codes[codes.length - 1];
@@ -801,15 +711,31 @@
     lines.push("region save");
 
     return { lines: lines, regionLines: regionLines, chain: chain, chains: chains,
-             leaf: leaf, caps: c, role: role() };
+             leaf: leaf, caps: c };
   }
 
   /* ---------- render ---------- */
 
+  // Carrying several tags is the thing people need told, and it belongs next to
+  // where they picked them rather than in a panel further down.
+  function renderPickNote() {
+    var picks = chosen();
+    if (picks.length < 2) {
+      els.pickNote.textContent = picks.length === 1
+        ? "Pick more than one and the repeater carries them all — that is how a high site " +
+          "bridges the places it covers."
+        : "";
+      return;
+    }
+    els.pickNote.textContent =
+      "Carrying " + picks.length + " tags, so local traffic for all of them crosses this " +
+      "repeater. The repeaters around each still won't re-forward the others', so it travels " +
+      "one hop past you and stops. Worth keeping to what this site really covers — the point " +
+      "of local scoping is that local traffic stays local.";
+  }
+
   function render() {
-    // A chip for the area now selected as primary would be a no-op, so drop it
-    // rather than leave it sitting there looking meaningful.
-    renderBridgePicker();
+    renderPickNote();
     renderFirmwareHints();
 
     if (!current) {
@@ -868,31 +794,6 @@
         "Nodes on 1.13 and older drop adverts with multi-byte hashes."
       : "set path.hash.mode arrived in firmware 1.14, so it is left out entirely on this " +
         "version. Adverts use the 1-byte hash.";
-
-    els.bridgeField.hidden = role() !== "bridge";
-    els.roleHint.textContent = role() === "longhaul"
-      ? "Carries " + ROOT.join(" and ") + " only. State-wide and mesh-wide traffic crosses the " +
-        "link; neither end's local chatter does. For a dedicated relay between distant areas, " +
-        "not for a high site that serves somewhere."
-      : role() === "bridge"
-        ? "Carries other areas' chains as well, so local traffic crosses between them. " +
-          "Use it sparingly — if many high sites do this, local scoping stops meaning anything."
-        : "The normal answer, and the right one for almost everything: carry the full chain. " +
-          "A short-range node needs it as much as a mountaintop does — dropping a tag only cuts " +
-          "off the devices that reach the mesh through you.";
-
-    var word = current ? LEVEL_WORD[current.level] : "areas";
-    var extras = bridges.length;
-    els.bridgeHint.textContent = extras === 0
-      ? "Tick every one this site genuinely covers, beyond the one selected above. Until " +
-        "then it behaves as an ordinary site."
-      : extras > 3
-        ? extras + " extra " + word + ". That is a lot of local traffic to pull through one " +
-          "site — worth checking each is really in its coverage, since the point of local " +
-          "scoping is that local traffic stays local."
-        : "Local traffic for " + (extras + 1) + " " + word + " will cross this repeater. The " +
-          "repeaters around each still won't re-forward the others', so it travels one hop " +
-          "past you and stops.";
 
     els.loop.disabled = !c.loopDetect;
     els.loopHint.textContent = c.loopDetect
@@ -1194,7 +1095,7 @@
   /* ---------- options ---------- */
 
   [els.duty, els.hash, els.home, els.verify, els.fw, els.loop, els.flood, els.owner,
-   els.role].forEach(function (el) { el.addEventListener("change", render); });
+   ].forEach(function (el) { el.addEventListener("change", render); });
   els.duty.addEventListener("input", render);
   els.flood.addEventListener("input", render);
   els.owner.addEventListener("input", render);
@@ -1206,17 +1107,29 @@
   fillAreas(null);
   render();
 
-  var initial = byCode[decodeURIComponent(location.hash.replace(/^#/, ""))];
-  if (initial) {
-    els.search.value = initial.name;
-    selectEntry(initial, { keepHash: true });
+  // The hash carries every pick, comma separated, so a link to a bridging site
+  // restores the whole set rather than just its first tag.
+  function fromHash() {
+    return decodeURIComponent(location.hash.replace(/^#/, ""))
+      .split(",")
+      .map(function (c) { return byCode[c.trim()]; })
+      .filter(Boolean);
   }
 
+  function applyHash(entries) {
+    if (!entries.length) { return; }
+    els.search.value = entries.length === 1 ? entries[0].name : "";
+    selectEntries(entries, { keepHash: true });
+  }
+
+  applyHash(fromHash());
+
   window.addEventListener("hashchange", function () {
-    var entry = byCode[decodeURIComponent(location.hash.replace(/^#/, ""))];
-    if (entry && entry !== current) {
-      els.search.value = entry.name;
-      selectEntry(entry, { keepHash: true });
+    var entries = fromHash();
+    // Ignore the hash we just wrote ourselves.
+    if (entries.length && entries.map(function (e) { return e.code; }).join(",") !==
+        chosen().map(function (e) { return e.code; }).join(",")) {
+      applyHash(entries);
     }
   });
 })();
