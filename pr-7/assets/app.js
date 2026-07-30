@@ -45,9 +45,8 @@
     resetBtn: $("reset-cmds"),
     role: $("opt-role"),
     roleHint: $("role-hint"),
-    bridge: $("opt-bridge"),
-    bridgeAdd: $("add-bridge"),
-    bridgeList: $("bridge-list"),
+    bridgePicker: $("bridge-picker"),
+    bridgeLabel: $("bridge-label"),
     bridgeField: $("bridge-field"),
     bridgeHint: $("bridge-hint")
   };
@@ -293,24 +292,6 @@
     o.value = value;
     o.textContent = label;
     return o;
-  }
-
-  // Every area in the state, grouped by county, for the bridge case. A second
-  // tag is only ever a peer area — bridging is about two local communities, not
-  // about reaching further up the tree.
-  function fillBridge() {
-    els.bridge.appendChild(option("", "Choose the other area…"));
-    DATA.regions.forEach(function (region) {
-      region.counties.forEach(function (county) {
-        if (!county.areas || !county.areas.length) { return; }
-        var group = document.createElement("optgroup");
-        group.label = county.name + " · " + region.name;
-        county.areas.forEach(function (a) {
-          group.appendChild(option(a.code, a.name));
-        });
-        els.bridge.appendChild(group);
-      });
-    });
   }
 
   function fillRegions() {
@@ -618,42 +599,95 @@
     return [primary];
   }
 
-  function renderBridgeList() {
-    els.bridgeList.textContent = "";
-    bridges.forEach(function (code) {
-      var entry = byCode[code];
-      if (!entry) { return; }
-      var li = document.createElement("li");
-      var name = document.createElement("span");
-      name.textContent = entry.name;
-      var drop = document.createElement("button");
-      drop.type = "button";
-      drop.className = "chip-x";
-      drop.setAttribute("aria-label", "Remove " + entry.name);
-      drop.textContent = "\u00d7";
-      drop.addEventListener("click", function () {
-        bridges = bridges.filter(function (c) { return c !== code; });
-        renderBridgeList();
-        render();
-      });
-      li.appendChild(name);
-      li.appendChild(drop);
-      els.bridgeList.appendChild(li);
+  // Extras are always peers of what is selected: a county-wide site bridges
+  // other counties, an area bridges other areas. Offering a finer tag than the
+  // primary one would have the site carry a deeper chain somewhere else than it
+  // does at home, which is not what bridging means.
+  var LEVEL_WORD = { region: "regions", county: "counties", area: "local areas" };
+
+  // Areas carry a centroid; a county or region is taken as the middle of the
+  // areas inside it, which is enough to sort by.
+  function centroidOf(entry) {
+    if (entry.area) { return { lat: entry.area.lat, lon: entry.area.lon }; }
+    var areas = [];
+    (entry.county ? [entry.county] : entry.region.counties).forEach(function (c) {
+      (c.areas || []).forEach(function (a) { areas.push(a); });
     });
+    if (!areas.length) { return null; }
+    return {
+      lat: areas.reduce(function (t, a) { return t + a.lat; }, 0) / areas.length,
+      lon: areas.reduce(function (t, a) { return t + a.lon; }, 0) / areas.length
+    };
   }
 
-  els.bridgeAdd.addEventListener("click", function () {
-    var code = els.bridge.value;
-    // Ignore a repeat, and ignore the area this site is already filed under —
-    // both are carried anyway, and a chip for either would claim something the
-    // generated commands do not do.
-    if (code && bridges.indexOf(code) === -1 && !(current && code === current.code)) {
-      bridges.push(code);
-      renderBridgeList();
-      render();
-    }
-    els.bridge.value = "";
-  });
+  // Nearest first. A site bridges the places next to it, so the ones worth
+  // ticking should be the ones you do not have to scroll for.
+  function peers() {
+    if (!current) { return []; }
+    var from = centroidOf(current);
+    return index
+      .filter(function (e) { return e.level === current.level && e.code !== current.code; })
+      .map(function (e) {
+        var at = centroidOf(e);
+        return { entry: e, km: at && from ? haversineKm(from.lat, from.lon, at.lat, at.lon) : Infinity };
+      })
+      .sort(function (a, b) { return a.km - b.km; });
+  }
+
+  // Rebuilt from the selection: the list of candidates changes with its level,
+  // and any pick that is no longer a peer stops being carried.
+  function renderBridgePicker() {
+    var candidates = peers();
+    var valid = {};
+    candidates.forEach(function (hit) { valid[hit.entry.code] = true; });
+    bridges = bridges.filter(function (c) { return valid[c]; });
+
+    els.bridgePicker.textContent = "";
+    els.bridgeLabel.textContent = current
+      ? "Which other " + LEVEL_WORD[current.level] + " does it cover?"
+      : "Which others does it cover?";
+
+    candidates.forEach(function (hit) {
+      var e = hit.entry;
+      var label = document.createElement("label");
+      label.className = "bridge-option";
+
+      var box = document.createElement("input");
+      box.type = "checkbox";
+      box.value = e.code;
+      box.checked = bridges.indexOf(e.code) !== -1;
+      box.addEventListener("change", function () {
+        bridges = box.checked
+          ? bridges.concat([e.code])
+          : bridges.filter(function (c) { return c !== e.code; });
+        render();
+      });
+
+      var text = document.createElement("span");
+      text.className = "bridge-name";
+      text.textContent = e.name;
+      // Names repeat across the state — there are two South Countys — and the
+      // list is sorted by distance rather than grouped, so each row has to say
+      // where it is.
+      if (e.level !== "region") {
+        var where = document.createElement("span");
+        where.className = "bridge-where";
+        where.textContent = e.level === "area" ? e.county.name : e.region.name;
+        text.appendChild(where);
+      }
+
+      var away = document.createElement("span");
+      away.className = "bridge-km";
+      away.textContent = isFinite(hit.km)
+        ? (hit.km < 10 ? hit.km.toFixed(1) : Math.round(hit.km)) + " km"
+        : "";
+
+      label.appendChild(box);
+      label.appendChild(text);
+      label.appendChild(away);
+      els.bridgePicker.appendChild(label);
+    });
+  }
 
   // Whatever the owner typed, as one serial-safe line's worth of text. Empty
   // means "don't send the command", which leaves any existing owner info on the
@@ -667,6 +701,52 @@
       .replace(/\t/g, " ")
       .replace(/\s+$/, "")
       .replace(/^\s+/, "");
+  }
+
+  /* ---------- region def, with branches ----------
+   *
+   * `region def` walks a cursor: each token becomes a child of the one before
+   * it. The `name|jump` form creates `name` under the cursor and then moves the
+   * cursor to `jump`, which lets one line define several branches instead of
+   * repeating the shared ancestry in a second command.
+   *
+   *   region def west ca cc slo prb|ca sfb ala oak
+   *
+   * builds the North County chain, hops the cursor back up to `ca`, and carries
+   * on into Oakland's. The 160-character serial limit still applies, so a line
+   * that would overflow starts a new command from the root instead.
+   */
+  function defLines(chains) {
+    var lines = [];
+    var tokens = null;    // what the current line has emitted
+    var at = null;        // the chain the cursor is currently sitting in
+
+    chains.forEach(function (ch) {
+      var codes = ch.map(function (x) { return x.code; });
+      if (!tokens) { tokens = codes.slice(); at = codes; return; }
+
+      // Hop back to the deepest name this chain shares with where the cursor is.
+      var i = 0;
+      while (i < at.length && i < codes.length && at[i] === codes[i]) { i += 1; }
+      var rest = codes.slice(i);
+      // Wholly contained in what is already built — nothing left to say.
+      if (!rest.length) { return; }
+
+      var joined = tokens.slice();
+      joined[joined.length - 1] += "|" + codes[i - 1];
+      joined = joined.concat(rest);
+
+      if (("region def " + joined.join(" ")).length <= MAX_LINE) {
+        tokens = joined;
+      } else {
+        lines.push("region def " + tokens.join(" "));
+        tokens = codes.slice();
+      }
+      at = codes;
+    });
+
+    if (tokens) { lines.push("region def " + tokens.join(" ")); }
+    return lines;
   }
 
   function buildCommands(entry) {
@@ -695,15 +775,12 @@
     // have in common rather than repeating it.
     var regionLines = [];
     var placed = {};
+    if (c.regionDef) {
+      regionLines = defLines(chains);
+    }
     chains.forEach(function (ch) {
       var chCodes = ch.map(function (x) { return x.code; });
-      if (c.regionDef) {
-        // A separate def line per chain: the cursor resets to the root between
-        // commands, and re-stating a name only updates its parent to the same
-        // value, so the two lines compose without clobbering each other.
-        regionLines.push("region def " + chCodes.join(" "));
-        return;
-      }
+      if (c.regionDef) { return; }
       chCodes.forEach(function (code, i) {
         if (placed[code]) { return; }
         placed[code] = true;
@@ -732,11 +809,7 @@
   function render() {
     // A chip for the area now selected as primary would be a no-op, so drop it
     // rather than leave it sitting there looking meaningful.
-    if (current) {
-      var kept = bridges.filter(function (c) { return c !== current.code; });
-      if (kept.length !== bridges.length) { bridges = kept; renderBridgeList(); }
-    }
-
+    renderBridgePicker();
     renderFirmwareHints();
 
     if (!current) {
@@ -808,16 +881,18 @@
           "A short-range node needs it as much as a mountaintop does — dropping a tag only cuts " +
           "off the devices that reach the mesh through you.";
 
+    var word = current ? LEVEL_WORD[current.level] : "areas";
     var extras = bridges.length;
     els.bridgeHint.textContent = extras === 0
-      ? "Add every area this site genuinely covers, beyond the one above. Until then it " +
-        "behaves as an ordinary site."
+      ? "Tick every one this site genuinely covers, beyond the one selected above. Until " +
+        "then it behaves as an ordinary site."
       : extras > 3
-        ? extras + " extra areas. That is a lot of local traffic to pull through one site — " +
-          "worth checking each is really in its coverage, since the point of local scoping is " +
-          "that local traffic stays local."
-        : "Local traffic for " + (extras + 1) + " areas will cross this repeater. The repeaters " +
-          "around each still won't re-forward the others', so it travels one hop past you and stops.";
+        ? extras + " extra " + word + ". That is a lot of local traffic to pull through one " +
+          "site — worth checking each is really in its coverage, since the point of local " +
+          "scoping is that local traffic stays local."
+        : "Local traffic for " + (extras + 1) + " " + word + " will cross this repeater. The " +
+          "repeaters around each still won't re-forward the others', so it travels one hop " +
+          "past you and stops.";
 
     els.loop.disabled = !c.loopDetect;
     els.loopHint.textContent = c.loopDetect
@@ -1119,7 +1194,7 @@
   /* ---------- options ---------- */
 
   [els.duty, els.hash, els.home, els.verify, els.fw, els.loop, els.flood, els.owner,
-   els.role, els.bridge].forEach(function (el) { el.addEventListener("change", render); });
+   els.role].forEach(function (el) { el.addEventListener("change", render); });
   els.duty.addEventListener("input", render);
   els.flood.addEventListener("input", render);
   els.owner.addEventListener("input", render);
@@ -1127,7 +1202,6 @@
   /* ---------- boot ---------- */
 
   fillRegions();
-  fillBridge();
   fillCounties(null);
   fillAreas(null);
   render();

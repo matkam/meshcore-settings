@@ -715,48 +715,58 @@ pre.tree {
 
 /* The second question in the panel, after location. Set off a little so it does
    not read as a fourth dropdown in the region/county/area row. */
-.bridge-add {
-  display: flex;
-  gap: 8px;
-  align-items: stretch;
+/* A <span> rather than a <label>: it names a group of checkboxes, not one
+   control, so it has no single `for` target. */
+.pseudo-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 6px;
 }
 
-.bridge-add select { flex: 1; }
-.bridge-add .action { margin: 0; flex: none; }
-
-.bridge-list {
-  list-style: none;
-  margin: 10px 0 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+/* Everything visible at once and scrollable, rather than a picker that hides
+   what is already chosen. */
+.bridge-picker {
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 10px 12px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
 }
 
-.bridge-list li {
+.bridge-option {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 6px 4px 10px;
-  font-size: 0.85rem;
-  background: var(--accent-soft);
-  color: var(--accent);
-  border-radius: 6px;
-}
-
-.chip-x {
-  font: inherit;
-  font-size: 1rem;
-  line-height: 1;
-  padding: 0 2px;
-  border: 0;
-  background: none;
-  color: inherit;
+  gap: 8px;
+  margin: 0;
+  padding: 4px 2px;
+  font-size: 0.88rem;
+  font-weight: 400;
+  color: var(--ink);
   cursor: pointer;
-  opacity: 0.7;
+  border-radius: 4px;
 }
 
-.chip-x:hover { opacity: 1; }
+.bridge-option:hover { background: var(--accent-soft); }
+.bridge-option input { flex: none; margin: 0; }
+.bridge-name { flex: 1; }
+
+.bridge-where {
+  display: block;
+  font-size: 0.76rem;
+  color: var(--ink-soft);
+}
+
+/* The distance is what makes the ordering legible — without it, "nearest
+   first" just looks like an arbitrary order. */
+.bridge-km {
+  flex: none;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
 
 .site-role {
   margin-top: 18px;

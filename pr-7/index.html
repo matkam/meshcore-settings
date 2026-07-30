@@ -153,12 +153,8 @@
     </div>
 
     <div class="field" id="bridge-field" hidden>
-      <label for="opt-bridge">Other areas this site carries</label>
-      <div class="bridge-add">
-        <select id="opt-bridge"></select>
-        <button type="button" id="add-bridge" class="action small">Add</button>
-      </div>
-      <ul class="bridge-list" id="bridge-list" aria-label="Extra areas carried"></ul>
+      <span class="pseudo-label" id="bridge-label">Which others does it cover?</span>
+      <div class="bridge-picker" id="bridge-picker" role="group" aria-labelledby="bridge-label"></div>
       <p class="hint" id="bridge-hint"></p>
     </div>
   </section>
