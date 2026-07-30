@@ -56,7 +56,7 @@ pass &= check("area (Oakland)",
    "region def west ca sfb ala oak", "region save"].join("\n"));
 
 // --- 3. region-wide
-await page.selectOption("#sel-county", "");
+await page.selectOption("#sel-county", []);
 pass &= check("region-wide (Bay Area)",
   (await page.textContent("#commands")).trim(),
   ["set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",

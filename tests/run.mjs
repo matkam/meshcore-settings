@@ -18,7 +18,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..");
 
 // Ordered cheapest-first, so an obvious break surfaces before the slow ones.
-const SUITES = ["basic", "firmware", "detect", "flow", "push", "map", "settings", "role"];
+const SUITES = ["basic", "firmware", "detect", "flow", "push", "map", "settings", "picks"];
 
 const only = process.argv.slice(2);
 const suites = only.length ? SUITES.filter((s) => only.includes(s)) : SUITES;

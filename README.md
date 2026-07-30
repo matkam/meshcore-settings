@@ -155,67 +155,51 @@ the hashes it stamps on its own adverts:
 
 The firmware default is `off`, so sending `moderate` is a deliberate change.
 
-## What kind of site is it?
+## Carrying more than one tag
 
-Location tells the generator *where* you are. It doesn't tell it **whose local
-traffic should cross you** — and for one kind of repeater that's a real decision.
-The principle, from the
+All three pickers take **multiple selections**, and the deepest level with
+anything ticked is what gets configured: areas if any are ticked, otherwise
+counties, otherwise regions.
+
+Picking several at that level is how one repeater comes to carry several tags —
+which is exactly what a high site bridging two communities needs, with no
+separate mode to say so. The county list is drawn from every selected region and
+the area list from every selected county, so a site can bridge across a county
+or region line without anything special.
+
+The principle behind it, from the
 [PNW region strategy](https://gessaman.com/meshcore/regions/), is that **RF reach
 is not a scope boundary**: a mountaintop node is heard far beyond the areas it
 carries tags for, but it only forwards traffic matching a tag it holds, and the
 non-matching neighbour that hears it won't re-forward. A local message pushed
-into non-matching territory dies one hop later.
+into non-matching territory dies one hop later — that one hop is the cost of
+bridging.
 
-So the picker asks a second question after location — **What kind of site is
-this?** — with three answers:
-
-| Answer | Chain | For |
-| --- | --- | --- |
-| **Home, neighbourhood, urban, or a high site serving one area** (default) | full ancestry | Almost everything |
-| **Dedicated long-haul link** | `west ca` only | A relay between distant areas that shouldn't carry either end's chatter |
-| **High site bridging several areas** | full ancestry **+ a branch per extra area** | A site that genuinely joins two or more communities |
-
-Note what this deliberately does **not** do: it never strips tags from a small
-node. Limited range is not a reason to carry less — a neighbourhood repeater
-needs the same full ancestry as a backbone one. Omitting a tag doesn't reduce
-your load meaningfully (wide-scope traffic is rare by design); it just cuts off
-the devices that reach the mesh through you, and leaves a hole in coverage for
-the neighbours behind you. Only the long-haul case drops tags, and only because
-carrying none of the local ones is the whole point of a long-haul link.
-
-Bridging takes as many as the site really covers. The source describes it as
-*dual* metro affiliation, but its metro tag sits at roughly our county level —
-our local areas are finer, so one mountaintop can legitimately cover three or
-four. It's still labelled *use sparingly*, and the hint says so more loudly past
-three: if many high sites carry many local tags, local scoping stops meaning
-anything.
-
-The extras are always **peers of what you picked**: a county-wide site bridges
-other counties, an area bridges other areas. Carrying a finer tag elsewhere than
-you carry at home isn't what bridging means. They're listed **nearest first with
-distances**, because the places a site bridges are the ones next to it.
+Worth knowing what that document says about *small* nodes, since the instinct is
+usually backwards: limited range is **not** a reason to carry fewer tags. A
+neighbourhood repeater should hold the same full ancestry as a backbone one.
+Dropping a tag doesn't meaningfully reduce your load — wide-scope traffic is rare
+by design — it just cuts off the devices that reach the mesh through you.
 
 ### One line, not several
 
 `region def` walks a cursor, and the `name|jump` form creates `name` under the
-cursor then moves the cursor to `jump`. So branches share their ancestry instead
-of repeating it in a second command:
+cursor then moves the cursor to `jump`. So several picks share their ancestry
+instead of repeating it:
 
 ```
-region def west ca cc slo prb|ca sfb ala oak|ca nco hum eka
+region def west ca cc slo prb|slo slc
+region def west ca sfb ala oak|ca cc slo prb
 ```
 
-That builds North County, hops back to `ca`, carries on into Oakland's chain,
-hops back again and into Humboldt Bay's. Each jump goes to the deepest name the
-next branch shares with where the cursor already is. The 160-character serial
-limit still applies, so a line that would overflow starts a fresh command from
-the root — and on pre-1.16 firmware, where there's no `region def` at all, it
-falls back to one `region put` per name with shared ancestry placed once.
+Each jump goes to the deepest name the next branch shares with where the cursor
+already is. The 160-character serial limit still applies, so a line that would
+overflow starts a fresh command from the root — and on pre-1.16 firmware, where
+there is no `region def`, it falls back to one `region put` per name with shared
+ancestry placed once.
 
-One thing this site doesn't model at all: **channel scope is a separate choice
-from the tags a repeater carries.** Carry the full ancestry on the node, then
-scope each channel to match how far that conversation should travel. Metro-level
-scope is the right default for local chat, not the widest tag available.
+A link carries every pick: [`#prb,slc`](https://matkam.github.io/meshcore-settings/#prb,slc)
+restores the whole set.
 
 ## Editing the commands
 
@@ -374,7 +358,7 @@ run against every PR, and screenshots are uploaded when something fails.
 | `push` | Sending over the air, stopping at a failure, resuming |
 | `map` | Drawing, hover, picking at all three levels, zoom and pan |
 | `settings` | Loop detection, flood advert interval, editing the commands |
-| `role` | Site role: long-haul truncation, bridging, shared-ancestry dedup |
+| `picks` | Multiple selections, branch joining, shared-ancestry dedup |
 
 `tests/sim.mjs` is the fake device: it answers the companion protocol over a
 stubbed Web Serial port, so a test can specify what the repeater reports and how

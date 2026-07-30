@@ -79,7 +79,7 @@ check("home/default on old fw", withHome.slice(-3).join("\n"),
 await page.uncheck("#opt-home");
 
 // county-level chain on old firmware (4 tokens)
-await page.selectOption("#sel-area", "");
+await page.selectOption("#sel-area", []);
 check("county-level on 1.10", await cmds(), [
   "set af 0", "set flood.advert.interval 24",
   "region put west", "region allowf west",
