@@ -127,22 +127,14 @@
 
     <p class="or">or browse</p>
 
-    <div class="selects">
-      <div class="field">
-        <label for="sel-region">Region</label>
-        <select id="sel-region" multiple size="7"></select>
-      </div>
-      <div class="field">
-        <label for="sel-county">County</label>
-        <select id="sel-county" multiple size="7" disabled></select>
-      </div>
-      <div class="field">
-        <label for="sel-area">Local area</label>
-        <select id="sel-area" multiple size="7" disabled></select>
-      </div>
+    <div class="field">
+      <span class="picker-head">
+        <span class="pseudo-label" id="picker-label">Tick everywhere this repeater covers</span>
+        <button type="button" id="clear-picks" class="link-btn" hidden>Clear</button>
+      </span>
+      <div class="picker" id="picker" role="group" aria-labelledby="picker-label"></div>
+      <p class="hint" id="pick-note"></p>
     </div>
-
-    <p class="hint" id="pick-note"></p>
   </section>
 
   <section class="panel" id="output-panel" aria-labelledby="settings-heading" hidden>

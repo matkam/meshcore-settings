@@ -12,9 +12,7 @@
   var els = {
     search: $("search"),
     results: $("results"),
-    region: $("sel-region"),
-    county: $("sel-county"),
-    area: $("sel-area"),
+    picker: $("picker"),
     outputPanel: $("output-panel"),
     clientPanel: $("client-panel"),
     chain: $("chain"),
@@ -43,7 +41,8 @@
     editNote: $("edit-note"),
     editNoteText: $("edit-note-text"),
     resetBtn: $("reset-cmds"),
-    pickNote: $("pick-note")
+    pickNote: $("pick-note"),
+    clearPicks: $("clear-picks")
   };
 
   /* ---------- firmware capabilities ---------- */
@@ -167,7 +166,13 @@
       return true;
     },
 
-    firmwareTier: function () { return els.fw.value; }
+    firmwareTier: function () { return els.fw.value; },
+
+    // Everything currently ticked, so the map can mark all of it rather than
+    // reaching into the picker's markup.
+    picked: function () {
+      return chosen().map(function (e) { return { code: e.code, level: e.level }; });
+    }
   };
 
   /* ---------- editing the commands ----------
@@ -281,17 +286,17 @@
     if (!entries.length) { return; }
     current = entries[0];
 
-    // Every entry has to be reachable, so the levels above it are selected too.
-    var regions = [], counties = [], areas = [];
+    picked = {};
     entries.forEach(function (e) {
-      if (regions.indexOf(e.region.code) === -1) { regions.push(e.region.code); }
-      if (e.county && counties.indexOf(e.county.code) === -1) { counties.push(e.county.code); }
-      if (e.area && areas.indexOf(e.area.code) === -1) { areas.push(e.area.code); }
+      // The levels above have to be ticked too, or the rows underneath them are
+      // never shown and the pick would be invisible.
+      picked[e.region.code] = true;
+      if (e.county) { picked[e.county.code] = true; }
+      if (e.area) { picked[e.area.code] = true; }
     });
 
-    setValues(els.region, regions);
-    fillCounties(counties);
-    fillAreas(areas);
+    renderPicker();
+    revealPick();
     render();
 
     if (!opts || !opts.keepHash) {
@@ -300,95 +305,125 @@
     }
   }
 
-  /* ---------- selects ----------
+  /* ---------- the picker ----------
    *
-   * All three are multi-select. The deepest level with anything ticked is what
-   * gets configured: areas if any are picked, otherwise counties, otherwise
-   * regions. Picking several at that level is how one repeater comes to carry
-   * several tags — which is what a high site bridging two communities needs, and
-   * it needs no separate mode to say so.
+   * A tree of checkboxes rather than three lists. The tags form a hierarchy, so
+   * showing it as one makes the shape of what you are configuring visible, and
+   * it needs no modifier keys: tick what the repeater covers, untick what it
+   * does not. Ticking a region reveals its counties, ticking a county reveals
+   * its areas — so the list stays short and the cascade is the same one the
+   * chain itself follows.
+   *
+   * You carry exactly what you tick, plus the ancestry each pick implies. There
+   * is no "deepest level wins" rule to learn: ticking a county and an area
+   * inside it is not a contradiction, because the area's chain already contains
+   * the county, and the redundant chain is dropped when the commands are built.
    */
 
-  function option(value, label) {
-    var o = document.createElement("option");
-    o.value = value;
-    o.textContent = label;
-    return o;
-  }
+  var picked = {};   // code -> true
 
-  function values(sel) {
-    return Array.prototype.filter.call(sel.options, function (o) { return o.selected; })
-      .map(function (o) { return o.value; });
-  }
+  function isPicked(code) { return picked[code] === true; }
 
-  function setValues(sel, codes) {
-    Array.prototype.forEach.call(sel.options, function (o) {
-      o.selected = codes.indexOf(o.value) !== -1;
-    });
-  }
-
-  function fillRegions() {
-    DATA.regions.forEach(function (r) { els.region.appendChild(option(r.code, r.name)); });
-  }
-
-  // Counties of every selected region, areas of every selected county — so a
-  // site can bridge across a county or region line without changing anything.
-  function fillCounties(keep) {
-    var regions = values(els.region);
-    els.county.textContent = "";
-    els.county.disabled = !regions.length;
-    regions.forEach(function (code) {
-      byCode[code].region.counties.forEach(function (c) {
-        els.county.appendChild(option(c.code, c.name));
-      });
-    });
-    setValues(els.county, keep || []);
-  }
-
-  function fillAreas(keep) {
-    var counties = values(els.county);
-    els.area.textContent = "";
-    els.area.disabled = !counties.length;
-    counties.forEach(function (code) {
-      (byCode[code].county.areas || []).forEach(function (a) {
-        els.area.appendChild(option(a.code, a.name));
-      });
-    });
-    setValues(els.area, keep || []);
-  }
-
-  // What is actually being configured, deepest level first.
   function chosen() {
-    var codes = values(els.area);
-    if (!codes.length) { codes = values(els.county); }
-    if (!codes.length) { codes = values(els.region); }
-    return codes.map(function (c) { return byCode[c]; }).filter(Boolean);
+    return index.filter(function (e) { return isPicked(e.code); });
   }
 
-  els.region.addEventListener("change", function () {
-    // Keep whatever is still reachable from the regions that remain selected.
-    var wasC = values(els.county);
-    var wasA = values(els.area);
-    fillCounties(wasC);
-    fillAreas(wasA);
+  function row(entry, level) {
+    var label = document.createElement("label");
+    label.className = "pick-row lvl-" + level;
+
+    var box = document.createElement("input");
+    box.type = "checkbox";
+    box.checked = isPicked(entry.code);
+    box.dataset.code = entry.code;
+    box.addEventListener("change", function () {
+      if (box.checked) {
+        picked[entry.code] = true;
+      } else {
+        delete picked[entry.code];
+        // Whatever sat under it goes too, since it is no longer reachable.
+        index.forEach(function (e) {
+          if (e.code === entry.code) { return; }
+          var under = (e.region && e.region.code === entry.code) ||
+                      (e.county && e.county.code === entry.code);
+          if (under) { delete picked[e.code]; }
+        });
+      }
+      renderPicker();
+      onPicked();
+    });
+
+    var name = document.createElement("span");
+    name.className = "pick-name";
+    name.textContent = entry.name;
+
+    var code = document.createElement("span");
+    code.className = "pick-code";
+    code.textContent = entry.code;
+
+    label.appendChild(box);
+    label.appendChild(name);
+    label.appendChild(code);
+    return label;
+  }
+
+  function renderPicker() {
+    // Rebuilt wholesale, which is simple and fast enough at this size — but the
+    // scroll position has to survive it or ticking something halfway down jumps
+    // the list back to the top.
+    var scroll = els.picker.scrollTop;
+    els.picker.textContent = "";
+
+    DATA.regions.forEach(function (region) {
+      els.picker.appendChild(row(byCode[region.code], "region"));
+      if (!isPicked(region.code)) { return; }
+
+      var counties = document.createElement("div");
+      counties.className = "pick-children";
+      region.counties.forEach(function (county) {
+        counties.appendChild(row(byCode[county.code], "county"));
+        if (!isPicked(county.code) || !(county.areas || []).length) { return; }
+
+        var areas = document.createElement("div");
+        areas.className = "pick-children";
+        county.areas.forEach(function (area) {
+          areas.appendChild(row(byCode[area.code], "area"));
+        });
+        counties.appendChild(areas);
+      });
+      els.picker.appendChild(counties);
+    });
+
+    els.picker.scrollTop = scroll;
+    els.clearPicks.hidden = !chosen().length;
+  }
+
+  els.clearPicks.addEventListener("click", function () {
+    picked = {};
+    els.search.value = "";
+    renderPicker();
     onPicked();
+    if (location.hash) { history.replaceState(null, "", location.pathname + location.search); }
   });
 
-  els.county.addEventListener("change", function () {
-    fillAreas(values(els.area));
-    onPicked();
-  });
-
-  els.area.addEventListener("change", onPicked);
+  // A pick made by search, the map or a connected repeater can land below the
+  // fold of a scrolling list, which looks like nothing happened.
+  function revealPick() {
+    var deepest = els.picker.querySelectorAll(".pick-row input:checked");
+    if (!deepest.length) { return; }
+    var row = deepest[deepest.length - 1].parentNode;
+    var top = row.offsetTop - els.picker.offsetTop;
+    if (top < els.picker.scrollTop || top > els.picker.scrollTop + els.picker.clientHeight - 40) {
+      els.picker.scrollTop = Math.max(0, top - els.picker.clientHeight / 2);
+    }
+  }
 
   function onPicked() {
     var picks = chosen();
     current = picks[0] || null;
     render();
-    if (current) {
-      var hash = "#" + picks.map(function (e) { return e.code; }).join(",");
-      if (location.hash !== hash) { history.replaceState(null, "", hash); }
-    }
+    var hash = picks.length ? "#" + picks.map(function (e) { return e.code; }).join(",") : "";
+    if (hash && location.hash !== hash) { history.replaceState(null, "", hash); }
   }
 
   /* ---------- search ---------- */
@@ -596,7 +631,18 @@
    * holds, and what it holds is exactly this.
    */
   function chainsFor() {
-    return chosen().map(chainOf);
+    var all = chosen().map(chainOf);
+    // A chain that is a prefix of another says nothing extra: `region def west
+    // ca cc slo prb` already creates cc and slo on the way past. So ticking a
+    // county and an area inside it is not a contradiction to resolve, it is a
+    // duplicate to drop — which is why the picker needs no "deepest wins" rule.
+    return all.filter(function (chain) {
+      return !all.some(function (other) {
+        return other.length > chain.length && chain.every(function (t, i) {
+          return other[i].code === t.code;
+        });
+      });
+    });
   }
 
   // Whatever the owner typed, as one serial-safe line's worth of text. Empty
@@ -719,7 +765,9 @@
   // Carrying several tags is the thing people need told, and it belongs next to
   // where they picked them rather than in a panel further down.
   function renderPickNote() {
-    var picks = chosen();
+    // Count what is actually carried, not what is ticked: ticking a county and
+    // an area inside it is one place, because the redundant chain is dropped.
+    var picks = chainsFor();
     if (picks.length < 2) {
       els.pickNote.textContent = picks.length === 1
         ? "Pick more than one and the repeater carries them all — that is how a high site " +
@@ -728,7 +776,7 @@
       return;
     }
     els.pickNote.textContent =
-      "Carrying " + picks.length + " tags, so local traffic for all of them crosses this " +
+      "Carrying " + picks.length + " places, so local traffic for all of them crosses this " +
       "repeater. The repeaters around each still won't re-forward the others', so it travels " +
       "one hop past you and stops. Worth keeping to what this site really covers — the point " +
       "of local scoping is that local traffic stays local.";
@@ -1102,9 +1150,7 @@
 
   /* ---------- boot ---------- */
 
-  fillRegions();
-  fillCounties(null);
-  fillAreas(null);
+  renderPicker();
   render();
 
   // The hash carries every pick, comma separated, so a link to a bridging site
