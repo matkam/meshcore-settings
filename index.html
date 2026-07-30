@@ -127,19 +127,13 @@
 
     <p class="or">or browse</p>
 
-    <div class="selects">
-      <div class="field">
-        <label for="sel-region">Region</label>
-        <select id="sel-region"></select>
-      </div>
-      <div class="field">
-        <label for="sel-county">County</label>
-        <select id="sel-county" disabled></select>
-      </div>
-      <div class="field">
-        <label for="sel-area">Local area</label>
-        <select id="sel-area" disabled></select>
-      </div>
+    <div class="field">
+      <span class="picker-head">
+        <span class="pseudo-label" id="picker-label">Tick everywhere this repeater covers</span>
+        <button type="button" id="clear-picks" class="link-btn" hidden>Clear</button>
+      </span>
+      <div class="picker" id="picker" role="group" aria-labelledby="picker-label"></div>
+      <p class="hint" id="pick-note"></p>
     </div>
   </section>
 
@@ -283,6 +277,13 @@
 
     <h3>Things worth knowing</h3>
     <ul class="notes">
+      <li>
+        <strong>Region names never travel.</strong> A scoped packet carries two 16-bit
+        transport codes — an HMAC of the region's key over the packet — not the name. So a
+        code costs the same airtime however long it is: <code>slo</code> and
+        <code>san-luis-obispo-county</code> are identical on the air. Short codes are for
+        your own sake at the console, not the mesh's.
+      </li>
       <li>
         <strong>Region names are one flat namespace.</strong> Two different places using the same
         code will merge on any repeater that carries both. The codes on this site are checked
