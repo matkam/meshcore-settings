@@ -713,6 +713,14 @@ pre.tree {
 
 /* ---------- map ---------- */
 
+/* The second question in the panel, after location. Set off a little so it does
+   not read as a fourth dropdown in the region/county/area row. */
+.site-role {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
 .map-figure {
   margin: 0 0 22px;
 }

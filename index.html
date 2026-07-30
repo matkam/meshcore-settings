@@ -141,6 +141,22 @@
         <select id="sel-area" disabled></select>
       </div>
     </div>
+
+    <div class="field site-role">
+      <label for="opt-role">What kind of site is this?</label>
+      <select id="opt-role">
+        <option value="local" selected>Home, neighbourhood, urban, or a high site serving one area</option>
+        <option value="longhaul">Dedicated long-haul link (no local tags)</option>
+        <option value="bridge">High site deliberately bridging two areas</option>
+      </select>
+      <p class="hint" id="role-hint"></p>
+    </div>
+
+    <div class="field" id="bridge-field" hidden>
+      <label for="opt-bridge">Second area to carry</label>
+      <select id="opt-bridge"></select>
+      <p class="hint" id="bridge-hint"></p>
+    </div>
   </section>
 
   <section class="panel" id="output-panel" aria-labelledby="settings-heading" hidden>
@@ -182,18 +198,10 @@
       <summary>Options</summary>
       <div class="advanced-body">
         <div class="field">
-          <label for="opt-role">What kind of site is this?</label>
-          <select id="opt-role">
-            <option value="local" selected>Home, neighbourhood, urban, or a high site serving one area</option>
-            <option value="longhaul">Dedicated long-haul link (no local tags)</option>
-            <option value="bridge">High site deliberately bridging two areas</option>
-          </select>
-          <p class="hint" id="role-hint"></p>
-        </div>
-        <div class="field" id="bridge-field" hidden>
-          <label for="opt-bridge">Second area to carry</label>
-          <select id="opt-bridge"></select>
-          <p class="hint" id="bridge-hint"></p>
+          <label for="opt-owner">Owner info</label>
+          <input id="opt-owner" type="text" maxlength="120" autocomplete="off"
+                 spellcheck="false" placeholder="you@example.com · @you on Discord · K6ABC">
+          <p class="hint" id="owner-hint"></p>
         </div>
         <div class="field">
           <label for="opt-duty">Duty cycle limit (%)</label>
@@ -320,7 +328,8 @@
       </li>
       <li>
         <strong>Region filtering needs firmware 1.10+.</strong> Newer commands landed later:
-        <code>set path.hash.mode</code> in 1.14, <code>set dutycycle</code> in 1.15 (replacing
+        <code>set owner.info</code> in 1.12, <code>set path.hash.mode</code> in 1.14,
+        <code>set dutycycle</code> in 1.15 (replacing
         <code>set af</code>), and <code>region def</code> in 1.16. Check yours with
         <code>ver</code> and pick the matching version above — if a command still comes back
         unknown, you're on older firmware than you selected.
