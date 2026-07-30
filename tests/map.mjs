@@ -1,5 +1,5 @@
 import { chromium } from "playwright";
-import { launchOptions, shot } from "./harness.mjs";
+import { launchOptions, shot, tick, clearPicks, isTicked } from "./harness.mjs";
 
 const SITE = process.env.SITE || "http://127.0.0.1:8765/";
 const browser = await chromium.launch(launchOptions);
@@ -79,8 +79,8 @@ async function pointFor(code) {
   const p = await pointFor("prb");
   await page.mouse.click(p.x, p.y);
   await page.waitForSelector("#output-panel:not([hidden])", { timeout: 3000 });
-  check("clicking a dot selects the area", (await page.inputValue("#sel-area")) === "prb",
-    await page.inputValue("#sel-area"));
+  check("clicking a dot selects the area", await isTicked(page, "prb"),
+    JSON.stringify(await page.$$eval(".picker input:checked", (n) => n.map((x) => x.dataset.code))));
   check("clicking a dot generates the commands",
     /region def west ca cc slo prb/.test(await page.textContent("#commands")));
   check("selected dot is marked on",
@@ -95,8 +95,8 @@ async function pointFor(code) {
 
 // --- a selection made elsewhere is reflected on the map
 {
-  await page.selectOption("#sel-region", "sfb");
-  await page.waitForTimeout(120);
+  await clearPicks(page);
+  await tick(page, "sfb");
   check("selecting a region elsewhere washes it in on the map",
     await page.$eval('.map-county[data-county="ala"]', (c) => c.classList.contains("is-in-region")));
   check("the old selection is cleared",
@@ -107,6 +107,7 @@ async function pointFor(code) {
 
 // --- searching also drives the map
 {
+  await clearPicks(page);
   await page.fill("#search", "Paso Robles");
   await page.waitForSelector("#results li", { timeout: 3000 });
   await page.click("#results li");
@@ -121,9 +122,9 @@ async function pointFor(code) {
     const r = document.querySelector('.map-label[data-region="sjv"]').getBoundingClientRect();
     return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
   }, "region label");
-  check("clicking a region label selects the region",
-    (await page.inputValue("#sel-region")) === "sjv" && (await page.inputValue("#sel-county")) === "",
-    (await page.inputValue("#sel-region")) + "/" + (await page.inputValue("#sel-county")));
+  const afterLabel = await page.$$eval(".picker input:checked", (n) => n.map((x) => x.dataset.code));
+  check("clicking a region label selects just that region",
+    JSON.stringify(afterLabel) === JSON.stringify(["sjv"]), JSON.stringify(afterLabel));
 }
 
 // --- clicking a county away from any dot
@@ -156,11 +157,11 @@ async function pointFor(code) {
   check("found open county ground to click", !!spot, JSON.stringify(spot));
   await page.mouse.click(spot.x, spot.y);
   await page.waitForTimeout(150);
-  const county = await page.inputValue("#sel-county");
-  check("clicking open county ground selects that county", county === spot.county,
-    county + " (expected " + spot.county + ")");
-  check("county click leaves the area unset", (await page.inputValue("#sel-area")) === "",
-    await page.inputValue("#sel-area"));
+  const county = await isTicked(page, spot.county);
+  check("clicking open county ground selects that county", county,
+    JSON.stringify(await page.$$eval(".picker input:checked", (n) => n.map((x) => x.dataset.code))));
+  check("county click leaves no area ticked",
+    (await page.$$eval(".pick-row.lvl-area input:checked", (n) => n.length)) === 0);
 }
 
 // --- the position marker
@@ -322,8 +323,9 @@ async function pointFor(code) {
   await page.mouse.up();
   await page.waitForTimeout(200);
   check("dragging pans the map", (await vbOf()) !== beforePan);
-  check("a drag does not change the selection", (await page.inputValue("#sel-area")) === "",
-    await page.inputValue("#sel-area"));
+  check("a drag does not change the selection",
+    (await page.$$eval(".pick-row.lvl-area input:checked", (n) => n.length)) === 0,
+    JSON.stringify(await page.$$eval(".picker input:checked", (n) => n.map((x) => x.dataset.code))));
 
   // Clicking still works while zoomed, and lands on the right thing.
   await mapInView();
@@ -341,7 +343,8 @@ async function pointFor(code) {
   await page.mouse.click(target.x, target.y);
   await page.waitForTimeout(200);
   check("clicking a dot still selects it while zoomed",
-    (await page.inputValue("#sel-area")) === target.c, await page.inputValue("#sel-area"));
+    await isTicked(page, target.c),
+    JSON.stringify(await page.$$eval(".picker input:checked", (n) => n.map((x) => x.dataset.code))));
 
   // Label placement is redone on zoom, so it has to hold there too.
   const coveredZoomed = await page.evaluate(() => {

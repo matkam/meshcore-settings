@@ -618,34 +618,36 @@
    * without app.js needing to know the map exists.
    */
 
-  var selRegion = document.getElementById("sel-region");
-  var selCounty = document.getElementById("sel-county");
-  var selArea = document.getElementById("sel-area");
+
+  // Several things can be ticked at once, so everything chosen is marked, not
+  // just the first — otherwise a site bridging two areas would show one dot.
+  function pickedAt(level) {
+    return window.SettingsState.picked()
+      .filter(function (p) { return p.level === level; })
+      .map(function (p) { return p.code; });
+  }
 
   function refresh() {
     clearMarks("is-on");
     clearMarks("is-in-region");
 
-    var region = selRegion.value;
-    var county = selCounty.value;
-    var area = selArea.value;
-
-    if (region) {
+    pickedAt("region").forEach(function (region) {
       var inRegion = gCounties.querySelectorAll('[data-region="' + region + '"]');
       for (var i = 0; i < inRegion.length; i++) { inRegion[i].classList.add("is-in-region"); }
       var label = gLabels.querySelector('[data-region="' + region + '"]');
       if (label) { label.classList.add("is-on"); }
-    }
-    if (county && countyEls[county]) { countyEls[county].classList.add("is-on"); }
-    if (area) {
+    });
+
+    pickedAt("county").forEach(function (county) {
+      if (countyEls[county]) { countyEls[county].classList.add("is-on"); }
+    });
+
+    pickedAt("area").forEach(function (area) {
       var el = dotEl(area);
       if (el) { el.classList.add("is-on"); }
-    }
+    });
   }
 
-  [selRegion, selCounty, selArea].forEach(function (sel) {
-    sel.addEventListener("change", refresh);
-  });
   window.SettingsState.onChange(refresh);
   refresh();
 

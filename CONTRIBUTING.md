@@ -18,9 +18,11 @@ an entry to its `areas` list:
 },
 ```
 
-- **`code`** — the region name that goes on the air. Lowercase `a-z0-9`, 1–8
-  characters, short as you can make it while staying readable. Must be unique
-  across the whole file.
+- **`code`** — the region name. Lowercase `a-z0-9`, 1–8 characters, short as you
+  can make it while staying readable, and unique across the whole file. Short is
+  for legibility at the console, **not** for airtime: a scoped packet carries a
+  16-bit transport code derived from the name, never the name itself, so code
+  length has no effect on the air.
 - **`name`** — what a human picks from the dropdown.
 - **`cities`** — search aliases only. These never appear in the generated
   commands; they exist so someone can type "Paso Robles" and land on `prb`. List

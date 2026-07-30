@@ -1,5 +1,5 @@
 import { chromium } from "playwright";
-import { launchOptions, shot } from "./harness.mjs";
+import { launchOptions, shot, isTicked } from "./harness.mjs";
 
 const SITE = process.env.SITE || "http://127.0.0.1:8765/";
 const browser = await chromium.launch(launchOptions);
@@ -197,7 +197,8 @@ console.log("  detect choices:", locChoices.join(" | "));
 console.log("  detect ver:", await page.textContent("#detect-ver"));
 await page.click("#detect-choices button");
 check("clicking suggestion selects the area",
-  (await page.inputValue("#sel-area")) === "prb", await page.inputValue("#sel-area"));
+  await isTicked(page, "prb"),
+  JSON.stringify(await page.$$eval(".picker input:checked", (n) => n.map((x) => x.dataset.code))));
 
 // push, accepting the confirm
 page.once("dialog", (d) => d.accept());

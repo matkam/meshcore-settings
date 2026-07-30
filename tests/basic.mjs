@@ -1,5 +1,5 @@
 import { chromium } from "playwright";
-import { launchOptions, shot } from "./harness.mjs";
+import { launchOptions, shot, tick, untick, clearPicks } from "./harness.mjs";
 
 const SITE = process.env.SITE || "http://127.0.0.1:8765/";
 const browser = await chromium.launch(launchOptions);
@@ -42,29 +42,30 @@ console.log("line note:", await page.textContent("#line-note"));
 console.log("scopes:", (await page.$$eval("#scope-list li", (n) => n.map((x) => x.textContent.trim()))).join(" | "));
 
 // --- 2. county-wide via selects
-await page.selectOption("#sel-region", "sfb");
-await page.selectOption("#sel-county", "ala");
+// Ticking adds, so start from nothing rather than on top of the search result.
+await clearPicks(page);
+await tick(page, "sfb", "ala");
 pass &= check("county-wide (Alameda)",
   (await page.textContent("#commands")).trim(),
   ["set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
    "region def west ca sfb ala", "region save"].join("\n"));
 
-await page.selectOption("#sel-area", "oak");
+await tick(page, "oak");
 pass &= check("area (Oakland)",
   (await page.textContent("#commands")).trim(),
   ["set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
    "region def west ca sfb ala oak", "region save"].join("\n"));
 
 // --- 3. region-wide
-await page.selectOption("#sel-county", "");
+await untick(page, "ala");
 pass &= check("region-wide (Bay Area)",
   (await page.textContent("#commands")).trim(),
   ["set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
    "region def west ca sfb", "region save"].join("\n"));
 
 // --- 4. options
-await page.selectOption("#sel-county", "scl");
-await page.selectOption("#sel-area", "sjc");
+await clearPicks(page);
+await tick(page, "sfb", "scl", "sjc");
 await page.evaluate(() => { document.querySelector("details.advanced").open = true; });
 await page.check("#opt-home");
 await page.fill("#opt-duty", "50");

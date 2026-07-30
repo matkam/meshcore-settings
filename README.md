@@ -155,6 +155,71 @@ the hashes it stamps on its own adverts:
 
 The firmware default is `off`, so sending `moderate` is a deliberate change.
 
+## Carrying more than one tag
+
+The picker is a **tree of checkboxes**: tick a region and its counties appear
+beneath it, tick a county and its areas appear beneath that. The tags are a
+hierarchy, so showing one keeps the list short and makes the shape of what
+you're configuring visible. Each row shows the code that will actually go on the
+air.
+
+**You carry exactly what you tick**, plus the ancestry each pick implies. Tick
+several and the repeater carries them all — which is what a high site bridging
+two communities needs, with no separate mode to say so, and no restriction on
+staying inside one county or region.
+
+There is no "deepest level wins" rule to learn. Ticking a county *and* an area
+inside it isn't a contradiction: the area's chain already contains the county, so
+the redundant chain is simply dropped when the commands are built.
+
+*Clear* empties the picker; ticking otherwise adds rather than replaces. Picking
+from the search box, the map or a connected repeater replaces the whole set and
+scrolls the result into view.
+
+The principle behind it, from the
+[PNW region strategy](https://gessaman.com/meshcore/regions/), is that **RF reach
+is not a scope boundary**: a mountaintop node is heard far beyond the areas it
+carries tags for, but it only forwards traffic matching a tag it holds, and the
+non-matching neighbour that hears it won't re-forward. A local message pushed
+into non-matching territory dies one hop later — that one hop is the cost of
+bridging.
+
+Worth knowing what that document says about *small* nodes, since the instinct is
+usually backwards: limited range is **not** a reason to carry fewer tags. A
+neighbourhood repeater should hold the same full ancestry as a backbone one.
+Dropping a tag doesn't meaningfully reduce your load — wide-scope traffic is rare
+by design — it just cuts off the devices that reach the mesh through you.
+
+### One line, not several
+
+`region def` walks a cursor, and the `name|jump` form creates `name` under the
+cursor then moves the cursor to `jump`. So several picks share their ancestry
+instead of repeating it:
+
+```
+region def west ca cc slo prb|slo slc
+region def west ca sfb ala oak|ca cc slo prb
+```
+
+Each jump goes to the deepest name the next branch shares with where the cursor
+already is. The 160-character serial limit still applies, so a line that would
+overflow starts a fresh command from the root — and on pre-1.16 firmware, where
+there is no `region def`, it falls back to one `region put` per name with shared
+ancestry placed once.
+
+A link carries every pick: [`#prb,slc`](https://matkam.github.io/meshcore-settings/#prb,slc)
+restores the whole set.
+
+### Two limits worth knowing
+
+- **160 characters per serial line.** Handled by splitting into more commands.
+- **32 region names per node** (`MAX_REGION_ENTRIES` in the firmware). This one
+  can't be worked around — it's the size of the node's region table. Ten areas in
+  ten different counties is already 32 names. Going over doesn't fail cleanly:
+  `region def` places names until the table is full and then rejects the rest,
+  leaving the repeater half configured. The line under the commands shows the
+  count, and warns when a selection won't fit.
+
 ## Editing the commands
 
 The generated block has an **Edit** button. Anything you type there becomes what
@@ -198,6 +263,10 @@ these. What actually matters is that the repeaters around you use the same names
 The codes here follow the widely used `west` / `ca` top-level tags and stay short
 and lowercase, but **check with your local mesh group before deploying**, and open
 a PR if your area is missing or named wrong.
+
+Region names never appear in packets — a scoped packet carries two 16-bit
+transport codes derived from the region's key, so a code's length has no effect on
+airtime. Codes are short for legibility at the console, nothing more.
 
 Region names live in one flat namespace on a node, so codes must be unique across
 the entire file — `npm run validate` enforces that, along with the 160-character
@@ -308,6 +377,7 @@ run against every PR, and screenshots are uploaded when something fails.
 | `push` | Sending over the air, stopping at a failure, resuming |
 | `map` | Drawing, hover, picking at all three levels, zoom and pan |
 | `settings` | Loop detection, flood advert interval, editing the commands |
+| `picks` | Multiple selections, branch joining, shared-ancestry dedup |
 
 `tests/sim.mjs` is the fake device: it answers the companion protocol over a
 stubbed Web Serial port, so a test can specify what the repeater reports and how
