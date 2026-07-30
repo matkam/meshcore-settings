@@ -36,6 +36,8 @@
     loopHint: $("loop-hint"),
     flood: $("opt-flood"),
     floodHint: $("flood-hint"),
+    owner: $("opt-owner"),
+    ownerHint: $("owner-hint"),
     commandsEdit: $("commands-edit"),
     editBtn: $("edit-cmds"),
     editNote: $("edit-note"),
@@ -52,7 +54,7 @@
 
   // Version gates, from the MeshCore CLI reference:
   //   1.10  region put / allowf / save
-  //   1.12  region list {allowed|denied}
+  //   1.12  region list {allowed|denied}, set owner.info
   //   1.14  set path.hash.mode, set loop.detect
   //   1.15  set dutycycle (set af deprecated), region put allows flooding by default
   //   1.16  region def
@@ -72,7 +74,13 @@
       // Same release as path.hash.mode, and not by coincidence: loop detection
       // counts how often this repeater's own hash appears in a packet's path,
       // and multibyte path hashes landed in the same version.
-      loopDetect: v >= 114
+      loopDetect: v >= 114,
+      // set owner.info landed in 1.12, which sits *inside* the 1.10-1.13 tier.
+      // Nothing here can tell 1.13 from 1.11, so rather than withhold it from
+      // the two versions that do have it, it is offered everywhere and the
+      // oldest tier says plainly that it might come back unknown.
+      ownerInfo: true,
+      ownerInfoUncertain: v < 114
     };
   }
 
@@ -599,6 +607,20 @@
     return [primary];
   }
 
+  // Whatever the owner typed, as one serial-safe line's worth of text. Empty
+  // means "don't send the command", which leaves any existing owner info on the
+  // repeater alone — there is no way here to deliberately blank it out, and
+  // sending an empty value by accident would do exactly that.
+  function ownerValue() {
+    // A single-line input, but a paste can still smuggle in line breaks and tabs.
+    // "|" is the firmware's own newline marker, so that is what they become.
+    return els.owner.value
+      .replace(/[\r\n]+/g, " | ")
+      .replace(/\t/g, " ")
+      .replace(/\s+$/, "")
+      .replace(/^\s+/, "");
+  }
+
   function buildCommands(entry) {
     var c = caps();
     var chains = chainsFor(entry);
@@ -615,6 +637,9 @@
     }
     if (c.loopDetect && els.loop.value) {
       lines.push("set loop.detect " + els.loop.value);
+    }
+    if (c.ownerInfo && ownerValue()) {
+      lines.push("set owner.info " + ownerValue());
     }
 
     // The region block, in whichever form this firmware understands. One chain
@@ -754,6 +779,32 @@
           : "How often the repeater floods an advert to the whole mesh. The firmware's own " +
             "default is 12 hours and it accepts 3–168; 24 halves that traffic while still " +
             "keeping the node discoverable.";
+
+    renderOwnerHint(c);
+  }
+
+  function renderOwnerHint(c) {
+    var owner = ownerValue();
+
+    var what =
+      "Free text the repeater carries so whoever finds it on the mesh can work out who runs " +
+      "it — an email address, a Discord handle, a callsign, a URL. Anyone who can query the " +
+      "node reads it back, so treat it as public.";
+
+    if (!owner) {
+      els.ownerHint.textContent = what +
+        " Blank, so nothing is sent and the repeater keeps whatever it already has.";
+      return;
+    }
+
+    els.ownerHint.textContent = what +
+      " A | becomes a line break where it is displayed. Up to " + els.owner.maxLength +
+      " characters here, which keeps the command inside the " + MAX_LINE +
+      "-character serial line." +
+      (c.ownerInfoUncertain
+        ? " set owner.info arrived in firmware 1.12, so on 1.10 or 1.11 it comes back unknown —" +
+          " drop that line if it does."
+        : "");
   }
 
   function renderChain(chain) {
@@ -805,6 +856,7 @@
     if (built.caps.hashMode) { lines.push("get path.hash.mode"); }
     if (built.caps.floodAdvert && floodValue() !== null) { lines.push("get flood.advert.interval"); }
     if (built.caps.loopDetect && els.loop.value) { lines.push("get loop.detect"); }
+    if (built.caps.ownerInfo && ownerValue()) { lines.push("get owner.info"); }
 
     var block = document.createElement("div");
     block.className = "code-block";
@@ -893,6 +945,16 @@
         strict: "Rejects a flood packet the moment this repeater's own id appears in its path at all, whatever the hash size. The least likely to let a loop through, and the most likely to drop a legitimate re-flood."
       };
       items.push(["set loop.detect " + els.loop.value, LOOP_WHY[els.loop.value]]);
+    }
+
+    if (built.caps.ownerInfo && ownerValue()) {
+      items.push(["set owner.info " + ownerValue(),
+        "Stores your contact details on the repeater, so someone seeing it on the mesh can " +
+        "reach you about it. It is readable by anyone who can query the node, and a | is " +
+        "shown as a line break." +
+        (built.caps.ownerInfoUncertain
+          ? " This command needs firmware 1.12; 1.10 and 1.11 will reject it."
+          : "")]);
     }
 
     if (built.caps.regionDef) {
@@ -996,12 +1058,11 @@
 
   /* ---------- options ---------- */
 
-  [els.duty, els.hash, els.home, els.verify, els.fw, els.loop, els.flood,
-   els.role, els.bridge].forEach(function (el) {
-    el.addEventListener("change", render);
-  });
+  [els.duty, els.hash, els.home, els.verify, els.fw, els.loop, els.flood, els.owner,
+   els.role, els.bridge].forEach(function (el) { el.addEventListener("change", render); });
   els.duty.addEventListener("input", render);
   els.flood.addEventListener("input", render);
+  els.owner.addEventListener("input", render);
 
   /* ---------- boot ---------- */
 
