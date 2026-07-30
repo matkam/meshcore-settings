@@ -185,6 +185,37 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
     String(await page.$$eval(".map-county.is-on", (n) => n.length)));
 }
 
+/* ---------- the node's own region table has a ceiling ----------
+ * MAX_REGION_ENTRIES in the firmware is 32. Going over does not fail cleanly:
+ * names are placed until the table is full, then the rest are rejected, which
+ * leaves the repeater half configured.
+ */
+{
+  await page.goto(SITE + "#prb", { waitUntil: "networkidle" });
+  check("the count is shown while it is comfortable",
+    /5 of 32 region names/.test(await page.textContent("#line-note")),
+    await page.textContent("#line-note"));
+
+  for (const code of ["nco", "nor", "sv", "sn", "sfb", "soc", "cc", "sjv"]) {
+    await page.check(`.picker input[data-code="${code}"]`);
+    await page.waitForTimeout(35);
+  }
+  const counties = await page.$$eval(".pick-row.lvl-county input",
+    (n) => n.slice(0, 26).map((x) => x.dataset.code));
+  for (const code of counties) {
+    await page.check(`.picker input[data-code="${code}"]`);
+    await page.waitForTimeout(20);
+  }
+  await page.waitForTimeout(300);
+  check("going over the node's region limit is called out",
+    /a node holds 32/.test(await page.textContent("#line-note")),
+    await page.textContent("#line-note"));
+  check("and it says what actually goes wrong, not just that it is too many",
+    /half configured/.test(await page.textContent("#line-note")));
+  check("styled as a warning",
+    (await page.getAttribute("#line-note", "class")).includes("over"));
+}
+
 /* ---------- getting back out ---------- */
 {
   await page.goto(SITE, { waitUntil: "networkidle" });

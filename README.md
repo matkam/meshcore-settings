@@ -210,6 +210,16 @@ ancestry placed once.
 A link carries every pick: [`#prb,slc`](https://matkam.github.io/meshcore-settings/#prb,slc)
 restores the whole set.
 
+### Two limits worth knowing
+
+- **160 characters per serial line.** Handled by splitting into more commands.
+- **32 region names per node** (`MAX_REGION_ENTRIES` in the firmware). This one
+  can't be worked around — it's the size of the node's region table. Ten areas in
+  ten different counties is already 32 names. Going over doesn't fail cleanly:
+  `region def` places names until the table is full and then rejects the rest,
+  leaving the repeater half configured. The line under the commands shows the
+  count, and warns when a selection won't fit.
+
 ## Editing the commands
 
 The generated block has an **Edit** button. Anything you type there becomes what
