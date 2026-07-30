@@ -46,6 +46,8 @@
     role: $("opt-role"),
     roleHint: $("role-hint"),
     bridge: $("opt-bridge"),
+    bridgeAdd: $("add-bridge"),
+    bridgeList: $("bridge-list"),
     bridgeField: $("bridge-field"),
     bridgeHint: $("bridge-hint")
   };
@@ -585,7 +587,14 @@
 
   function role() { return els.role.value; }
 
-  // The chains this node should carry. Usually one; a bridge carries two.
+  // Extra places a bridging site carries, beyond the one it is filed under.
+  // The PNW document describes bridging two metros, but its metro tag sits at
+  // roughly our county level — our local areas are finer, so one mountaintop can
+  // genuinely cover three or four of them. The count is not capped; the hint
+  // says when it is getting out of hand.
+  var bridges = [];
+
+  // The chains this node should carry: the one it sits in, plus any it bridges.
   function chainsFor(entry) {
     var primary = chainOf(entry);
 
@@ -597,15 +606,54 @@
     }
 
     if (role() === "bridge") {
-      var second = byCode[els.bridge.value];
-      // An unset or nonsensical second area is just the ordinary case.
-      if (second && second.code !== entry.code) {
-        return [primary, chainOf(second)];
-      }
+      var chains = [primary];
+      bridges.forEach(function (code) {
+        var extra = byCode[code];
+        // Its own area is already the primary chain, so adding it is a no-op.
+        if (extra && extra.code !== entry.code) { chains.push(chainOf(extra)); }
+      });
+      return chains;
     }
 
     return [primary];
   }
+
+  function renderBridgeList() {
+    els.bridgeList.textContent = "";
+    bridges.forEach(function (code) {
+      var entry = byCode[code];
+      if (!entry) { return; }
+      var li = document.createElement("li");
+      var name = document.createElement("span");
+      name.textContent = entry.name;
+      var drop = document.createElement("button");
+      drop.type = "button";
+      drop.className = "chip-x";
+      drop.setAttribute("aria-label", "Remove " + entry.name);
+      drop.textContent = "\u00d7";
+      drop.addEventListener("click", function () {
+        bridges = bridges.filter(function (c) { return c !== code; });
+        renderBridgeList();
+        render();
+      });
+      li.appendChild(name);
+      li.appendChild(drop);
+      els.bridgeList.appendChild(li);
+    });
+  }
+
+  els.bridgeAdd.addEventListener("click", function () {
+    var code = els.bridge.value;
+    // Ignore a repeat, and ignore the area this site is already filed under —
+    // both are carried anyway, and a chip for either would claim something the
+    // generated commands do not do.
+    if (code && bridges.indexOf(code) === -1 && !(current && code === current.code)) {
+      bridges.push(code);
+      renderBridgeList();
+      render();
+    }
+    els.bridge.value = "";
+  });
 
   // Whatever the owner typed, as one serial-safe line's worth of text. Empty
   // means "don't send the command", which leaves any existing owner info on the
@@ -682,6 +730,13 @@
   /* ---------- render ---------- */
 
   function render() {
+    // A chip for the area now selected as primary would be a no-op, so drop it
+    // rather than leave it sitting there looking meaningful.
+    if (current) {
+      var kept = bridges.filter(function (c) { return c !== current.code; });
+      if (kept.length !== bridges.length) { bridges = kept; renderBridgeList(); }
+    }
+
     renderFirmwareHints();
 
     if (!current) {
@@ -747,16 +802,22 @@
         "link; neither end's local chatter does. For a dedicated relay between distant areas, " +
         "not for a high site that serves somewhere."
       : role() === "bridge"
-        ? "Carries a second area's chain as well, so local traffic crosses between the two. " +
+        ? "Carries other areas' chains as well, so local traffic crosses between them. " +
           "Use it sparingly — if many high sites do this, local scoping stops meaning anything."
         : "The normal answer, and the right one for almost everything: carry the full chain. " +
           "A short-range node needs it as much as a mountaintop does — dropping a tag only cuts " +
           "off the devices that reach the mesh through you.";
 
-    els.bridgeHint.textContent = els.bridge.value
-      ? "Both areas' traffic will cross this repeater. The areas either side still won't " +
-        "re-forward each other's, so it stops one hop past you."
-      : "Pick the other area this site genuinely bridges. Until then it behaves as a normal site.";
+    var extras = bridges.length;
+    els.bridgeHint.textContent = extras === 0
+      ? "Add every area this site genuinely covers, beyond the one above. Until then it " +
+        "behaves as an ordinary site."
+      : extras > 3
+        ? extras + " extra areas. That is a lot of local traffic to pull through one site — " +
+          "worth checking each is really in its coverage, since the point of local scoping is " +
+          "that local traffic stays local."
+        : "Local traffic for " + (extras + 1) + " areas will cross this repeater. The repeaters " +
+          "around each still won't re-forward the others', so it travels one hop past you and stops.";
 
     els.loop.disabled = !c.loopDetect;
     els.loopHint.textContent = c.loopDetect
@@ -916,13 +977,12 @@
         "local message forwarded into non-matching territory dies one hop later, because the next " +
         "repeater does not carry the tag."]);
     } else if (built.role === "bridge" && built.chains.length > 1) {
-      var other = built.chains[1];
-      items.push(["region " + (built.caps.regionDef ? "def" : "put") + " … " +
-                  other[other.length - 1].code,
-        "A second chain, so this site carries " + other[other.length - 1].label +
-        " as well as " + built.chain[built.chain.length - 1].label +
-        ". Local traffic for both crosses this repeater. The repeaters either side still won't " +
-        "re-forward each other's, so it travels one hop into the neighbouring area and stops."]);
+      var others = built.chains.slice(1).map(function (ch) { return ch[ch.length - 1].label; });
+      items.push(["region " + (built.caps.regionDef ? "def" : "put") + "  \u00d7" + built.chains.length,
+        "One chain per area this site carries: " + built.chain[built.chain.length - 1].label +
+        ", plus " + others.join(", ") + ". Local traffic for all of them crosses this repeater. " +
+        "The repeaters around each area still won't re-forward the others', so it travels one " +
+        "hop past you and stops — that one extra hop is the cost of bridging."]);
     }
 
     if (built.caps.floodAdvert && floodValue() !== null) {
