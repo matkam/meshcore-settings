@@ -6,6 +6,9 @@
   var ROOT = DATA.meta.root;
   var ROOT_LABELS = DATA.meta.rootLabels || {};
   var MAX_LINE = DATA.meta.maxLineLength || 160;
+  // MAX_REGION_ENTRIES in the firmware's RegionMap.h. It is a build-time
+  // #ifndef, so a custom build could differ, but 32 is what ships.
+  var MAX_REGIONS = 32;
 
   var $ = function (id) { return document.getElementById(id); };
 
@@ -911,6 +914,26 @@
     }, "");
     var over = longest.length > MAX_LINE;
 
+    // A node holds MAX_REGIONS names, full stop. Going over does not fail
+    // cleanly: region put/def places names until the table is full and then
+    // replies "Err - put failed", leaving the node half configured. Easy to
+    // reach now that several places can be picked — ten areas in ten different
+    // counties is exactly 32 names.
+    var names = {};
+    built.chains.forEach(function (chain) {
+      chain.forEach(function (t) { names[t.code] = true; });
+    });
+    var count = Object.keys(names).length;
+
+    if (count > MAX_REGIONS) {
+      els.lineNote.className = "line-note over";
+      els.lineNote.textContent =
+        "This needs " + count + " region names, and a node holds " + MAX_REGIONS +
+        ". The repeater will place what fits and then reject the rest, leaving it " +
+        "half configured — pick fewer places.";
+      return;
+    }
+
     els.lineNote.className = "line-note" + (over ? " over" : "");
 
     if (over) {
@@ -919,7 +942,8 @@
         "-character serial limit. Split it across two commands.";
     } else if (built.caps.regionDef) {
       els.lineNote.textContent =
-        "region def line: " + longest.length + " of " + MAX_LINE + " characters.";
+        "region def line: " + longest.length + " of " + MAX_LINE + " characters, " +
+        count + " of " + MAX_REGIONS + " region names.";
     } else {
       els.lineNote.textContent =
         built.regionLines.length + " region commands, longest " + longest.length +
