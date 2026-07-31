@@ -302,7 +302,10 @@ than the page growing.
 The box grows with the window up to about 720px — roughly nineteen rows, against
 the fourteen a fixed 420px used to give — and stops there so step 1 doesn't
 become a wall of tags. It's only ever as tall as it has content for, so at rest
-it's still eight rows. Drag its bottom edge for more. Phones cap lower, since a
+it's still eight rows. Drag its bottom edge for more — the cap steps aside as
+soon as you grab the handle, since `resize` writes a height that `max-height`
+would otherwise clamp, which stopped the drag dead at exactly the point you'd
+reach for it. Phones cap lower, since a
 row is two lines there and 70% of the screen would push the map out of sight.
 
 It used not to work that way: ticking was the only way to see inside something,
