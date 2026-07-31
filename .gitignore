@@ -1,2 +1,7 @@
 node_modules/
 tests/screenshots/
+
+# The dev dependencies are Playwright and a YAML parser, neither of which the
+# published site contains, so there is nothing here worth pinning. Ignored
+# rather than merely untracked so a `git add -A` cannot sweep it into a commit.
+package-lock.json
