@@ -558,6 +558,39 @@ window.RegionData.ready(function (DATA) {
       countsFrom(DATA.places, 0, " and ") + " to choose from.";
   }
 
+  /* ---------- the resize handle ----------
+   *
+   * `resize` writes an inline height as you drag, but `max-height` still clamps
+   * what that height renders as — so the handle could not pass the cap, which is
+   * exactly the point at which someone reaches for it.
+   *
+   * Grabbing the handle is a statement that the person wants to choose the
+   * height, so the automatic cap gets out of the way at that moment. The height
+   * is pinned first so the box does not jump, and both are put back if the grab
+   * turned out to be a click that never dragged anywhere.
+   */
+
+  var GRAB_PX = 18;   // the corner the browser draws its grip in
+
+  els.picker.addEventListener("pointerdown", function (evt) {
+    if (getComputedStyle(els.picker).resize === "none") { return; }
+
+    var box = els.picker.getBoundingClientRect();
+    if (evt.clientX < box.right - GRAB_PX || evt.clientY < box.bottom - GRAB_PX) { return; }
+
+    var from = box.height;
+    els.picker.style.height = from + "px";
+    els.picker.style.maxHeight = "none";
+
+    window.addEventListener("pointerup", function restore() {
+      window.removeEventListener("pointerup", restore);
+      if (Math.abs(els.picker.getBoundingClientRect().height - from) < 1) {
+        els.picker.style.height = "";
+        els.picker.style.maxHeight = "";
+      }
+    });
+  });
+
   els.clearPicks.addEventListener("click", function () {
     picked = {};
     els.search.value = "";
