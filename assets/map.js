@@ -56,11 +56,19 @@ window.RegionData.ready(function (DATA) {
   var points = [];    // every place with a position, with that position projected
 
   DATA.nodes.forEach(function (node) {
-    if (node.outline) { byShape[node.outline] = node; }
+    // `outline` is a name or a list of them: a place claims every shape it
+    // wholly contains. Where a place cuts across a shape nobody claims it, and
+    // it draws as plain background with the dots inside describing the extent.
+    outlineNames(node).forEach(function (name) { byShape[name] = node; });
     if (typeof node.lat === "number" && typeof node.lon === "number") {
       points.push({ node: node });
     }
   });
+
+  function outlineNames(node) {
+    if (!node.outline) { return []; }
+    return Array.isArray(node.outline) ? node.outline : [node.outline];
+  }
 
   // Ancestors, nearest first — "Del Norte County · North Coast".
   function ancestry(node) {
@@ -107,7 +115,7 @@ window.RegionData.ready(function (DATA) {
   // which left an unplaced marker drawn at the origin.
   gMark.style.display = "none";
 
-  var outlineEls = {};   // place code -> <path>
+  var outlineEls = {};   // place code -> [<path>], one per shape it claims
 
   MAP.shapes.forEach(function (shape) {
     var owner = byShape[shape.name];
@@ -119,7 +127,7 @@ window.RegionData.ready(function (DATA) {
       // Every ancestor, so "tint everything inside this place" is one selector
       // with ~= rather than a walk back up the tree.
       path.dataset.trail = owner.trail.join(" ");
-      outlineEls[owner.code] = path;
+      (outlineEls[owner.code] = outlineEls[owner.code] || []).push(path);
     }
     gCounties.appendChild(path);
   });
@@ -154,7 +162,9 @@ window.RegionData.ready(function (DATA) {
     text.setAttribute("y", text.dataset.baseY);
     text.setAttribute("class", "map-label");
     text.dataset.place = place.code;
-    text.textContent = place.code.toUpperCase();
+    // Codes are words now, and "SACRAMENTOVALLEY" across the valley floor is
+    // unreadable, so a place may carry a `short` for the label only.
+    text.textContent = (place.short || place.code).toUpperCase();
     gLabels.appendChild(text);
   });
 
@@ -507,7 +517,7 @@ window.RegionData.ready(function (DATA) {
       // ancestors as part of the chain, so this previews what a click actually
       // does — and it means the outline under the pointer responds everywhere,
       // rather than only in the gaps between dots.
-      setHover({ code: dot.node.code, els: [dot.el, enclosingOutline(dot.node)],
+      setHover({ code: dot.node.code, els: [dot.el].concat(enclosingOutlines(dot.node)),
                  label: dot.node.name, sub: ancestry(dot.node) }, evt);
       return;
     }
@@ -526,14 +536,15 @@ window.RegionData.ready(function (DATA) {
 
   svg.addEventListener("pointerleave", clearHover);
 
-  // The nearest drawn shape a place sits inside, which is what should light up
+  // The nearest drawn shapes a place sits inside, which is what should light up
   // when its dot is hovered. Not necessarily its parent: a level can pass
-  // through without claiming a shape of its own.
-  function enclosingOutline(node) {
+  // through without claiming a shape of its own, and one that does claim may
+  // hold several — the North Bay is four counties.
+  function enclosingOutlines(node) {
     for (var i = node.trail.length - 1; i >= 0; i--) {
       if (outlineEls[node.trail[i]]) { return outlineEls[node.trail[i]]; }
     }
-    return outlineEls[node.code] || null;
+    return outlineEls[node.code] || [];
   }
 
   function setHover(next, evt) {
@@ -624,7 +635,7 @@ window.RegionData.ready(function (DATA) {
     clearMarks("is-in-region");
 
     window.SettingsState.picked().forEach(function (pick) {
-      if (outlineEls[pick.code]) { outlineEls[pick.code].classList.add("is-on"); }
+      (outlineEls[pick.code] || []).forEach(function (el) { el.classList.add("is-on"); });
 
       var dot = dotEl(pick.code);
       if (dot) { dot.classList.add("is-on"); }

@@ -72,6 +72,12 @@
       });
     })(regions.places, [], 0);
 
+    // Extra region names that are not levels. A place opts into one, and
+    // everything beneath it carries it too, so this walks the trail rather than
+    // reading the node alone.
+    var tagsByCode = {};
+    (regions.tags || []).forEach(function (t) { tagsByCode[t.code] = t; });
+
     var levels = regions.levels || [];
     var limits = regions.limits || {};
 
@@ -86,6 +92,20 @@
       places: regions.places || [],
       nodes: nodes,
       byCode: byCode,
+
+      tags: regions.tags || [],
+      tag: function (code) { return tagsByCode[code] || null; },
+
+      // Every tag this place carries, its own and any inherited from above.
+      tagsFor: function (node) {
+        var out = [];
+        node.trail.concat([node.code]).forEach(function (code) {
+          var n = byCode[code];
+          if (!n || !n.tags) { return; }
+          n.tags.forEach(function (t) { if (out.indexOf(t) === -1) { out.push(t); } });
+        });
+        return out;
+      },
 
       maxLineLength: limits.maxLineLength || 160,
       maxRegionNames: limits.maxRegionNames || 32,
