@@ -951,12 +951,17 @@ window.RegionData.ready(function (DATA) {
     var regionLines = [];
     var placed = {};
     if (c.regionDef) {
-      // Picks and tags are built as separate commands. Joining them would be
-      // correct — `dtla|ca socal` does put socal under ca — but the `name|jump`
-      // form means "another branch of what you picked", and a tag is not that.
-      // On one line it reads as though the tag hangs off the leaf, and a single
-      // pick would carry a `|` whose only explanation is about bridge sites.
-      regionLines = defLines(chains).concat(defLines(tagChains));
+      regionLines = defLines(chains);
+      // A tag is one extra name, not a chain, so it is placed with `region put`
+      // even here where `region def` is available. Three reasons: `def` walking
+      // a chain overstates what a tag is, a second `def` would re-assert west
+      // and ca that the line above just placed — each re-put resetting their
+      // flags — and this way the tag looks the same on every firmware, where
+      // only the chain form differs. `put` flood-allows as it creates on 1.15+,
+      // so no allowf is needed at this tier.
+      tagChains.forEach(function (ch) {
+        regionLines.push("region put " + ch[ch.length - 1].code + " " + ch[ch.length - 2].code);
+      });
     }
     allChains.forEach(function (ch) {
       var chCodes = ch.map(function (x) { return x.code; });

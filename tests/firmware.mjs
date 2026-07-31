@@ -101,9 +101,10 @@ await tick(page, "slonorth");
 await page.evaluate(() => { document.querySelector("details.advanced").open = false; });
 await page.screenshot({ path: shot("fw-old.png"), clip: { x: 0, y: 180, width: 1000, height: 1250 } });
 
-/* ---------- tags on old firmware ----------
- * A tag is not a level, so it cannot ride the chain: it is placed as its own
- * child of the root, which is a separate `region put` (and its own allowf).
+/* ---------- tags ----------
+ * A tag is one extra name rather than a chain, so `region put` places it on
+ * every tier — the only difference further down is that 1.14 and older need an
+ * explicit allowf, the same as every other name.
  */
 await page.goto(SITE + "#dtla", { waitUntil: "networkidle" });
 await page.selectOption("#opt-fw", "110");
@@ -115,8 +116,11 @@ check("a tag is placed as its own name on 1.10", await cmds(), [
   "region put dtla losangeles", "region allowf dtla",
   "region put socal ca", "region allowf socal",
   "region save"].join("\n"));
-await page.goto(SITE + "#slonorth", { waitUntil: "networkidle" });
 await page.selectOption("#opt-fw", "116");
+check("and the same line on 1.16, where the chain uses region def", await cmds(), [
+  "set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
+  "region def west ca losangeles dtla", "region put socal ca", "region save"].join("\n"));
+await page.goto(SITE + "#slonorth", { waitUntil: "networkidle" });
 
 for (const w of [390, 768, 1200]) {
   await page.setViewportSize({ width: w, height: 900 });

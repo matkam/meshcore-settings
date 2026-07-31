@@ -82,13 +82,13 @@ await page.selectOption("#opt-hash", "1");
 
 // --- 5. deep link
 await page.goto(SITE + "#palmsprings", { waitUntil: "networkidle" });
-// The Low Desert carries the `socal` tag, which is not part of the chain, so it
-// gets its own command rather than being joined on with `|` — that form means
-// "another branch of what you picked", which a tag is not.
+// The Low Desert carries the `socal` tag. It is one extra name rather than a
+// chain, so it is placed with `region put` even on 1.16 — the same line every
+// firmware tier emits for it.
 pass &= check("deep link #palmsprings, with the socal tag",
   (await page.textContent("#commands")).trim(),
   ["set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
-   "region def west ca lowdesert palmsprings", "region def west ca socal", "region save"].join("\n"));
+   "region def west ca lowdesert palmsprings", "region put socal ca", "region save"].join("\n"));
 console.log("deep-link search box:", JSON.stringify(await page.inputValue("#search")));
 
 // --- 5b. a tag is opt-in: places outside it carry nothing extra
