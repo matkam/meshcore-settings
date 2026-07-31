@@ -356,6 +356,25 @@ Two promises: `format` changes only when the shape does in a way that breaks
 readers, and a `code` already in the file is not renamed — codes are on real
 hardware, and renaming one splits a mesh.
 
+### The YAML is published too
+
+`data/regions.yaml` goes out with everything else, served as `text/yaml` with the
+same `Access-Control-Allow-Origin: *`, so `yaml.safe_load` on that URL gets you
+the same tree with the explanatory comments attached. Nothing stops you reading
+it, and if you want to see *why* a place is filed where it is, that's the file to
+look at.
+
+The JSON is still the one to depend on:
+
+- It parses everywhere without a dependency.
+- It is normalised. The build fixes key order, drops `children` when a place has
+  none, and rejects unknown fields; the YAML is whatever a contributor typed.
+- `updated: 2026-07-31` is a YAML timestamp, not a string, so most parsers hand
+  you a date object. The JSON always has `"2026-07-31"`. That is the one field
+  where the two formats disagree on type.
+
+So: the YAML if you're reading, the JSON if you're building on it.
+
 ## Pushing settings over the air
 
 On browsers with Web Serial or Web Bluetooth (Chrome/Edge desktop, plus Chrome on
