@@ -11,7 +11,7 @@
  * Only data/regions.json is intercepted.
  */
 import { chromium } from "playwright";
-import { launchOptions, tick, clearPicks } from "./harness.mjs";
+import { launchOptions, tick, clearPicks, collapseAll } from "./harness.mjs";
 
 const SITE = process.env.SITE || "http://127.0.0.1:8765/";
 
@@ -122,10 +122,13 @@ check("the chain display shows all six", chain.join(" ") === "west tl za da ta n
 /* ---------- a shallower branch is not padded out ---------- */
 
 await clearPicks(page);
+await collapseAll(page);
 await tick(page, "zb", "db");
 check("a two-level branch stops where it stops",
   (await cmds()).includes("region def west tl zb db"), await cmds());
 check("and shows no empty level under it", (await rows(2)) === 0, await rows(2));
+check("so the shallow branch has nothing to open",
+  (await page.$$('.pick-toggle[data-code="db"]')).length === 0);
 
 /* ---------- level names come from the data ---------- */
 

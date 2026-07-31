@@ -290,6 +290,35 @@ Region names live in one flat namespace on a node, so codes must be unique acros
 the entire file — `npm run validate` enforces that, along with the 160-character
 serial line limit and MeshCore's 8-level depth cap.
 
+## Browsing, and looking a code up
+
+The picker is a tree of checkboxes, and **opening a place is separate from
+choosing it**. Each place with something inside it has its own disclosure
+control, so you can read the whole scheme end to end without ticking anything —
+useful for "what is Mendocino County's code?" or "what did the group settle on
+for the Coachella Valley?". *Expand all* opens the lot; the box scrolls rather
+than the page growing.
+
+It used not to work that way: ticking was the only way to see inside something,
+so looking a code up meant selecting two places you didn't want and then
+unselecting them.
+
+Every row carries its code first, then its name, then a description — a region's
+blurb, or for a local area the towns it covers, which is the same alias list that
+makes it findable by search. Counties have no description in the data and need
+none. Descriptions are clipped to one line so a row stays a row and the tree's
+shape stays scannable; the full text is in the tooltip, and on a narrow screen it
+drops to a second line instead.
+
+Ticking a place still opens it, because working downwards that way is a good
+default. Unticking deliberately leaves it open — you may still want to look at
+what you just decided against — and *Clear* clears the selection without
+collapsing anything.
+
+One consequence worth knowing if you're reading the DOM: only open rows are
+rendered, so a ticked place inside a collapsed one is not in the markup. It is
+still selected, and `window.SettingsState.picked()` still reports it.
+
 ## Using the region data elsewhere
 
 [`data/regions.json`](data/regions.json) is the tree on its own, with nothing about
@@ -484,6 +513,7 @@ run against every PR, and screenshots are uploaded when something fails.
 | `basic` | Search, the picker, deep links, copy |
 | `firmware` | Command output on each of the four version tiers |
 | `levels` | A synthetic tree, four levels deep in one branch and two in another |
+| `browse` | Reading the tree without selecting from it, and vice versa |
 | `detect` | Reading position and firmware from a connected repeater |
 | `flow` | Landing on the page cold and working through it |
 | `push` | Sending over the air, stopping at a failure, resuming |

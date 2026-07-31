@@ -94,7 +94,7 @@ async function scenario({ lat, lon, ver }) {
     const label = (await page.$$eval("#detect-choices button", (bs) => bs.map((b) => b.textContent)))[i];
     await page.$$eval("#detect-choices button", (bs, i) => bs[i].click(), i);
     // The chain renders codes, so compare against the picker's own label instead.
-    const picked = await page.$eval(".pick-row.lvl-2 input:checked + .pick-name",
+    const picked = await page.$eval(".pick-row.lvl-2 input:checked ~ .pick-title .pick-name",
       (x) => x.textContent);
     if (picked !== label.split(" · ")[0]) { allApplied = false; }
   }
