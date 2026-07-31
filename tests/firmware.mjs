@@ -17,7 +17,7 @@ function check(name, actual, expected) {
   if (!ok) console.log("--- expected ---\n" + expected + "\n--- actual ---\n" + actual + "\n");
 }
 
-await page.goto(SITE + "#prb", { waitUntil: "networkidle" });
+await page.goto(SITE + "#pasorobles", { waitUntil: "networkidle" });
 const cmds = async () => (await page.textContent("#commands")).trim();
 
 // 1.16+ default

@@ -78,12 +78,6 @@ check("a local area describes itself with its towns",
   (await descOf("oakland")).text === "Oakland, Berkeley, Emeryville, Alameda, Piedmont, Albany",
   JSON.stringify(await descOf("oakland")));
 
-// Retired codes are searchable but must not leak into the description, which is
-// why they live in `legacy` rather than in `aliases`.
-check("and not with the code it used to have",
-  !(await descOf("oakland")).text.includes("oak"),
-  JSON.stringify(await descOf("oakland")));
-
 check("the full text is on the element, since the visible text may be clipped",
   (await descOf("oakland")).title === (await descOf("oakland")).text);
 
@@ -240,7 +234,7 @@ check("and comes back ticked when it is opened again",
 
 /* ---------- a pick from elsewhere opens its way in ---------- */
 
-await page.goto(SITE + "#prb", { waitUntil: "networkidle" });
+await page.goto(SITE + "#pasorobles", { waitUntil: "networkidle" });
 check("a deep link opens the tree down to what it selected",
   (await isOpen("centralcoast")) === "true" && (await isOpen("slocounty")) === "true",
   `centralcoast=${await isOpen("centralcoast")} slocounty=${await isOpen("slocounty")}`);

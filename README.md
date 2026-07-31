@@ -63,9 +63,9 @@ firmware it's converted to the nearest airtime factor, since `set af` only offer
 1/(1+af) steps (100% → `af 0`, 50% → `af 1`, 25% → `af 3`). Check your version on
 the node with `ver`.
 
-Every area has a shareable deep link — [`#prb`](https://matkam.github.io/meshcore-settings/#prb)
-opens the page with North County already selected, which is handy for pasting into
-a group chat when you're helping someone bring a node up.
+Every area has a shareable deep link — [`#pasorobles`](https://matkam.github.io/meshcore-settings/#pasorobles)
+opens the page with Paso Robles / Atascadero already selected, which is handy for
+pasting into a group chat when you're helping someone bring a node up.
 
 ## The map
 
@@ -220,7 +220,7 @@ overflow starts a fresh command from the root — and on pre-1.16 firmware, wher
 there is no `region def`, it falls back to one `region put` per name with shared
 ancestry placed once.
 
-A link carries every pick: [`#prb,slc`](https://matkam.github.io/meshcore-settings/#prb,slc)
+A link carries every pick: [`#pasorobles,slocity`](https://matkam.github.io/meshcore-settings/#pasorobles,slocity)
 restores the whole set.
 
 ### Two limits worth knowing
@@ -314,10 +314,6 @@ why Los Angeles is not `la`.
 Region names live in one flat namespace on a node, so codes must be unique across
 the entire file — `npm run validate` enforces that, along with the 160-character
 serial line limit, the 30-character code limit and MeshCore's 8-level depth cap.
-
-Codes that have been retired live on in a `legacy` map at the bottom of
-`data/regions.yaml` and in the new place's `aliases`, so a link somebody saved or
-a code somebody wrote down still resolves.
 
 ## Browsing, and looking a code up
 

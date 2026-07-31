@@ -19,7 +19,7 @@ function check(name, ok, detail) {
     Object.defineProperty(navigator, "serial", { get: () => undefined, configurable: true });
     Object.defineProperty(navigator, "bluetooth", { get: () => undefined, configurable: true });
   });
-  await page.goto(SITE + "#prb", { waitUntil: "networkidle" });
+  await page.goto(SITE + "#pasorobles", { waitUntil: "networkidle" });
   check("push panel hidden without Web Serial/BLE", await page.isHidden("#push-panel"));
   check("no JS errors (unsupported browser path)", errs.length === 0, errs.join("; "));
   await page.close();
@@ -145,7 +145,7 @@ await page.addInitScript(() => {
   }});
 });
 
-await page.goto(SITE + "#prb", { waitUntil: "networkidle" });
+await page.goto(SITE + "#pasorobles", { waitUntil: "networkidle" });
 
 check("push panel visible with Web Serial", await page.isVisible("#push-panel"));
 check("BLE button hidden when unsupported", await page.isHidden("#btn-ble"));

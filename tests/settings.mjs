@@ -14,7 +14,7 @@ function check(name, ok, detail) {
 const page = await browser.newPage({ viewport: { width: 1000, height: 1200 } });
 const errs = [];
 page.on("pageerror", (e) => errs.push(e.message));
-await page.goto(SITE + "#prb", { waitUntil: "networkidle" });
+await page.goto(SITE + "#pasorobles", { waitUntil: "networkidle" });
 await page.evaluate(() => { document.querySelector("details.advanced").open = true; });
 
 const cmds = async () => (await page.textContent("#commands")).trim();
@@ -254,7 +254,7 @@ await page.close();
   p2.on("pageerror", (e) => e2.push(e.message));
   await p2.addInitScript(simInit);
   await p2.addInitScript(() => { window.__pos = { lat: 35.63, lon: -120.69 }; window.__ver = "v1.16.0 (Build: x)"; });
-  await p2.goto(SITE + "#prb", { waitUntil: "networkidle" });
+  await p2.goto(SITE + "#pasorobles", { waitUntil: "networkidle" });
 
   await p2.click("#edit-cmds");
   await p2.fill("#commands-edit", "set dutycycle 33\nregion def west ca centralcoast slocounty pasorobles\nregion save");

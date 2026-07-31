@@ -136,7 +136,7 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
 /* ---------- deep links ---------- */
 
 {
-  await page.goto(SITE + "#prb", { waitUntil: "networkidle" });
+  await page.goto(SITE + "#pasorobles", { waitUntil: "networkidle" });
   check("a single deep link still works",
     (await defs())[0] === "region def west ca centralcoast slocounty pasorobles", await cmds());
   await tick(page, "slocity");
@@ -149,7 +149,7 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
 /* ---------- it still composes with the rest ---------- */
 
 {
-  await page.goto(SITE + "#prb", { waitUntil: "networkidle" });
+  await page.goto(SITE + "#pasorobles", { waitUntil: "networkidle" });
   await page.click("#edit-cmds");
   await page.fill("#commands-edit", "set dutycycle 7\nregion save");
   await page.waitForTimeout(120);
@@ -163,8 +163,7 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
 
 // A link to a bridging site has to restore the whole set, not just its first tag.
 {
-  // Both are retired codes, so this covers the legacy map as well as multi-pick.
-  await page.goto(SITE + "#prb,oak", { waitUntil: "networkidle" });
+  await page.goto(SITE + "#pasorobles,oakland", { waitUntil: "networkidle" });
   const line = (await defs())[0];
   check("a multi deep link restores every pick",
     line.includes("pasorobles") && line.includes("oakland") && (await defs()).length === 1, line);
@@ -178,7 +177,7 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
 
 // The map has to show every pick, not just the first.
 {
-  await page.goto(SITE + "#prb,oak", { waitUntil: "networkidle" });
+  await page.goto(SITE + "#pasorobles,oakland", { waitUntil: "networkidle" });
   await page.waitForTimeout(250);
   check("the map marks every picked area",
     (await page.$$eval(".map-dot.is-on", (n) => n.length)) === 2,
@@ -198,7 +197,7 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
  * leaves the repeater half configured.
  */
 {
-  await page.goto(SITE + "#prb", { waitUntil: "networkidle" });
+  await page.goto(SITE + "#pasorobles", { waitUntil: "networkidle" });
   check("the count is shown while it is comfortable",
     /5 of 32 region names/.test(await page.textContent("#line-note")),
     await page.textContent("#line-note"));

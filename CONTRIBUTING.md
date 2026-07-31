@@ -105,16 +105,13 @@ real hardware, changing it silently splits the mesh — nodes on the old name st
 matching nodes on the new one until every operator reflashes their config. Adding
 a new code is cheap; changing one is not.
 
-If a rename really is necessary, say so explicitly in the PR description so it
-can be announced to the affected operators, and **put the old code in the
-`legacy` map** at the bottom of `data/regions.yaml` pointing at its successor.
-That keeps saved links working and keeps the old code findable in search. Leave
-it out of `aliases` — those are printed as the row's description, and a list of
-retired codes helps nobody read it.
+That window is open now and will not stay open. Nothing here is on hardware yet,
+so getting a name right today costs a pull request; getting it right in a year
+costs every operator in that branch a reflash. If you think a code is wrong, say
+so while it is still free.
 
-Where a code has no single successor, leave it out of `legacy` rather than
-guessing. `soc` split into six regions, and quietly landing somebody in Los
-Angeles when they meant San Diego is worse than the link doing nothing.
+If a rename really is necessary later, say so explicitly in the PR description so
+it can be announced to the affected operators.
 
 ## Choosing a code
 

@@ -78,10 +78,7 @@ const built = {
   limits: data.limits,
   root: (data.root || []).map((r) => ({ code: r.code, name: r.name })),
   levels: (data.levels || []).map((l) => ({ name: l.name, plural: l.plural })),
-  places: (data.places || []).map((node) => place(node, [])),
-  // Retired codes, so a link somebody saved still resolves. Sorted here rather
-  // than trusted from the source, for the same reason the rest of the output is.
-  legacy: Object.fromEntries(Object.entries(data.legacy || {}).sort(([a], [b]) => (a < b ? -1 : 1)))
+  places: (data.places || []).map((node) => place(node, []))
 };
 
 const text = printJson(built) + "\n";

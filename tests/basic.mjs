@@ -81,20 +81,18 @@ await page.fill("#opt-duty", "100");
 await page.selectOption("#opt-hash", "1");
 
 // --- 5. deep link
-await page.goto(SITE + "#cch", { waitUntil: "networkidle" });
-// #cch is a retired code: it exercises the legacy map as well as deep linking.
-pass &= check("deep link #cch (retired code)",
+await page.goto(SITE + "#palmsprings", { waitUntil: "networkidle" });
+pass &= check("deep link #palmsprings",
   (await page.textContent("#commands")).trim(),
   ["set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
    "region def west ca lowdesert palmsprings", "region save"].join("\n"));
 console.log("deep-link search box:", JSON.stringify(await page.inputValue("#search")));
 
 // --- 6. searches that should resolve
-// The last two are retired codes, which stay searchable through `aliases`.
 for (const [q, want] of [["Big Bear", "bigbear"], ["Humboldt", "eureka"], ["Truckee", "truckee"],
                          ["slo", "slocity"], ["Santa Cruz", "santacruz"], ["Bakersfield", "bakersfield"],
                          ["Yosemite", "mariposa"], ["Chula Vista", "chulavista"],
-                         ["prb", "pasorobles"], ["sfb", "bayarea"]]) {
+                         ["Alameda County", "eastbay"], ["Paso Robles", "pasorobles"]]) {
   await page.fill("#search", "");
   await page.fill("#search", q);
   await page.waitForTimeout(60);
@@ -111,7 +109,7 @@ await page.waitForTimeout(60);
 console.log("no-match:", (await page.textContent("#results")).trim());
 
 // --- 8. copy button
-await page.goto(SITE + "#prb", { waitUntil: "networkidle" });
+await page.goto(SITE + "#pasorobles", { waitUntil: "networkidle" });
 await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
 await page.click("#copy");
 const clip = await page.evaluate(() => navigator.clipboard.readText());
