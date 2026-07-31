@@ -290,6 +290,23 @@ Region names live in one flat namespace on a node, so codes must be unique acros
 the entire file — `npm run validate` enforces that, along with the 160-character
 serial line limit and MeshCore's 8-level depth cap.
 
+## Looking a code up
+
+The bottom of the page lists **every code in the scheme**, which the picker
+deliberately doesn't: it only reveals what is inside a place once you tick it,
+because ticking is how you choose. That's the wrong gesture for "what is
+Mendocino County's code?" or "what did the group settle on for the Coachella
+Valley?".
+
+It opens showing only the eight regions — each with its code, its description
+and a count of what's inside — and opening one reveals that whole subtree at
+once rather than another level of clicking. Counties show their name; local
+areas show the towns they cover, which is the alias list that makes them
+searchable. *Expand all* is there when you want the lot.
+
+It is read-only. Nothing in it selects anything or touches the generated
+commands — pick with the map, the search box or the list at the top.
+
 ## Using the region data elsewhere
 
 [`data/regions.json`](data/regions.json) is the tree on its own, with nothing about
@@ -428,6 +445,7 @@ Two things worth knowing:
 | `index.html` | The page |
 | `assets/data.js` | Fetches the two data files and indexes the tree |
 | `assets/app.js` | Search, the picker, command generation |
+| `assets/reference.js` | The read-only box listing every code |
 | `assets/map.js` | The map: draws it, handles picking, reflects the selection |
 | `assets/push.js` | Over-the-air flow: connect, log in, send, verify, resume |
 | `assets/vendor/meshcore.js/` | Vendored [meshcore.js](https://github.com/liamcottle/meshcore.js) (MIT), pinned — see its README |
@@ -484,6 +502,7 @@ run against every PR, and screenshots are uploaded when something fails.
 | `basic` | Search, the picker, deep links, copy |
 | `firmware` | Command output on each of the four version tiers |
 | `levels` | A synthetic tree, four levels deep in one branch and two in another |
+| `reference` | The code list: collapsed by default, recurses, changes nothing |
 | `detect` | Reading position and firmware from a connected repeater |
 | `flow` | Landing on the page cold and working through it |
 | `push` | Sending over the air, stopping at a failure, resuming |

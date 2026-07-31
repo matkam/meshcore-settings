@@ -580,6 +580,132 @@ pre.tree {
   line-height: 1.6;
 }
 
+/* ---------- the reference ----------
+   Read-only, and styled to be scanned rather than filled in: the code chip is
+   the thing the eye should land on, since that is what actually goes on the
+   air. Rows indent off a --depth custom property, so a tree with more levels
+   needs no new rules. */
+
+.ref-root {
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 6px;
+}
+
+.ref-root-name { color: var(--ink); }
+.ref-root-note { color: var(--ink-soft); }
+
+.ref-total {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px 14px;
+  margin: 0 0 10px;
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+}
+
+.ref-group {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+/* No display change on the summary itself: giving it flex or grid drops the
+   disclosure triangle in Chrome and Safari, and the triangle is the only thing
+   saying these open. */
+.ref-group summary {
+  padding: 9px 12px;
+  cursor: pointer;
+}
+
+.ref-group summary:hover { background: var(--accent-soft); }
+.ref-group[open] summary { border-bottom: 1px solid var(--line); }
+
+.ref-head {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  width: calc(100% - 1.2em);
+}
+
+.ref-head .ref-name { font-weight: 600; }
+
+/* The code and the name are one unit that never breaks between them; min-width
+   lets the name wrap inside it instead of forcing the whole unit onto its own
+   line. */
+.ref-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ref-count {
+  margin-left: auto;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.ref-blurb {
+  display: block;
+  margin: 2px 0 0 1.2em;
+  font-size: 0.84rem;
+  color: var(--ink-soft);
+}
+
+.ref-body { padding: 6px 12px 10px; }
+
+.ref-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 3px 10px;
+  padding: 3px 0;
+  padding-left: calc(var(--depth, 0) * 16px);
+  font-size: 0.88rem;
+}
+
+.ref-row .ref-name { font-weight: 500; }
+
+/* A row with things under it anchors the group beneath it. */
+.ref-parent .ref-name { font-weight: 600; }
+.ref-parent + .ref-row { margin-top: 1px; }
+.ref-row + .ref-parent { margin-top: 7px; }
+
+.ref-desc {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+.ref-code {
+  flex: none;
+  min-width: 3.6em;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 5px;
+  padding: 1px 6px;
+}
+
+/* Narrow screens: the description drops to its own line rather than squeezing
+   the name down to one word per line. */
+@media (max-width: 560px) {
+  .ref-desc { flex-basis: 100%; margin-left: 3.6em; }
+  .ref-count { margin-left: 0; flex-basis: 100%; }
+}
+
 /* ---------- push panel ---------- */
 
 .step.alt { background: var(--warn); }
