@@ -306,12 +306,16 @@ root as its own short chain, and a place opts into it rather than inheriting one
 by position. Everything beneath an opted-in place carries it too.
 
 ```
-region def west ca losangeles dtla|ca socal
+region def west ca losangeles dtla
+region def west ca socal
 ```
 
-That is one line building two chains — `west › ca › losangeles › dtla`, then back
-to `ca` for `socal`. The node ends up holding five names and matching traffic
-scoped to any of them.
+Its own command, not joined onto the chain with `|`. That form would work —
+`dtla|ca socal` does put `socal` under `ca` — but `name|jump` means "another
+branch of what you picked", and a tag is not that. On one line it reads as though
+the tag hangs off the leaf, and a single pick would carry a `|` whose only
+explanation is about bridge sites. The node ends up holding five names either way
+and matches traffic scoped to any of them.
 
 Tags are declared once at the top of `data/regions.yaml` and referenced by the
 places that carry them:
