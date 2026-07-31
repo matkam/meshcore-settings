@@ -364,14 +364,15 @@ the same tree with the explanatory comments attached. Nothing stops you reading
 it, and if you want to see *why* a place is filed where it is, that's the file to
 look at.
 
+Every field means the same thing in both, down to the type — `updated` is quoted
+in the YAML precisely so it doesn't resolve to a timestamp on one side and a
+string on the other.
+
 The JSON is still the one to depend on:
 
 - It parses everywhere without a dependency.
 - It is normalised. The build fixes key order, drops `children` when a place has
   none, and rejects unknown fields; the YAML is whatever a contributor typed.
-- `updated: 2026-07-31` is a YAML timestamp, not a string, so most parsers hand
-  you a date object. The JSON always has `"2026-07-31"`. That is the one field
-  where the two formats disagree on type.
 
 So: the YAML if you're reading, the JSON if you're building on it.
 

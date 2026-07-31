@@ -46,7 +46,10 @@ format: 1
 
 name: California
 description: MeshCore repeater region scopes for California, as a tree of nested places.
-updated: 2026-07-31
+# Quoted on purpose: unquoted, YAML resolves this to a timestamp and a parser
+# hands back a date object, where regions.json always has a string. Keep the
+# quotes so both files mean the same thing to whoever reads them.
+updated: "2026-07-31"
 license: MIT
 source: https://github.com/matkam/meshcore-settings
 

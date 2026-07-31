@@ -65,6 +65,9 @@ const built = {
   format: data.format,
   name: data.name,
   description: data.description,
+  // The YAML quotes this so both files agree on the type. If somebody drops the
+  // quotes, YAML resolves it to a timestamp — flatten it back rather than let a
+  // full ISO datetime appear in the JSON.
   updated: data.updated instanceof Date
     ? data.updated.toISOString().slice(0, 10)
     : String(data.updated),
