@@ -139,8 +139,8 @@ places:
         lat: 40.106
         lon: -123.793
         aliases: ["Garberville", "Redway", "Miranda", "Shelter Cove"]
-      - code: willowcreek
-        name: Hoopa / Willow Creek
+      - code: klamathtrinity
+        name: Klamath-Trinity
         county: Humboldt
         lat: 41.05
         lon: -123.674
@@ -219,14 +219,14 @@ places:
         lat: 40.416
         lon: -120.653
         aliases: ["Susanville", "Janesville", "Bieber", "Herlong"]
-      - code: redbluff
-        name: Red Bluff / Corning
+      - code: tehama
+        name: Tehama County
         county: Tehama
         lat: 40.178
         lon: -122.236
         aliases: ["Red Bluff", "Corning", "Los Molinos", "Mineral"]
-      - code: quincy
-        name: Quincy / Portola
+      - code: plumas
+        name: Plumas County
         county: Plumas
         lat: 39.937
         lon: -120.947
@@ -287,8 +287,8 @@ places:
             lat: 38.679
             lon: -121.773
             aliases: ["Woodland", "Esparto", "Knights Landing"]
-          - code: roseville
-            name: Roseville / Rocklin
+          - code: southplacer
+            name: South Placer
             county: Placer
             lat: 38.752
             lon: -121.288
@@ -318,19 +318,19 @@ places:
             lon: -121.622
             aliases: ["Paradise", "Magalia", "Concow", "Stirling City"]
       - code: yubasutter
-        name: Marysville / Yuba City
+        name: Yuba-Sutter
         county: ["Yuba", "Sutter"]
         lat: 39.143
         lon: -121.604
         aliases: ["Marysville", "Linda", "Olivehurst", "Wheatland", "Brownsville", "Yuba City", "Live Oak", "Sutter"]
       - code: willows
-        name: Willows / Orland
+        name: Glenn County
         county: Glenn
         lat: 39.524
         lon: -122.194
         aliases: ["Willows", "Orland", "Hamilton"]
       - code: colusa
-        name: Colusa / Williams
+        name: Colusa County
         county: Colusa
         lat: 39.214
         lon: -122.009
@@ -373,14 +373,14 @@ places:
             lat: 38.686
             lon: -121.082
             aliases: ["El Dorado Hills", "Cameron Park", "Shingle Springs"]
-          - code: jackson
-            name: Jackson / Sutter Creek
+          - code: amador
+            name: Amador County
             county: Amador
             lat: 38.349
             lon: -120.774
             aliases: ["Jackson", "Sutter Creek", "Ione", "Plymouth", "Pine Grove"]
-          - code: sanandreas
-            name: San Andreas / Angels Camp
+          - code: calaveras
+            name: Calaveras County
             county: Calaveras
             lat: 38.196
             lon: -120.681
@@ -392,13 +392,13 @@ places:
             lon: -120.382
             aliases: ["Sonora", "Jamestown", "Twain Harte", "Groveland", "Columbia"]
           - code: mariposa
-            name: Mariposa / Yosemite
+            name: Mariposa County
             county: Mariposa
             lat: 37.485
             lon: -119.966
             aliases: ["Mariposa", "Yosemite Valley", "El Portal", "Coulterville"]
-          - code: loyalton
-            name: Loyalton / Downieville
+          - code: sierracounty
+            name: Sierra County
             county: Sierra
             lat: 39.677
             lon: -120.24
@@ -527,8 +527,8 @@ places:
             lat: 38.61
             lon: -122.869
             aliases: ["Healdsburg", "Cloverdale", "Geyserville"]
-          - code: guerneville
-            name: Russian River / Coast
+          - code: westsonoma
+            name: West Sonoma
             county: Sonoma
             lat: 38.502
             lon: -122.996
@@ -569,8 +569,8 @@ places:
         outline: ["Alameda", "Contra Costa"]
         aliases: ["Contra Costa County", "Alameda County"]
         children:
-          - code: richmond
-            name: Richmond / El Cerrito
+          - code: westcontracosta
+            name: West Contra Costa
             county: Contra Costa
             lat: 37.936
             lon: -122.348
@@ -587,8 +587,8 @@ places:
             lat: 37.78
             lon: -121.978
             aliases: ["San Ramon", "Danville", "Alamo", "Blackhawk"]
-          - code: antioch
-            name: Antioch / Brentwood
+          - code: eastcontracosta
+            name: East Contra Costa
             county: Contra Costa
             lat: 38.005
             lon: -121.806
@@ -623,8 +623,8 @@ places:
         outline: ["San Mateo"]
         aliases: ["San Mateo County"]
         children:
-          - code: dalycity
-            name: Daly City / Pacifica
+          - code: northpeninsula
+            name: North Peninsula
             county: San Mateo
             lat: 37.688
             lon: -122.47
@@ -672,7 +672,7 @@ places:
             lon: -122.036
             aliases: ["Sunnyvale", "Santa Clara"]
           - code: cupertino
-            name: Cupertino / Los Gatos
+            name: West Valley
             county: Santa Clara
             lat: 37.323
             lon: -122.032
@@ -757,7 +757,7 @@ places:
             lat: 35.119
             lon: -120.591
             aliases: ["Arroyo Grande", "Pismo Beach", "Grover Beach", "Oceano", "Nipomo"]
-      - code: sbcounty
+      - code: santabarbara
         name: Santa Barbara County
         blurb: Santa Barbara County.
         outline: ["Santa Barbara"]
@@ -803,7 +803,7 @@ places:
             lat: 34.448
             lon: -119.243
             aliases: ["Ojai", "Oak View", "Meiners Oaks", "Santa Paula", "Fillmore"]
-      - code: kingcity
+      - code: king
         name: King City
         county: Monterey
         lat: 36.213
@@ -828,7 +828,7 @@ places:
     aliases: ["Kern County"]
     nudge: [10, 22]
     children:
-      - code: northvalley
+      - code: sjvnorth
         name: North Valley
         blurb: "Stockton, Modesto and the northern valley floor."
         outline: ["San Joaquin", "Stanislaus"]
@@ -864,7 +864,7 @@ places:
             lat: 37.495
             lon: -120.847
             aliases: ["Turlock", "Patterson", "Newman", "Hughson", "Denair"]
-      - code: midvalley
+      - code: sjvmid
         name: Mid Valley
         blurb: Merced through Fresno.
         outline: ["Fresno", "Madera", "Merced"]
@@ -912,14 +912,14 @@ places:
             lat: 36.14
             lon: -120.36
             aliases: ["Coalinga", "Firebaugh", "Mendota", "Huron", "San Joaquin"]
-      - code: southvalley
+      - code: sjvsouth
         name: South Valley
         blurb: Hanford down to Bakersfield.
         outline: ["Kings", "Tulare"]
         aliases: ["Kings County", "Tulare County"]
         children:
           - code: hanford
-            name: Hanford / Lemoore
+            name: Kings County
             county: Kings
             lat: 36.327
             lon: -119.646
@@ -943,7 +943,7 @@ places:
             lon: -119.017
             aliases: ["Porterville", "Terra Bella", "Springville"]
           - code: threerivers
-            name: Three Rivers / Springville
+            name: "Sequoia & Kings Canyon"
             county: Tulare
             lat: 36.439
             lon: -118.906
@@ -1090,13 +1090,13 @@ places:
     nudge: [6, -8]
     children:
       - code: ontario
-        name: Ontario / Rancho Cucamonga
+        name: West End
         county: San Bernardino
         lat: 34.064
         lon: -117.649
         aliases: ["Ontario", "Rancho Cucamonga", "Chino", "Upland", "Fontana", "Montclair"]
       - code: sanbernardino
-        name: San Bernardino / Redlands
+        name: San Bernardino Valley
         county: San Bernardino
         lat: 34.108
         lon: -117.29
