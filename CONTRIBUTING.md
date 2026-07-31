@@ -104,6 +104,71 @@ under it rather than redrawing the county — the hierarchy is there to absorb
 that. Open an issue first if you're not sure; someone else may already be running
 nodes under the existing name.
 
+## Previewing your change
+
+`npm run serve` is enough for most edits, including the push panel against real
+hardware — `http://localhost` counts as a secure context, so Web Serial and Web
+Bluetooth both work there. Where it runs out is any other device: open that same
+server at your machine's LAN address and the page is no longer in a secure
+context, so the push panel goes away. Testing Web Bluetooth from a phone, or
+letting someone in your mesh group try the change, needs real HTTPS — which
+means GitHub Pages.
+
+This repo publishes a preview for every PR opened from a branch on the repo
+itself, and deliberately doesn't for PRs from forks. That isn't an oversight
+about permissions: the preview would be served from the maintainer's
+`github.io`, the same origin as the live site, and browsers remember Web Serial
+grants **per origin, ignoring the path**. Preview code would inherit access to
+whatever repeater a reviewer had already approved for the live site, with no
+fresh prompt. Nobody should hand that to unreviewed code, including you.
+
+Publishing from your own fork moves the preview to your origin, where the only
+grants at stake are ones you made yourself. Both routes below use workflows
+already in the repo — there is nothing to write.
+
+### One-time setup on your fork
+
+1. Open the **Actions** tab and accept the "workflows aren't being run on this
+   forked repository" banner. Forks ship with Actions off.
+2. Run either route below once. It creates the `gh-pages` branch, which doesn't
+   exist in a fresh fork.
+3. Now go to **Settings → Pages** and set the source to **Deploy from a branch**,
+   `gh-pages`, `/ (root)`. This step has to come third — the branch has to exist
+   before you can point Pages at it.
+
+Your fork has to be public; Pages on a private repo needs a paid plan.
+
+### Publishing a single branch
+
+**Actions → Deploy to GitHub Pages → Run workflow**, and pick your branch from
+the dropdown. It lands at:
+
+```
+https://<your-username>.github.io/meshcore-settings/
+```
+
+One branch at a time, and re-running replaces it. This is the quicker route when
+you just want to check one change against hardware.
+
+### Publishing a preview per PR
+
+Open a pull request **inside your fork** — your branch into your fork's `main` —
+alongside the real one upstream. The preview workflow treats that as a
+same-repo PR, publishes to a subdirectory, and comments the link on your own PR:
+
+```
+https://<your-username>.github.io/meshcore-settings/pr-1/
+```
+
+It republishes on every push to the branch and deletes the directory when you
+close the PR, so several branches can be up at once without colliding. Worth the
+extra bookkeeping if you're iterating, or if you want to link a stable URL from
+the upstream PR description.
+
+Both routes run `npm run validate` before publishing, so a `regions.yaml` that
+disagrees with `regions.json` fails the publish rather than shipping a broken
+preview.
+
 ## Before you open the PR
 
 - [ ] `data/regions.json` is rebuilt and committed alongside the YAML
