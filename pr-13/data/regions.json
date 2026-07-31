@@ -1,0 +1,1643 @@
+{
+  "format": 1,
+  "name": "California",
+  "description": "MeshCore repeater region scopes for California, as a tree of nested places.",
+  "updated": "2026-07-31",
+  "license": "MIT",
+  "source": "https://github.com/matkam/meshcore-settings",
+  "limits": {
+    "maxLineLength": 160,
+    "maxRegionNames": 32,
+    "maxDepth": 8
+  },
+  "root": [
+    {
+      "code": "west",
+      "name": "Western US"
+    },
+    {
+      "code": "ca",
+      "name": "California"
+    }
+  ],
+  "levels": [
+    {
+      "name": "region",
+      "plural": "regions"
+    },
+    {
+      "name": "county",
+      "plural": "counties"
+    },
+    {
+      "name": "local area",
+      "plural": "local areas"
+    }
+  ],
+  "places": [
+    {
+      "code": "nco",
+      "name": "North Coast",
+      "blurb": "Redwood coast from the Oregon line down to Lake County.",
+      "nudge": [40, -20],
+      "children": [
+        {
+          "code": "dnr",
+          "name": "Del Norte County",
+          "outline": "Del Norte",
+          "children": [
+            {
+              "code": "cre",
+              "name": "Crescent City",
+              "lat": 41.756,
+              "lon": -124.202,
+              "aliases": ["Crescent City", "Smith River", "Klamath", "Gasquet"]
+            }
+          ]
+        },
+        {
+          "code": "hum",
+          "name": "Humboldt County",
+          "outline": "Humboldt",
+          "children": [
+            {
+              "code": "eka",
+              "name": "Humboldt Bay",
+              "lat": 40.802,
+              "lon": -124.163,
+              "aliases": ["Eureka", "Arcata", "McKinleyville", "Fortuna", "Ferndale", "Trinidad"]
+            },
+            {
+              "code": "shu",
+              "name": "Southern Humboldt",
+              "lat": 40.106,
+              "lon": -123.793,
+              "aliases": ["Garberville", "Redway", "Miranda", "Shelter Cove"]
+            },
+            {
+              "code": "hoo",
+              "name": "Hoopa / Willow Creek",
+              "lat": 41.05,
+              "lon": -123.674,
+              "aliases": ["Hoopa", "Willow Creek", "Orleans"]
+            }
+          ]
+        },
+        {
+          "code": "trn",
+          "name": "Trinity County",
+          "outline": "Trinity",
+          "children": [
+            {
+              "code": "wvl",
+              "name": "Weaverville",
+              "lat": 40.731,
+              "lon": -122.941,
+              "aliases": ["Weaverville", "Hayfork", "Lewiston", "Trinity Center"]
+            }
+          ]
+        },
+        {
+          "code": "men",
+          "name": "Mendocino County",
+          "outline": "Mendocino",
+          "children": [
+            {
+              "code": "ukh",
+              "name": "Ukiah Valley",
+              "lat": 39.15,
+              "lon": -123.208,
+              "aliases": ["Ukiah", "Willits", "Hopland", "Redwood Valley"]
+            },
+            {
+              "code": "fbg",
+              "name": "Mendocino Coast",
+              "lat": 39.446,
+              "lon": -123.805,
+              "aliases": ["Fort Bragg", "Mendocino", "Point Arena", "Albion"]
+            }
+          ]
+        },
+        {
+          "code": "lak",
+          "name": "Lake County",
+          "outline": "Lake",
+          "children": [
+            {
+              "code": "clk",
+              "name": "Clear Lake",
+              "lat": 38.958,
+              "lon": -122.626,
+              "aliases": ["Clearlake", "Lakeport", "Kelseyville", "Middletown"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "nor",
+      "name": "North State / Shasta Cascade",
+      "blurb": "The far northeast: Shasta, Siskiyou, Lassen, Modoc, Plumas, Tehama.",
+      "nudge": [-22, 0],
+      "children": [
+        {
+          "code": "sis",
+          "name": "Siskiyou County",
+          "outline": "Siskiyou",
+          "children": [
+            {
+              "code": "yrk",
+              "name": "Yreka",
+              "lat": 41.735,
+              "lon": -122.634,
+              "aliases": ["Yreka", "Montague", "Fort Jones", "Happy Camp"]
+            },
+            {
+              "code": "mts",
+              "name": "Mount Shasta",
+              "lat": 41.31,
+              "lon": -122.312,
+              "aliases": ["Mount Shasta", "Weed", "Dunsmuir", "McCloud"]
+            },
+            {
+              "code": "tul2",
+              "name": "Tulelake Basin",
+              "lat": 41.955,
+              "lon": -121.478,
+              "aliases": ["Tulelake", "Dorris", "Macdoel"]
+            }
+          ]
+        },
+        {
+          "code": "mdc",
+          "name": "Modoc County",
+          "outline": "Modoc",
+          "children": [
+            {
+              "code": "alt",
+              "name": "Alturas",
+              "lat": 41.487,
+              "lon": -120.542,
+              "aliases": ["Alturas", "Cedarville", "Adin", "Canby"]
+            }
+          ]
+        },
+        {
+          "code": "sha",
+          "name": "Shasta County",
+          "outline": "Shasta",
+          "children": [
+            {
+              "code": "rdg",
+              "name": "Redding Area",
+              "lat": 40.586,
+              "lon": -122.391,
+              "aliases": ["Redding", "Anderson", "Shasta Lake", "Palo Cedro", "Cottonwood"]
+            },
+            {
+              "code": "bur",
+              "name": "Intermountain",
+              "lat": 40.885,
+              "lon": -121.661,
+              "aliases": ["Burney", "Fall River Mills", "McArthur", "Round Mountain"]
+            }
+          ]
+        },
+        {
+          "code": "las",
+          "name": "Lassen County",
+          "outline": "Lassen",
+          "children": [
+            {
+              "code": "sus",
+              "name": "Susanville",
+              "lat": 40.416,
+              "lon": -120.653,
+              "aliases": ["Susanville", "Janesville", "Bieber", "Herlong"]
+            }
+          ]
+        },
+        {
+          "code": "teh",
+          "name": "Tehama County",
+          "outline": "Tehama",
+          "children": [
+            {
+              "code": "rbf",
+              "name": "Red Bluff / Corning",
+              "lat": 40.178,
+              "lon": -122.236,
+              "aliases": ["Red Bluff", "Corning", "Los Molinos", "Mineral"]
+            }
+          ]
+        },
+        {
+          "code": "plu",
+          "name": "Plumas County",
+          "outline": "Plumas",
+          "children": [
+            {
+              "code": "qcy",
+              "name": "Quincy / Portola",
+              "lat": 39.937,
+              "lon": -120.947,
+              "aliases": ["Quincy", "Portola", "Chester", "Graeagle", "Lake Almanor"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "sv",
+      "name": "Sacramento Valley",
+      "blurb": "Sacramento and the valley floor north of the Delta.",
+      "nudge": [16, 0],
+      "children": [
+        {
+          "code": "but",
+          "name": "Butte County",
+          "outline": "Butte",
+          "children": [
+            {
+              "code": "chi",
+              "name": "Chico",
+              "lat": 39.729,
+              "lon": -121.837,
+              "aliases": ["Chico", "Durham", "Hamilton City"]
+            },
+            {
+              "code": "orv",
+              "name": "Oroville",
+              "lat": 39.514,
+              "lon": -121.556,
+              "aliases": ["Oroville", "Palermo", "Thermalito", "Gridley", "Biggs"]
+            },
+            {
+              "code": "par",
+              "name": "Paradise Ridge",
+              "lat": 39.759,
+              "lon": -121.622,
+              "aliases": ["Paradise", "Magalia", "Concow", "Stirling City"]
+            }
+          ]
+        },
+        {
+          "code": "gle",
+          "name": "Glenn County",
+          "outline": "Glenn",
+          "children": [
+            {
+              "code": "wil",
+              "name": "Willows / Orland",
+              "lat": 39.524,
+              "lon": -122.194,
+              "aliases": ["Willows", "Orland", "Hamilton"]
+            }
+          ]
+        },
+        {
+          "code": "col",
+          "name": "Colusa County",
+          "outline": "Colusa",
+          "children": [
+            {
+              "code": "clu",
+              "name": "Colusa / Williams",
+              "lat": 39.214,
+              "lon": -122.009,
+              "aliases": ["Colusa", "Williams", "Arbuckle", "Maxwell"]
+            }
+          ]
+        },
+        {
+          "code": "sut",
+          "name": "Sutter County",
+          "outline": "Sutter",
+          "children": [
+            {
+              "code": "ycy",
+              "name": "Yuba City",
+              "lat": 39.14,
+              "lon": -121.617,
+              "aliases": ["Yuba City", "Live Oak", "Sutter"]
+            }
+          ]
+        },
+        {
+          "code": "yub",
+          "name": "Yuba County",
+          "outline": "Yuba",
+          "children": [
+            {
+              "code": "mrv",
+              "name": "Marysville",
+              "lat": 39.146,
+              "lon": -121.591,
+              "aliases": ["Marysville", "Linda", "Olivehurst", "Wheatland", "Brownsville"]
+            }
+          ]
+        },
+        {
+          "code": "yol",
+          "name": "Yolo County",
+          "outline": "Yolo",
+          "children": [
+            {
+              "code": "dav",
+              "name": "Davis",
+              "lat": 38.545,
+              "lon": -121.741,
+              "aliases": ["Davis", "Winters"]
+            },
+            {
+              "code": "wds",
+              "name": "Woodland",
+              "lat": 38.679,
+              "lon": -121.773,
+              "aliases": ["Woodland", "Esparto", "Knights Landing"]
+            },
+            {
+              "code": "wsc",
+              "name": "West Sacramento",
+              "lat": 38.581,
+              "lon": -121.53,
+              "aliases": ["West Sacramento", "Clarksburg"]
+            }
+          ]
+        },
+        {
+          "code": "sac",
+          "name": "Sacramento County",
+          "outline": "Sacramento",
+          "children": [
+            {
+              "code": "sct",
+              "name": "Sacramento Central",
+              "lat": 38.582,
+              "lon": -121.494,
+              "aliases": ["Sacramento", "Midtown", "Land Park", "Natomas"]
+            },
+            {
+              "code": "ctp",
+              "name": "North Area",
+              "lat": 38.707,
+              "lon": -121.281,
+              "aliases": ["Citrus Heights", "Carmichael", "Fair Oaks", "Orangevale", "Antelope"]
+            },
+            {
+              "code": "fol",
+              "name": "Folsom / Rancho Cordova",
+              "lat": 38.678,
+              "lon": -121.176,
+              "aliases": ["Folsom", "Rancho Cordova", "Gold River"]
+            },
+            {
+              "code": "elk",
+              "name": "South County",
+              "lat": 38.409,
+              "lon": -121.372,
+              "aliases": ["Elk Grove", "Galt", "Laguna", "Isleton"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "sn",
+      "name": "Sierra Nevada",
+      "blurb": "Gold Country, Tahoe, the high Sierra and the Eastern Sierra.",
+      "nudge": [10, -10],
+      "children": [
+        {
+          "code": "nev",
+          "name": "Nevada County",
+          "outline": "Nevada",
+          "children": [
+            {
+              "code": "gvl",
+              "name": "Grass Valley / Nevada City",
+              "lat": 39.219,
+              "lon": -121.061,
+              "aliases": ["Grass Valley", "Nevada City", "Penn Valley", "Rough and Ready"]
+            },
+            {
+              "code": "trk",
+              "name": "Truckee",
+              "lat": 39.328,
+              "lon": -120.183,
+              "aliases": ["Truckee", "Donner", "Soda Springs"]
+            }
+          ]
+        },
+        {
+          "code": "sie",
+          "name": "Sierra County",
+          "outline": "Sierra",
+          "children": [
+            {
+              "code": "loy",
+              "name": "Loyalton / Downieville",
+              "lat": 39.677,
+              "lon": -120.24,
+              "aliases": ["Loyalton", "Downieville", "Sierra City", "Sierraville"]
+            }
+          ]
+        },
+        {
+          "code": "pla",
+          "name": "Placer County",
+          "outline": "Placer",
+          "children": [
+            {
+              "code": "rsv",
+              "name": "Roseville / Rocklin",
+              "lat": 38.752,
+              "lon": -121.288,
+              "aliases": ["Roseville", "Rocklin", "Lincoln", "Loomis"]
+            },
+            {
+              "code": "aub",
+              "name": "Auburn",
+              "lat": 38.897,
+              "lon": -121.077,
+              "aliases": ["Auburn", "Colfax", "Foresthill", "Newcastle"]
+            },
+            {
+              "code": "tah",
+              "name": "North Lake Tahoe",
+              "lat": 39.167,
+              "lon": -120.144,
+              "aliases": ["Tahoe City", "Kings Beach", "Tahoe Vista", "Olympic Valley", "Northstar"]
+            }
+          ]
+        },
+        {
+          "code": "eld",
+          "name": "El Dorado County",
+          "outline": "El Dorado",
+          "children": [
+            {
+              "code": "plv",
+              "name": "Placerville",
+              "lat": 38.73,
+              "lon": -120.798,
+              "aliases": ["Placerville", "Diamond Springs", "Pollock Pines", "Georgetown"]
+            },
+            {
+              "code": "edh",
+              "name": "El Dorado Hills",
+              "lat": 38.686,
+              "lon": -121.082,
+              "aliases": ["El Dorado Hills", "Cameron Park", "Shingle Springs"]
+            },
+            {
+              "code": "slt",
+              "name": "South Lake Tahoe",
+              "lat": 38.933,
+              "lon": -119.977,
+              "aliases": ["South Lake Tahoe", "Meyers", "Tahoma"]
+            }
+          ]
+        },
+        {
+          "code": "amd",
+          "name": "Amador County",
+          "outline": "Amador",
+          "children": [
+            {
+              "code": "jck",
+              "name": "Jackson / Sutter Creek",
+              "lat": 38.349,
+              "lon": -120.774,
+              "aliases": ["Jackson", "Sutter Creek", "Ione", "Plymouth", "Pine Grove"]
+            }
+          ]
+        },
+        {
+          "code": "clv",
+          "name": "Calaveras County",
+          "outline": "Calaveras",
+          "children": [
+            {
+              "code": "snd",
+              "name": "San Andreas / Angels Camp",
+              "lat": 38.196,
+              "lon": -120.681,
+              "aliases": ["San Andreas", "Angels Camp", "Murphys", "Arnold", "Valley Springs"]
+            }
+          ]
+        },
+        {
+          "code": "tuo",
+          "name": "Tuolumne County",
+          "outline": "Tuolumne",
+          "children": [
+            {
+              "code": "sra",
+              "name": "Sonora",
+              "lat": 37.984,
+              "lon": -120.382,
+              "aliases": ["Sonora", "Jamestown", "Twain Harte", "Groveland", "Columbia"]
+            }
+          ]
+        },
+        {
+          "code": "alp",
+          "name": "Alpine County",
+          "outline": "Alpine",
+          "children": [
+            {
+              "code": "mkv",
+              "name": "Markleeville",
+              "lat": 38.694,
+              "lon": -119.779,
+              "aliases": ["Markleeville", "Bear Valley", "Kirkwood"]
+            }
+          ]
+        },
+        {
+          "code": "mps",
+          "name": "Mariposa County",
+          "outline": "Mariposa",
+          "children": [
+            {
+              "code": "yos",
+              "name": "Mariposa / Yosemite",
+              "lat": 37.485,
+              "lon": -119.966,
+              "aliases": ["Mariposa", "Yosemite Valley", "El Portal", "Coulterville"]
+            }
+          ]
+        },
+        {
+          "code": "mno",
+          "name": "Mono County",
+          "outline": "Mono",
+          "children": [
+            {
+              "code": "mml",
+              "name": "Mammoth Lakes",
+              "lat": 37.649,
+              "lon": -118.972,
+              "aliases": ["Mammoth Lakes", "June Lake", "Crowley Lake"]
+            },
+            {
+              "code": "brg",
+              "name": "Bridgeport / Lee Vining",
+              "lat": 38.256,
+              "lon": -119.231,
+              "aliases": ["Bridgeport", "Lee Vining", "Mono Lake", "Walker"]
+            }
+          ]
+        },
+        {
+          "code": "iny",
+          "name": "Inyo County",
+          "outline": "Inyo",
+          "children": [
+            {
+              "code": "bsp",
+              "name": "Bishop",
+              "lat": 37.364,
+              "lon": -118.395,
+              "aliases": ["Bishop", "Big Pine", "Round Valley"]
+            },
+            {
+              "code": "lnp",
+              "name": "Lone Pine / Owens Valley",
+              "lat": 36.606,
+              "lon": -118.063,
+              "aliases": ["Lone Pine", "Independence", "Death Valley", "Furnace Creek", "Tecopa"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "sfb",
+      "name": "San Francisco Bay Area",
+      "blurb": "The nine Bay Area counties.",
+      "nudge": [-52, 6],
+      "children": [
+        {
+          "code": "sf",
+          "name": "San Francisco",
+          "outline": "San Francisco",
+          "children": [
+            {
+              "code": "sfe",
+              "name": "East SF",
+              "lat": 37.779,
+              "lon": -122.409,
+              "aliases": ["Downtown", "SoMa", "Mission", "Potrero Hill", "Bayview", "North Beach"]
+            },
+            {
+              "code": "sfw",
+              "name": "West SF",
+              "lat": 37.76,
+              "lon": -122.482,
+              "aliases": ["Sunset", "Richmond", "Golden Gate Park", "Twin Peaks", "Ingleside"]
+            }
+          ]
+        },
+        {
+          "code": "mrn",
+          "name": "Marin County",
+          "outline": "Marin",
+          "children": [
+            {
+              "code": "srf",
+              "name": "Central Marin",
+              "lat": 37.974,
+              "lon": -122.531,
+              "aliases": ["San Rafael", "Novato", "Larkspur", "San Anselmo", "Fairfax"]
+            },
+            {
+              "code": "smr",
+              "name": "Southern Marin",
+              "lat": 37.877,
+              "lon": -122.499,
+              "aliases": ["Sausalito", "Mill Valley", "Tiburon", "Marin City"]
+            },
+            {
+              "code": "wmr",
+              "name": "West Marin",
+              "lat": 38.066,
+              "lon": -122.807,
+              "aliases": ["Point Reyes Station", "Bolinas", "Stinson Beach", "Inverness", "Tomales"]
+            }
+          ]
+        },
+        {
+          "code": "son",
+          "name": "Sonoma County",
+          "outline": "Sonoma",
+          "children": [
+            {
+              "code": "str",
+              "name": "Santa Rosa",
+              "lat": 38.44,
+              "lon": -122.714,
+              "aliases": ["Santa Rosa", "Rohnert Park", "Cotati", "Windsor"]
+            },
+            {
+              "code": "ptl",
+              "name": "Petaluma",
+              "lat": 38.232,
+              "lon": -122.637,
+              "aliases": ["Petaluma", "Penngrove"]
+            },
+            {
+              "code": "hbg",
+              "name": "Northern Sonoma",
+              "lat": 38.61,
+              "lon": -122.869,
+              "aliases": ["Healdsburg", "Cloverdale", "Geyserville"]
+            },
+            {
+              "code": "rvr",
+              "name": "Russian River / Coast",
+              "lat": 38.502,
+              "lon": -122.996,
+              "aliases": ["Guerneville", "Sebastopol", "Bodega Bay", "Jenner", "Monte Rio"]
+            },
+            {
+              "code": "svl",
+              "name": "Sonoma Valley",
+              "lat": 38.292,
+              "lon": -122.458,
+              "aliases": ["Sonoma", "Glen Ellen", "Kenwood"]
+            }
+          ]
+        },
+        {
+          "code": "nap",
+          "name": "Napa County",
+          "outline": "Napa",
+          "children": [
+            {
+              "code": "npc",
+              "name": "Napa City",
+              "lat": 38.297,
+              "lon": -122.287,
+              "aliases": ["Napa", "American Canyon", "Yountville"]
+            },
+            {
+              "code": "upv",
+              "name": "Upvalley",
+              "lat": 38.505,
+              "lon": -122.47,
+              "aliases": ["St. Helena", "Calistoga", "Angwin"]
+            }
+          ]
+        },
+        {
+          "code": "sol",
+          "name": "Solano County",
+          "outline": "Solano",
+          "children": [
+            {
+              "code": "fld",
+              "name": "Fairfield / Vacaville",
+              "lat": 38.249,
+              "lon": -122.04,
+              "aliases": ["Fairfield", "Vacaville", "Suisun City", "Dixon"]
+            },
+            {
+              "code": "vjo",
+              "name": "Vallejo / Benicia",
+              "lat": 38.104,
+              "lon": -122.256,
+              "aliases": ["Vallejo", "Benicia", "Rio Vista"]
+            }
+          ]
+        },
+        {
+          "code": "ccc",
+          "name": "Contra Costa County",
+          "outline": "Contra Costa",
+          "children": [
+            {
+              "code": "wcc",
+              "name": "West County",
+              "lat": 37.936,
+              "lon": -122.348,
+              "aliases": ["Richmond", "El Cerrito", "San Pablo", "Pinole", "Hercules"]
+            },
+            {
+              "code": "wcr",
+              "name": "Central County",
+              "lat": 37.906,
+              "lon": -122.065,
+              "aliases": ["Walnut Creek", "Concord", "Pleasant Hill", "Martinez", "Lafayette", "Orinda"]
+            },
+            {
+              "code": "srm",
+              "name": "San Ramon Valley",
+              "lat": 37.78,
+              "lon": -121.978,
+              "aliases": ["San Ramon", "Danville", "Alamo", "Blackhawk"]
+            },
+            {
+              "code": "ecc",
+              "name": "East County",
+              "lat": 38.005,
+              "lon": -121.806,
+              "aliases": ["Antioch", "Pittsburg", "Brentwood", "Oakley", "Discovery Bay"]
+            }
+          ]
+        },
+        {
+          "code": "ala",
+          "name": "Alameda County",
+          "outline": "Alameda",
+          "children": [
+            {
+              "code": "oak",
+              "name": "Oakland / Berkeley",
+              "lat": 37.804,
+              "lon": -122.271,
+              "aliases": ["Oakland", "Berkeley", "Emeryville", "Alameda", "Piedmont", "Albany"]
+            },
+            {
+              "code": "hay",
+              "name": "Hayward / San Leandro",
+              "lat": 37.669,
+              "lon": -122.081,
+              "aliases": ["Hayward", "San Leandro", "Castro Valley", "San Lorenzo"]
+            },
+            {
+              "code": "frm",
+              "name": "Southern Alameda",
+              "lat": 37.548,
+              "lon": -121.989,
+              "aliases": ["Fremont", "Newark", "Union City"]
+            },
+            {
+              "code": "tri",
+              "name": "Tri-Valley",
+              "lat": 37.662,
+              "lon": -121.876,
+              "aliases": ["Pleasanton", "Livermore", "Dublin", "Sunol"]
+            }
+          ]
+        },
+        {
+          "code": "smt",
+          "name": "San Mateo County",
+          "outline": "San Mateo",
+          "children": [
+            {
+              "code": "dly",
+              "name": "North County",
+              "lat": 37.688,
+              "lon": -122.47,
+              "aliases": ["Daly City", "South San Francisco", "Pacifica", "Brisbane", "Colma"]
+            },
+            {
+              "code": "smc",
+              "name": "Mid-Peninsula",
+              "lat": 37.563,
+              "lon": -122.326,
+              "aliases": ["San Mateo", "Burlingame", "Millbrae", "San Bruno", "Foster City"]
+            },
+            {
+              "code": "rwc",
+              "name": "South County",
+              "lat": 37.485,
+              "lon": -122.236,
+              "aliases": ["Redwood City", "Menlo Park", "San Carlos", "Belmont", "Atherton"]
+            },
+            {
+              "code": "hmb",
+              "name": "Coastside",
+              "lat": 37.463,
+              "lon": -122.429,
+              "aliases": ["Half Moon Bay", "El Granada", "Pescadero", "Montara", "La Honda"]
+            }
+          ]
+        },
+        {
+          "code": "scl",
+          "name": "Santa Clara County",
+          "outline": "Santa Clara",
+          "children": [
+            {
+              "code": "sjc",
+              "name": "San Jose",
+              "lat": 37.339,
+              "lon": -121.895,
+              "aliases": ["San Jose", "Milpitas", "Alviso", "Willow Glen", "Almaden"]
+            },
+            {
+              "code": "pav",
+              "name": "North County",
+              "lat": 37.442,
+              "lon": -122.143,
+              "aliases": ["Palo Alto", "Mountain View", "Los Altos", "Stanford"]
+            },
+            {
+              "code": "snv",
+              "name": "Sunnyvale / Santa Clara",
+              "lat": 37.369,
+              "lon": -122.036,
+              "aliases": ["Sunnyvale", "Santa Clara"]
+            },
+            {
+              "code": "cup",
+              "name": "West Valley",
+              "lat": 37.323,
+              "lon": -122.032,
+              "aliases": ["Cupertino", "Saratoga", "Los Gatos", "Campbell", "Monte Sereno"]
+            },
+            {
+              "code": "gil",
+              "name": "South County",
+              "lat": 37.006,
+              "lon": -121.568,
+              "aliases": ["Gilroy", "Morgan Hill", "San Martin"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "cc",
+      "name": "Central Coast",
+      "blurb": "Santa Cruz down through Santa Barbara.",
+      "nudge": [-30, 22],
+      "children": [
+        {
+          "code": "scz",
+          "name": "Santa Cruz County",
+          "outline": "Santa Cruz",
+          "children": [
+            {
+              "code": "scc",
+              "name": "Santa Cruz City",
+              "lat": 36.974,
+              "lon": -122.031,
+              "aliases": ["Santa Cruz", "Capitola", "Soquel", "Live Oak", "Aptos"]
+            },
+            {
+              "code": "slv",
+              "name": "San Lorenzo Valley",
+              "lat": 37.061,
+              "lon": -122.07,
+              "aliases": ["Scotts Valley", "Felton", "Ben Lomond", "Boulder Creek"]
+            },
+            {
+              "code": "wat",
+              "name": "Pajaro Valley",
+              "lat": 36.91,
+              "lon": -121.757,
+              "aliases": ["Watsonville", "Freedom", "Corralitos", "La Selva Beach"]
+            }
+          ]
+        },
+        {
+          "code": "mry",
+          "name": "Monterey County",
+          "outline": "Monterey",
+          "children": [
+            {
+              "code": "mtp",
+              "name": "Monterey Peninsula",
+              "lat": 36.6,
+              "lon": -121.894,
+              "aliases": ["Monterey", "Pacific Grove", "Carmel", "Seaside", "Marina", "Del Rey Oaks"]
+            },
+            {
+              "code": "sal",
+              "name": "Salinas Valley",
+              "lat": 36.678,
+              "lon": -121.655,
+              "aliases": ["Salinas", "Gonzales", "Soledad", "Greenfield", "Castroville"]
+            },
+            {
+              "code": "kgc",
+              "name": "South County",
+              "lat": 36.213,
+              "lon": -121.126,
+              "aliases": ["King City", "San Ardo", "Bradley", "Parkfield"]
+            },
+            {
+              "code": "big",
+              "name": "Big Sur",
+              "lat": 36.27,
+              "lon": -121.808,
+              "aliases": ["Big Sur", "Lucia", "Gorda", "Pfeiffer"]
+            }
+          ]
+        },
+        {
+          "code": "ben",
+          "name": "San Benito County",
+          "outline": "San Benito",
+          "children": [
+            {
+              "code": "hol",
+              "name": "Hollister",
+              "lat": 36.852,
+              "lon": -121.402,
+              "aliases": ["Hollister", "San Juan Bautista", "Tres Pinos", "Pinnacles"]
+            }
+          ]
+        },
+        {
+          "code": "slo",
+          "name": "San Luis Obispo County",
+          "outline": "San Luis Obispo",
+          "children": [
+            {
+              "code": "prb",
+              "name": "North County",
+              "lat": 35.627,
+              "lon": -120.691,
+              "aliases": ["Paso Robles", "Atascadero", "Templeton", "San Miguel", "Shandon", "Creston", "Santa Margarita"]
+            },
+            {
+              "code": "slc",
+              "name": "SLO City / Central",
+              "lat": 35.283,
+              "lon": -120.66,
+              "aliases": ["San Luis Obispo", "Los Osos", "Avila Beach", "Edna Valley"]
+            },
+            {
+              "code": "mbc",
+              "name": "North Coast",
+              "lat": 35.366,
+              "lon": -120.85,
+              "aliases": ["Morro Bay", "Cayucos", "Cambria", "San Simeon", "Harmony"]
+            },
+            {
+              "code": "fvc",
+              "name": "South County",
+              "lat": 35.119,
+              "lon": -120.591,
+              "aliases": ["Arroyo Grande", "Pismo Beach", "Grover Beach", "Oceano", "Nipomo"]
+            }
+          ]
+        },
+        {
+          "code": "sba",
+          "name": "Santa Barbara County",
+          "outline": "Santa Barbara",
+          "children": [
+            {
+              "code": "sbc",
+              "name": "South Coast",
+              "lat": 34.421,
+              "lon": -119.698,
+              "aliases": ["Santa Barbara", "Goleta", "Carpinteria", "Montecito", "Isla Vista"]
+            },
+            {
+              "code": "syv",
+              "name": "Santa Ynez Valley",
+              "lat": 34.596,
+              "lon": -120.138,
+              "aliases": ["Solvang", "Buellton", "Santa Ynez", "Los Olivos", "Ballard"]
+            },
+            {
+              "code": "lmp",
+              "name": "Lompoc",
+              "lat": 34.639,
+              "lon": -120.458,
+              "aliases": ["Lompoc", "Vandenberg", "Mission Hills"]
+            },
+            {
+              "code": "smv",
+              "name": "Santa Maria Valley",
+              "lat": 34.953,
+              "lon": -120.436,
+              "aliases": ["Santa Maria", "Orcutt", "Guadalupe", "Los Alamos"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "sjv",
+      "name": "San Joaquin Valley",
+      "blurb": "Stockton down to Bakersfield.",
+      "nudge": [10, 26],
+      "children": [
+        {
+          "code": "sjq",
+          "name": "San Joaquin County",
+          "outline": "San Joaquin",
+          "children": [
+            {
+              "code": "stk",
+              "name": "Stockton",
+              "lat": 37.958,
+              "lon": -121.291,
+              "aliases": ["Stockton", "Lincoln Village", "Morada"]
+            },
+            {
+              "code": "lod",
+              "name": "Lodi",
+              "lat": 38.13,
+              "lon": -121.272,
+              "aliases": ["Lodi", "Galt Junction", "Woodbridge", "Lockeford"]
+            },
+            {
+              "code": "trc",
+              "name": "South County",
+              "lat": 37.74,
+              "lon": -121.426,
+              "aliases": ["Tracy", "Manteca", "Lathrop", "Ripon", "Escalon"]
+            }
+          ]
+        },
+        {
+          "code": "stn",
+          "name": "Stanislaus County",
+          "outline": "Stanislaus",
+          "children": [
+            {
+              "code": "mod",
+              "name": "Modesto",
+              "lat": 37.639,
+              "lon": -120.997,
+              "aliases": ["Modesto", "Ceres", "Riverbank", "Oakdale", "Salida"]
+            },
+            {
+              "code": "trl",
+              "name": "Turlock",
+              "lat": 37.495,
+              "lon": -120.847,
+              "aliases": ["Turlock", "Patterson", "Newman", "Hughson", "Denair"]
+            }
+          ]
+        },
+        {
+          "code": "mer",
+          "name": "Merced County",
+          "outline": "Merced",
+          "children": [
+            {
+              "code": "mcd",
+              "name": "Merced",
+              "lat": 37.302,
+              "lon": -120.483,
+              "aliases": ["Merced", "Atwater", "Livingston", "Winton"]
+            },
+            {
+              "code": "lgr",
+              "name": "West Merced",
+              "lat": 37.058,
+              "lon": -120.85,
+              "aliases": ["Los Banos", "Dos Palos", "Gustine", "Santa Nella"]
+            }
+          ]
+        },
+        {
+          "code": "mad",
+          "name": "Madera County",
+          "outline": "Madera",
+          "children": [
+            {
+              "code": "mdr",
+              "name": "Madera",
+              "lat": 36.961,
+              "lon": -120.061,
+              "aliases": ["Madera", "Chowchilla", "Madera Ranchos"]
+            },
+            {
+              "code": "okh",
+              "name": "Foothills",
+              "lat": 37.328,
+              "lon": -119.649,
+              "aliases": ["Oakhurst", "Coarsegold", "Bass Lake", "North Fork"]
+            }
+          ]
+        },
+        {
+          "code": "fre",
+          "name": "Fresno County",
+          "outline": "Fresno",
+          "children": [
+            {
+              "code": "frc",
+              "name": "Fresno / Clovis",
+              "lat": 36.746,
+              "lon": -119.772,
+              "aliases": ["Fresno", "Clovis", "Fowler", "Kerman"]
+            },
+            {
+              "code": "sng",
+              "name": "East County",
+              "lat": 36.708,
+              "lon": -119.556,
+              "aliases": ["Sanger", "Reedley", "Selma", "Dinuba Junction", "Shaver Lake"]
+            },
+            {
+              "code": "clg",
+              "name": "West County",
+              "lat": 36.14,
+              "lon": -120.36,
+              "aliases": ["Coalinga", "Firebaugh", "Mendota", "Huron", "San Joaquin"]
+            }
+          ]
+        },
+        {
+          "code": "kng",
+          "name": "Kings County",
+          "outline": "Kings",
+          "children": [
+            {
+              "code": "hnf",
+              "name": "Hanford / Lemoore",
+              "lat": 36.327,
+              "lon": -119.646,
+              "aliases": ["Hanford", "Lemoore", "Corcoran", "Avenal"]
+            }
+          ]
+        },
+        {
+          "code": "tul",
+          "name": "Tulare County",
+          "outline": "Tulare",
+          "children": [
+            {
+              "code": "vis",
+              "name": "Visalia",
+              "lat": 36.33,
+              "lon": -119.292,
+              "aliases": ["Visalia", "Exeter", "Farmersville", "Goshen"]
+            },
+            {
+              "code": "tlc",
+              "name": "Tulare City",
+              "lat": 36.208,
+              "lon": -119.347,
+              "aliases": ["Tulare", "Dinuba", "Woodlake", "Lindsay"]
+            },
+            {
+              "code": "prt",
+              "name": "Porterville",
+              "lat": 36.065,
+              "lon": -119.017,
+              "aliases": ["Porterville", "Terra Bella", "Springville"]
+            },
+            {
+              "code": "thr",
+              "name": "Sierra Foothills",
+              "lat": 36.439,
+              "lon": -118.906,
+              "aliases": ["Three Rivers", "Sequoia", "Kings Canyon", "Mineral King"]
+            }
+          ]
+        },
+        {
+          "code": "krn",
+          "name": "Kern County",
+          "outline": "Kern",
+          "children": [
+            {
+              "code": "bak",
+              "name": "Bakersfield",
+              "lat": 35.373,
+              "lon": -119.019,
+              "aliases": ["Bakersfield", "Oildale", "Rosedale", "Lamont", "Arvin"]
+            },
+            {
+              "code": "dlk",
+              "name": "North County",
+              "lat": 35.769,
+              "lon": -119.247,
+              "aliases": ["Delano", "Wasco", "Shafter", "McFarland", "Taft"]
+            },
+            {
+              "code": "tch",
+              "name": "Tehachapi",
+              "lat": 35.132,
+              "lon": -118.449,
+              "aliases": ["Tehachapi", "Mojave", "California City", "Frazier Park", "Lebec"]
+            },
+            {
+              "code": "rdc",
+              "name": "Indian Wells Valley",
+              "lat": 35.622,
+              "lon": -117.671,
+              "aliases": ["Ridgecrest", "Inyokern", "China Lake", "Trona"]
+            },
+            {
+              "code": "kvl",
+              "name": "Kern River Valley",
+              "lat": 35.628,
+              "lon": -118.474,
+              "aliases": ["Lake Isabella", "Kernville", "Wofford Heights", "Bodfish"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "soc",
+      "name": "Southern California",
+      "blurb": "LA, Orange County, the Inland Empire, San Diego and the deserts.",
+      "nudge": [10, 30],
+      "children": [
+        {
+          "code": "ven",
+          "name": "Ventura County",
+          "outline": "Ventura",
+          "children": [
+            {
+              "code": "oxn",
+              "name": "Oxnard Plain",
+              "lat": 34.198,
+              "lon": -119.177,
+              "aliases": ["Oxnard", "Ventura", "Camarillo", "Port Hueneme"]
+            },
+            {
+              "code": "tho",
+              "name": "Conejo Valley",
+              "lat": 34.17,
+              "lon": -118.838,
+              "aliases": ["Thousand Oaks", "Newbury Park", "Westlake Village", "Agoura"]
+            },
+            {
+              "code": "smi",
+              "name": "Simi Valley",
+              "lat": 34.269,
+              "lon": -118.781,
+              "aliases": ["Simi Valley", "Moorpark"]
+            },
+            {
+              "code": "ojv",
+              "name": "Ojai Valley",
+              "lat": 34.448,
+              "lon": -119.243,
+              "aliases": ["Ojai", "Oak View", "Meiners Oaks", "Santa Paula", "Fillmore"]
+            }
+          ]
+        },
+        {
+          "code": "la",
+          "name": "Los Angeles County",
+          "outline": "Los Angeles",
+          "children": [
+            {
+              "code": "dtla",
+              "name": "Central LA",
+              "lat": 34.048,
+              "lon": -118.253,
+              "aliases": ["Downtown", "Hollywood", "Koreatown", "Echo Park", "Silver Lake", "Boyle Heights"]
+            },
+            {
+              "code": "wla",
+              "name": "Westside",
+              "lat": 34.019,
+              "lon": -118.47,
+              "aliases": ["Santa Monica", "Venice", "Culver City", "Westwood", "Brentwood", "Marina del Rey"]
+            },
+            {
+              "code": "sfv",
+              "name": "San Fernando Valley",
+              "lat": 34.187,
+              "lon": -118.451,
+              "aliases": ["Van Nuys", "Burbank", "Glendale", "Sherman Oaks", "Northridge", "Woodland Hills"]
+            },
+            {
+              "code": "sgv",
+              "name": "San Gabriel Valley",
+              "lat": 34.148,
+              "lon": -118.144,
+              "aliases": ["Pasadena", "Alhambra", "El Monte", "West Covina", "Arcadia", "Monrovia"]
+            },
+            {
+              "code": "pom",
+              "name": "Pomona Valley",
+              "lat": 34.055,
+              "lon": -117.752,
+              "aliases": ["Pomona", "Claremont", "La Verne", "San Dimas", "Diamond Bar"]
+            },
+            {
+              "code": "sbay",
+              "name": "South Bay",
+              "lat": 33.836,
+              "lon": -118.341,
+              "aliases": ["Torrance", "Redondo Beach", "Hermosa Beach", "Manhattan Beach", "El Segundo", "San Pedro"]
+            },
+            {
+              "code": "lbc",
+              "name": "Long Beach",
+              "lat": 33.77,
+              "lon": -118.194,
+              "aliases": ["Long Beach", "Signal Hill", "Lakewood", "Cerritos"]
+            },
+            {
+              "code": "seg",
+              "name": "Southeast LA",
+              "lat": 33.94,
+              "lon": -118.133,
+              "aliases": ["Downey", "Whittier", "Norwalk", "Compton", "Bellflower", "Paramount"]
+            },
+            {
+              "code": "mal",
+              "name": "Santa Monica Mountains",
+              "lat": 34.026,
+              "lon": -118.78,
+              "aliases": ["Malibu", "Topanga", "Calabasas", "Agoura Hills"]
+            },
+            {
+              "code": "scv",
+              "name": "Santa Clarita Valley",
+              "lat": 34.391,
+              "lon": -118.542,
+              "aliases": ["Santa Clarita", "Valencia", "Newhall", "Castaic", "Stevenson Ranch"]
+            },
+            {
+              "code": "ant",
+              "name": "Antelope Valley",
+              "lat": 34.687,
+              "lon": -118.154,
+              "aliases": ["Lancaster", "Palmdale", "Quartz Hill", "Acton", "Rosamond"]
+            },
+            {
+              "code": "cat",
+              "name": "Catalina Island",
+              "lat": 33.343,
+              "lon": -118.328,
+              "aliases": ["Avalon", "Two Harbors", "Santa Catalina"]
+            }
+          ]
+        },
+        {
+          "code": "oc",
+          "name": "Orange County",
+          "outline": "Orange",
+          "children": [
+            {
+              "code": "anh",
+              "name": "North OC",
+              "lat": 33.836,
+              "lon": -117.914,
+              "aliases": ["Anaheim", "Fullerton", "Buena Park", "Orange", "Brea", "Yorba Linda"]
+            },
+            {
+              "code": "sna",
+              "name": "Central OC",
+              "lat": 33.746,
+              "lon": -117.868,
+              "aliases": ["Santa Ana", "Irvine", "Tustin", "Costa Mesa", "Garden Grove", "Westminster"]
+            },
+            {
+              "code": "hbh",
+              "name": "Coastal OC",
+              "lat": 33.66,
+              "lon": -117.999,
+              "aliases": ["Huntington Beach", "Newport Beach", "Seal Beach", "Laguna Beach", "Fountain Valley"]
+            },
+            {
+              "code": "mvo",
+              "name": "South OC",
+              "lat": 33.6,
+              "lon": -117.672,
+              "aliases": ["Mission Viejo", "Lake Forest", "San Clemente", "Dana Point", "Laguna Niguel", "Rancho Santa Margarita"]
+            }
+          ]
+        },
+        {
+          "code": "sbd",
+          "name": "San Bernardino County",
+          "outline": "San Bernardino",
+          "children": [
+            {
+              "code": "ont",
+              "name": "West Valley",
+              "lat": 34.064,
+              "lon": -117.649,
+              "aliases": ["Ontario", "Rancho Cucamonga", "Chino", "Upland", "Fontana", "Montclair"]
+            },
+            {
+              "code": "sbn",
+              "name": "Inland Valley",
+              "lat": 34.108,
+              "lon": -117.29,
+              "aliases": ["San Bernardino", "Redlands", "Rialto", "Colton", "Highland", "Yucaipa", "Loma Linda"]
+            },
+            {
+              "code": "bbl",
+              "name": "Mountains",
+              "lat": 34.244,
+              "lon": -116.911,
+              "aliases": ["Big Bear Lake", "Lake Arrowhead", "Running Springs", "Crestline", "Wrightwood"]
+            },
+            {
+              "code": "vv",
+              "name": "Victor Valley",
+              "lat": 34.536,
+              "lon": -117.291,
+              "aliases": ["Victorville", "Apple Valley", "Hesperia", "Adelanto", "Phelan"]
+            },
+            {
+              "code": "mrb",
+              "name": "Morongo Basin",
+              "lat": 34.114,
+              "lon": -116.432,
+              "aliases": ["Yucca Valley", "Joshua Tree", "Twentynine Palms", "Landers", "Pioneertown"]
+            },
+            {
+              "code": "bar",
+              "name": "Barstow",
+              "lat": 34.896,
+              "lon": -117.017,
+              "aliases": ["Barstow", "Newberry Springs", "Yermo", "Baker"]
+            },
+            {
+              "code": "ndl",
+              "name": "Needles",
+              "lat": 34.848,
+              "lon": -114.614,
+              "aliases": ["Needles", "Havasu Lake", "Big River"]
+            }
+          ]
+        },
+        {
+          "code": "riv",
+          "name": "Riverside County",
+          "outline": "Riverside",
+          "children": [
+            {
+              "code": "rvc",
+              "name": "Western Riverside",
+              "lat": 33.953,
+              "lon": -117.396,
+              "aliases": ["Riverside", "Corona", "Norco", "Jurupa Valley", "Eastvale"]
+            },
+            {
+              "code": "mvy",
+              "name": "Moreno Valley / Perris",
+              "lat": 33.937,
+              "lon": -117.23,
+              "aliases": ["Moreno Valley", "Perris", "Menifee", "Lake Elsinore", "Wildomar"]
+            },
+            {
+              "code": "tmc",
+              "name": "Temecula Valley",
+              "lat": 33.494,
+              "lon": -117.148,
+              "aliases": ["Temecula", "Murrieta", "Winchester", "Anza"]
+            },
+            {
+              "code": "hem",
+              "name": "San Jacinto Valley",
+              "lat": 33.748,
+              "lon": -116.972,
+              "aliases": ["Hemet", "San Jacinto", "Beaumont", "Banning", "Cabazon"]
+            },
+            {
+              "code": "idw",
+              "name": "Idyllwild",
+              "lat": 33.74,
+              "lon": -116.719,
+              "aliases": ["Idyllwild", "Pine Cove", "Mountain Center"]
+            },
+            {
+              "code": "cch",
+              "name": "Coachella Valley",
+              "lat": 33.83,
+              "lon": -116.545,
+              "aliases": ["Palm Springs", "Palm Desert", "Indio", "La Quinta", "Cathedral City", "Coachella"]
+            },
+            {
+              "code": "blh",
+              "name": "Palo Verde Valley",
+              "lat": 33.61,
+              "lon": -114.596,
+              "aliases": ["Blythe", "Ripley", "Desert Center"]
+            }
+          ]
+        },
+        {
+          "code": "sd",
+          "name": "San Diego County",
+          "outline": "San Diego",
+          "children": [
+            {
+              "code": "sdc",
+              "name": "Central San Diego",
+              "lat": 32.716,
+              "lon": -117.161,
+              "aliases": ["San Diego", "La Jolla", "Pacific Beach", "Point Loma", "Mission Valley", "North Park"]
+            },
+            {
+              "code": "ncc",
+              "name": "North County Coastal",
+              "lat": 33.166,
+              "lon": -117.323,
+              "aliases": ["Oceanside", "Carlsbad", "Encinitas", "Del Mar", "Solana Beach", "Vista"]
+            },
+            {
+              "code": "nci",
+              "name": "North County Inland",
+              "lat": 33.119,
+              "lon": -117.086,
+              "aliases": ["Escondido", "San Marcos", "Poway", "Rancho Bernardo", "Fallbrook", "Valley Center"]
+            },
+            {
+              "code": "ecs",
+              "name": "East County",
+              "lat": 32.795,
+              "lon": -116.962,
+              "aliases": ["El Cajon", "Santee", "La Mesa", "Lakeside", "Alpine", "Spring Valley"]
+            },
+            {
+              "code": "sbo",
+              "name": "South Bay",
+              "lat": 32.64,
+              "lon": -117.084,
+              "aliases": ["Chula Vista", "National City", "Imperial Beach", "Bonita", "San Ysidro"]
+            },
+            {
+              "code": "ram",
+              "name": "Backcountry",
+              "lat": 33.042,
+              "lon": -116.868,
+              "aliases": ["Ramona", "Julian", "Borrego Springs", "Descanso", "Campo", "Warner Springs"]
+            }
+          ]
+        },
+        {
+          "code": "imp",
+          "name": "Imperial County",
+          "outline": "Imperial",
+          "children": [
+            {
+              "code": "elc",
+              "name": "El Centro",
+              "lat": 32.792,
+              "lon": -115.563,
+              "aliases": ["El Centro", "Imperial", "Holtville", "Seeley"]
+            },
+            {
+              "code": "bwl",
+              "name": "North Valley",
+              "lat": 32.979,
+              "lon": -115.53,
+              "aliases": ["Brawley", "Westmorland", "Calipatria", "Niland", "Salton Sea"]
+            },
+            {
+              "code": "clx",
+              "name": "Calexico",
+              "lat": 32.679,
+              "lon": -115.499,
+              "aliases": ["Calexico", "Heber"]
+            },
+            {
+              "code": "wnh",
+              "name": "Winterhaven",
+              "lat": 32.739,
+              "lon": -114.622,
+              "aliases": ["Winterhaven", "Bard", "Felicity", "Ogilby"]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
