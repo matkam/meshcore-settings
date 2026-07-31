@@ -7,8 +7,9 @@
  * a time, stopping at the first failure so a half-applied region chain is
  * obvious rather than silent.
  *
- * Loaded as a module, so it runs after app.js (a classic script) has already
- * defined window.SettingsState.
+ * Loaded as a module, so it runs after app.js (a classic script) has been
+ * evaluated — but app.js only defines window.SettingsState once the region JSON
+ * has been fetched, so the wiring below waits for the same signal.
  */
 import WebSerialConnection from "./vendor/meshcore.js/src/connection/web_serial_connection.js";
 import WebBleConnection from "./vendor/meshcore.js/src/connection/web_ble_connection.js";
@@ -80,7 +81,7 @@ function detectLocation(contact) {
 
   // Runners-up within the same slop that made the winner plausible: when two
   // centroids are nearly as close, which one is nearest is close to a coin toss.
-  const near = window.SettingsState.nearestAreas(lat, lon, DETECT_CHOICES, DETECT_NEAR_KM);
+  const near = window.SettingsState.nearestPlaces(lat, lon, DETECT_CHOICES, DETECT_NEAR_KM);
   if (!near.length) { return; }
 
   const where = lat.toFixed(3) + ", " + lon.toFixed(3);
@@ -181,7 +182,7 @@ let busy = false;
 //
 // Without either API there is nothing to offer — leave the panel hidden so the
 // copy-paste flow is all anyone sees.
-if (hasSerial || hasBle) { init(); }
+if (hasSerial || hasBle) { window.RegionData.ready(init); }
 
 function init() {
   // Available from the start: connecting is how the selections below get filled
