@@ -182,9 +182,8 @@ pre:focus-visible {
   margin-bottom: 6px;
 }
 
-/* The tags are a hierarchy, so the picker is one — ticking a region reveals its
-   counties, ticking a county reveals its areas. Scrolls rather than growing
-   without limit once a few are open. */
+/* The tags are a hierarchy, so the picker is one — ticking a place reveals what
+   is inside it. Scrolls rather than growing without limit once a few are open. */
 .picker {
   max-height: 420px;
   overflow-y: auto;
@@ -219,9 +218,14 @@ pre:focus-visible {
   color: var(--ink-soft);
 }
 
-.pick-row.lvl-region { font-weight: 600; font-size: 0.95rem; }
-.pick-row.lvl-county { font-size: 0.9rem; }
-.pick-row.lvl-area { font-size: 0.88rem; }
+/* Rows shrink with depth, so the level a row sits at is readable without
+   counting indents. Classes are lvl-<depth>, not level names: the tree can be
+   any number deep, and past the third the difference stops being useful. */
+.pick-row.lvl-0 { font-weight: 600; font-size: 0.95rem; }
+.pick-row.lvl-1 { font-size: 0.9rem; }
+.pick-row.lvl-2 { font-size: 0.88rem; }
+.pick-row.lvl-3, .pick-row.lvl-4, .pick-row.lvl-5,
+.pick-row.lvl-6, .pick-row.lvl-7 { font-size: 0.86rem; }
 
 /* One rule per level of nesting, which doubles as the separator between a
    parent and the things under it. */

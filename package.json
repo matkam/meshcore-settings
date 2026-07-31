@@ -4,13 +4,15 @@
   "private": true,
   "description": "Pick your area in California, get MeshCore repeater settings including region scopes.",
   "scripts": {
-    "validate": "node scripts/validate.mjs",
-    "build:counties": "node scripts/build-counties.mjs",
+    "validate": "node scripts/build-regions.mjs --check && node scripts/validate.mjs",
+    "build:regions": "node scripts/build-regions.mjs",
+    "build:outlines": "node scripts/build-outlines.mjs",
     "serve": "python3 -m http.server 8000",
     "test": "node tests/run.mjs"
   },
   "license": "MIT",
   "devDependencies": {
-    "playwright": "^1.56.0"
+    "playwright": "^1.56.0",
+    "yaml": "^2.9.0"
   }
 }

@@ -58,8 +58,8 @@ check("carrying several is explained where they are picked",
 /* ---------- across a county, and across a region ---------- */
 
 await only("cc", "sfb", "slo", "ala", "prb", "oak");
-check("counties from every ticked region are shown", (await rows("county")) > 12,
-  String(await rows("county")));
+check("counties from every ticked region are shown", (await rows(1)) > 12,
+  String(await rows(1)));
 check("areas from every ticked county are shown",
   (await page.$$eval('.picker input[data-code="oak"]', (n) => n.length)) === 1);
 {
@@ -100,10 +100,10 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
       await page.waitForTimeout(30);
     }
   }
-  await tickAll("region");
-  await tickAll("county");
-  const areas = await page.$$eval(".pick-row.lvl-area input", (n) => n.map((x) => x.dataset.code));
-  await tickAll("area");
+  await tickAll(0);
+  await tickAll(1);
+  const areas = await page.$$eval(".pick-row.lvl-2 input", (n) => n.map((x) => x.dataset.code));
+  await tickAll(2);
   await page.waitForTimeout(300);
   const many = await defs();
   check("a line that would overflow starts a new command", many.length > 1, String(many.length));
@@ -166,10 +166,10 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
   check("a multi deep link restores every pick",
     line.includes("prb") && line.includes("oak") && (await defs()).length === 1, line);
   check("ticking a parent is what reveals its children",
-    (await rows("county")) > 0 && (await rows("area")) > 0,
-    `${await rows("county")} counties, ${await rows("area")} areas`);
+    (await rows(1)) > 0 && (await rows(2)) > 0,
+    `${await rows(1)} counties, ${await rows(2)} areas`);
   check("and ticks the levels above them, so the rows are visible",
-    (await page.$$eval(".pick-row.lvl-region input:checked", (n) => n.length)) === 2,
+    (await page.$$eval(".pick-row.lvl-0 input:checked", (n) => n.length)) === 2,
     JSON.stringify(await page.$$eval(".picker input:checked", (n) => n.map((x) => x.dataset.code))));
 }
 
@@ -200,7 +200,7 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
     await page.check(`.picker input[data-code="${code}"]`);
     await page.waitForTimeout(35);
   }
-  const counties = await page.$$eval(".pick-row.lvl-county input",
+  const counties = await page.$$eval(".pick-row.lvl-1 input",
     (n) => n.slice(0, 26).map((x) => x.dataset.code));
   for (const code of counties) {
     await page.check(`.picker input[data-code="${code}"]`);

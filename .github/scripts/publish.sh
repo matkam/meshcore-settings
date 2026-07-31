@@ -51,12 +51,27 @@ done
 git fetch origin gh-pages --depth=1 2>/dev/null || true
 
 if git rev-parse --verify origin/gh-pages >/dev/null 2>&1; then
-  git checkout -B gh-pages origin/gh-pages
+  # --force because the job may have run `npm install` first: an untracked
+  # package-lock.json colliding with a tracked one on gh-pages aborts a plain
+  # checkout, which failed the publish rather than the build that caused it.
+  git checkout -f -B gh-pages origin/gh-pages
 else
   echo "gh-pages does not exist yet, creating it"
   git checkout --orphan gh-pages
   git reset --hard
 fi
+
+# Everything published is copied from $STAGE below, so anything else still in
+# the worktree is build residue -- node_modules, a lockfile, test screenshots --
+# and `git add -A` at the end would commit it. A preview publish only replaces
+# its own directory, so without this a stray node_modules/ lands at the root of
+# the served site and stays there.
+#
+# .github is spared because this script lives in it. A production publish
+# removes it anyway a few lines down, and survives doing so only because an
+# unlinked file stays readable while bash still holds it open -- no reason to
+# lean on that in the preview path too.
+git clean -ffdxq -e .github
 
 if [ -z "$DEST" ]; then
   # Production: replace the root, but never the previews.

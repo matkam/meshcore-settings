@@ -31,6 +31,10 @@ jobs:
         with:
           node-version: 20
 
+      - name: Install the build tooling
+        if: github.event.action != 'closed'
+        run: npm install --no-audit --no-fund
+
       - name: Validate region data
         if: github.event.action != 'closed'
         run: npm run validate

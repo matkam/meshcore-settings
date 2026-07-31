@@ -74,7 +74,12 @@ county for a county-wide scope, or a region label for a region-wide one — the
 three levels of the scope chain, in the three things you can click. Whatever is
 selected is reflected back: the region as a wash across its counties, the county
 as a solid fill, the area as a marked dot. A selection made in the search box or
-the dropdowns shows up on the map too, and vice versa.
+the picker shows up on the map too, and vice versa.
+
+None of that is coded per level. A place is drawn as a boundary if it names an
+outline, as a dot if it carries a lat/lon, and as a label if it sits at the top of
+the tree — so a tree shaped differently from California's gets a map without any
+change here.
 
 It zooms, which the Bay Area needs — a dozen areas sit within a few pixels of
 each other at full extent. Use the buttons, ctrl/⌘ + scroll, or pinch; drag to
@@ -95,25 +100,29 @@ Two deliberate limits on what it claims:
   and from hovering instead.
 
 The map is a shortcut, not the only route — everything on it is also reachable
-through the search box and the dropdowns, which are what keyboard and
-screen-reader users get. Nothing is map-only.
+through the search box and the picker, which are what keyboard and screen-reader
+users get. Nothing is map-only.
 
 `window.RegionMap.showPosition(lat, lon)` drops a marker at a real position, for
 showing where a connected repeater says it is.
 
 ### Regenerating the outlines
 
-`data/counties.js` is generated and committed. Adding an area never touches it.
+`data/outlines.json` is generated and committed. Adding an area never touches it.
 If the boundaries ever need replacing:
 
 ```sh
-npm run build:counties -- path/to/california-counties.geojson
+npm run build:outlines -- path/to/california-counties.geojson
 ```
 
 It projects lon/lat into flat viewBox units, simplifies the rings to about 600 m,
-drops specks while keeping the real islands, and writes one SVG path per county.
+drops specks while keeping the real islands, and writes one SVG path per shape.
 The projection constants live in the generated file and are shared by the map and
 the validator, so a coordinate lands in the same place in both.
+
+The shapes are a library keyed by name, not a level of the tree: a place claims
+one with `outline: Del Norte`. Today they happen to be counties, which is why the
+input is a counties GeoJSON, but nothing in the site assumes that.
 
 ## The other settings
 
@@ -233,8 +242,8 @@ emptied list disables sending rather than sending nothing.
 
 ## The region scheme
 
-Five levels, matching how a `region def` chain is walked — each token becomes a
-child of the one before it:
+A chain of names, matching how `region def` is walked — each token becomes a child
+of the one before it:
 
 ```
 west  →  ca  →  cc            →  slo                     →  prb
@@ -242,9 +251,18 @@ US West  California  Central Coast  San Luis Obispo County   North County
 ```
 
 California is split into 8 regions covering all 58 counties, with 162 local areas
-under them. You can generate settings at any of the three lower levels: pick a
+under them, and you can generate settings at any of those three levels: pick a
 region for a region-wide chain, a county for a county-wide chain, or a local area
 for the full five-token chain.
+
+Three is what California uses, not what the site supports. The tree in
+`data/regions.yaml` nests as deep as you like — a place has `children`, and those
+children may have children — up to MeshCore's eight-level chain limit, with the
+two root tokens counting toward it. Branches can be ragged, so one county can grow
+a level of neighbourhoods without every other county having to. Nothing in the
+page knows what a "county" is: the level names come from a `levels` list in the
+data, the map draws a boundary for any place that names one and a dot for any
+place that carries a lat/lon, and the picker just recurses.
 
 On firmware older than 1.16 the same chain is built with `region put <name> [parent]`
 followed by `region allowf <name>` for each level — see
@@ -272,6 +290,92 @@ Region names live in one flat namespace on a node, so codes must be unique acros
 the entire file — `npm run validate` enforces that, along with the 160-character
 serial line limit and MeshCore's 8-level depth cap.
 
+## Using the region data elsewhere
+
+[`data/regions.json`](data/regions.json) is the tree on its own, with nothing about
+this site in it. It's published with the rest of the site, so it can be fetched
+directly:
+
+```
+https://matkam.github.io/meshcore-settings/data/regions.json
+```
+
+GitHub Pages serves it with `Access-Control-Allow-Origin: *`, so a browser app can
+read it cross-origin without a proxy. The raw file on GitHub works too, and tracks
+`main` rather than the last deploy:
+
+```
+https://raw.githubusercontent.com/matkam/meshcore-settings/main/data/regions.json
+```
+
+The shape, in brief — the field-by-field documentation lives in the comments at
+the top of [`data/regions.yaml`](data/regions.yaml):
+
+```jsonc
+{
+  "format": 1,                    // bumped only on a breaking change
+  "name": "California",
+  "updated": "2026-07-31",
+  "limits": { "maxLineLength": 160, "maxRegionNames": 32, "maxDepth": 8 },
+  "root":   [ { "code": "west", "name": "Western US" }, … ],
+  "levels": [ { "name": "region", "plural": "regions" }, … ],
+  "places": [
+    {
+      "code": "cc",             // unique across the whole file
+      "name": "Central Coast",
+      "children": [
+        {
+          "code": "slo",
+          "name": "San Luis Obispo County",
+          "outline": "San Luis Obispo",       // optional, a shape in outlines.json
+          "children": [
+            {
+              "code": "prb",
+              "name": "North County",
+              "lat": 35.627, "lon": -120.691, // optional
+              "aliases": ["Paso Robles", "Atascadero", …]  // search terms only
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+A place's chain is `root` plus its ancestors plus itself, which is what
+`region def` takes. `children` is absent rather than empty on a leaf. `aliases`
+never travel over the air — they exist so a search box can find a place by a town
+name.
+
+[`data/outlines.json`](data/outlines.json) sits beside it with the boundary shapes,
+already projected into flat SVG units, and carries the projection constants and its
+own attribution notice.
+
+Two promises: `format` changes only when the shape does in a way that breaks
+readers, and a `code` already in the file is not renamed — codes are on real
+hardware, and renaming one splits a mesh.
+
+### The YAML is published too
+
+`data/regions.yaml` goes out with everything else, served as `text/yaml` with the
+same `Access-Control-Allow-Origin: *`, so `yaml.safe_load` on that URL gets you
+the same tree with the explanatory comments attached. Nothing stops you reading
+it, and if you want to see *why* a place is filed where it is, that's the file to
+look at.
+
+Every field means the same thing in both, down to the type — `updated` is quoted
+in the YAML precisely so it doesn't resolve to a timestamp on one side and a
+string on the other.
+
+The JSON is still the one to depend on:
+
+- It parses everywhere without a dependency.
+- It is normalised. The build fixes key order, drops `children` when a place has
+  none, and rejects unknown fields; the YAML is whatever a contributor typed.
+
+So: the YAML if you're reading, the JSON if you're building on it.
+
 ## Pushing settings over the air
 
 On browsers with Web Serial or Web Bluetooth (Chrome/Edge desktop, plus Chrome on
@@ -290,7 +394,7 @@ Once connected, the repeater can answer both questions the page otherwise asks y
   so it needs no login. Each area is represented by a single centroid, so the
   nearest one is a guess rather than an answer — some areas genuinely sit a few km
   apart (Yuba City and Marysville face each other across the river), and a large
-  area's centroid can be well away from where a node actually is. So the page
+  area's point can be well away from where a node actually is. So the page
   offers a **shortlist of up to three, closest first, with distances** and you
   click the right one; nothing is applied silently. Runners-up are only listed
   while they're within 25 km of the closest match, so a genuinely isolated area
@@ -302,9 +406,10 @@ Once connected, the repeater can answer both questions the page otherwise asks y
   version selector is set directly. An unparseable reply is reported and the
   selector left alone.
 
-Area centroids live alongside each area in `data/regions.js`. `npm run validate`
-checks they're inside California, that no two are identical, and warns when two are
-close enough that detection can't reliably tell them apart.
+Positions live alongside each place in `data/regions.yaml` — at any level, not
+just the deepest. `npm run validate` checks they land on the map, that no two are
+identical, and warns when two are close enough that detection can't reliably tell
+them apart.
 
 Two things worth knowing:
 
@@ -321,36 +426,42 @@ Two things worth knowing:
 | Path | What it is |
 | --- | --- |
 | `index.html` | The page |
-| `assets/app.js` | Search, cascading selects, command generation |
+| `assets/data.js` | Fetches the two data files and indexes the tree |
+| `assets/app.js` | Search, the picker, command generation |
 | `assets/map.js` | The map: draws it, handles picking, reflects the selection |
 | `assets/push.js` | Over-the-air flow: connect, log in, send, verify, resume |
 | `assets/vendor/meshcore.js/` | Vendored [meshcore.js](https://github.com/liamcottle/meshcore.js) (MIT), pinned — see its README |
 | `assets/style.css` | Styles, light and dark |
-| `data/regions.js` | **The region tree.** This is the file worth editing. |
-| `data/counties.js` | County outlines for the map — generated, don't hand-edit |
+| `data/regions.yaml` | **The region tree.** This is the file worth editing. |
+| `data/regions.json` | The same tree, built from the YAML — what the site loads, and what to consume from outside |
+| `data/outlines.json` | Boundary shapes for the map — generated, don't hand-edit |
+| `scripts/build-regions.mjs` | YAML → JSON, and `--check` that they agree |
+| `scripts/build-outlines.mjs` | Regenerates `data/outlines.json` from a GeoJSON |
 | `scripts/validate.mjs` | Uniqueness / length / depth / coordinate checks |
 | `tests/` | Browser tests — see [Tests](#tests) |
-| `scripts/build-counties.mjs` | Regenerates `data/counties.js` from a GeoJSON |
 
 The vendored library is plain ES modules with relative imports, so the browser loads
-it directly — there is still no build step and no package manager.
+it directly — the page itself is still unbuilt and unbundled.
 
 ## Running it locally
 
-There is no build step. Serve the directory and open it:
+The page is unbuilt — no bundler, no framework. Serve the directory and open it:
 
 ```sh
 npm run serve       # python3 -m http.server 8000
 ```
 
-Then http://localhost:8000. Opening `index.html` directly off the filesystem works
-too — the region data is a plain `.js` file rather than JSON precisely so `file://`
-doesn't trip over CORS.
+Then http://localhost:8000. It has to be *served*: the tree is a JSON file the
+page fetches, and browsers block `fetch` on `file://` URLs. Opening `index.html`
+off the filesystem shows a note saying exactly that.
 
-Before opening a PR:
+Editing the tree does have a build step, because the file people edit is YAML and
+the file everything reads is JSON:
 
 ```sh
-npm run validate
+npm install              # once, for the YAML parser
+npm run build:regions    # data/regions.yaml -> data/regions.json
+npm run validate         # checks they agree, then checks the tree
 ```
 
 ## Tests
@@ -359,7 +470,7 @@ Browser tests, driven by Playwright against a simulated companion radio, so the
 over-the-air flow is exercised without hardware:
 
 ```sh
-npm install          # Playwright — the site itself still has no dependencies
+npm install          # Playwright and the YAML parser; the page itself has neither
 npm test             # all suites
 npm test -- map      # just one
 ```
@@ -370,18 +481,25 @@ run against every PR, and screenshots are uploaded when something fails.
 
 | Suite | What it covers |
 | --- | --- |
-| `basic` | Search, cascading selects, deep links, copy |
+| `basic` | Search, the picker, deep links, copy |
 | `firmware` | Command output on each of the four version tiers |
+| `levels` | A synthetic tree, four levels deep in one branch and two in another |
 | `detect` | Reading position and firmware from a connected repeater |
 | `flow` | Landing on the page cold and working through it |
 | `push` | Sending over the air, stopping at a failure, resuming |
-| `map` | Drawing, hover, picking at all three levels, zoom and pan |
+| `map` | Drawing, hover, picking at every level, zoom and pan |
 | `settings` | Loop detection, flood advert interval, editing the commands |
 | `picks` | Multiple selections, branch joining, shared-ancestry dedup |
 
 `tests/sim.mjs` is the fake device: it answers the companion protocol over a
 stubbed Web Serial port, so a test can specify what the repeater reports and how
 it replies to each command.
+
+`levels` earns its place: every other suite drives California's three levels and
+would keep passing if three were hard-coded somewhere. It intercepts the fetch of
+`data/regions.json` and serves a tree of its own instead, with the outlines and
+positions hung off different levels, then checks the picker, the chain, the map
+and the level names all follow.
 
 If Playwright can't find a browser — some environments pre-install one whose
 build number doesn't match the npm package — point it at the binary:
@@ -421,8 +539,9 @@ token, which is not worth a preview.
 
 ## Adding or fixing an area
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Short version: add an entry to the right
-county in `data/regions.js`, run `npm run validate`, open a PR.
+See [CONTRIBUTING.md](CONTRIBUTING.md). Short version: add an entry under the
+right county in `data/regions.yaml`, run `npm run build:regions` and
+`npm run validate`, commit both files, open a PR.
 
 ## Sources
 
