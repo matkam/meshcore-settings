@@ -32,8 +32,15 @@ window.RegionData.ready(function (DATA) {
 
   var SVG_NS = "http://www.w3.org/2000/svg";
 
+  function svgEl(name, className) {
+    var node = document.createElementNS(SVG_NS, name);
+    if (className) { node.setAttribute("class", className); }
+    return node;
+  }
+
   // Screen pixels, converted to viewBox units whenever the map is resized. Small
-  // marks by design: 162 of them, and in the Bay Area they nearly touch.
+  // marks by design: there are over 160 of them, and in the Bay Area they nearly
+  // touch.
   var DOT_PX = 2.6;
   var DOT_SELECTED_PX = 5;
   var LABEL_PX = 11;
@@ -41,7 +48,7 @@ window.RegionData.ready(function (DATA) {
   // lookup below. This is how far "closest" is still allowed to be, so a dot
   // owns a disc twice this wide.
   //
-  // It has to stay modest. There are 162 dots: at 22 the discs covered four
+  // It has to stay modest. With this many dots, at 22 the discs covered four
   // fifths of the state's land area, which left most of the map unable to hover
   // or click the county it was over.
   var HIT_PX = 12;
@@ -91,26 +98,21 @@ window.RegionData.ready(function (DATA) {
   /* ---------- build the svg ---------- */
 
   var vb = MAP.viewBox;
-  var svg = document.createElementNS(SVG_NS, "svg");
+  var svg = svgEl("svg", "map-svg");
   svg.setAttribute("viewBox", vb.x + " " + vb.y + " " + vb.width + " " + vb.height);
-  svg.setAttribute("class", "map-svg");
   // The picker below carries the same information for anyone not using a
-  // pointer, so the map describes itself as one image rather than 220
-  // unlabelled shapes.
+  // pointer, so the map describes itself as one image rather than a couple of
+  // hundred unlabelled shapes.
   svg.setAttribute("role", "img");
   svg.setAttribute("aria-label",
     "Map of " + DATA.regions.name + "'s " + DATA.levelPluralAt(1) +
     " with a marker for each " + DATA.levelNameAt(2) + ". " +
     "The picker below makes the same choices.");
 
-  var gCounties = document.createElementNS(SVG_NS, "g");
-  gCounties.setAttribute("class", "map-counties");
-  var gDots = document.createElementNS(SVG_NS, "g");
-  gDots.setAttribute("class", "map-dots");
-  var gLabels = document.createElementNS(SVG_NS, "g");
-  gLabels.setAttribute("class", "map-labels");
-  var gMark = document.createElementNS(SVG_NS, "g");
-  gMark.setAttribute("class", "map-mark");
+  var gCounties = svgEl("g", "map-counties");
+  var gDots = svgEl("g", "map-dots");
+  var gLabels = svgEl("g", "map-labels");
+  var gMark = svgEl("g", "map-mark");
   // display, not the hidden attribute: SVG elements ignore hidden in Chromium,
   // which left an unplaced marker drawn at the origin.
   gMark.style.display = "none";
@@ -119,9 +121,8 @@ window.RegionData.ready(function (DATA) {
 
   MAP.shapes.forEach(function (shape) {
     var owner = byShape[shape.name];
-    var path = document.createElementNS(SVG_NS, "path");
+    var path = svgEl("path", "map-county");
     path.setAttribute("d", shape.d);
-    path.setAttribute("class", "map-county");
     if (owner) {
       path.dataset.place = owner.code;
       // Every ancestor, so "tint everything inside this place" is one selector
@@ -132,13 +133,15 @@ window.RegionData.ready(function (DATA) {
     gCounties.appendChild(path);
   });
 
+  var dotByCode = {};
+
   points.forEach(function (a) {
-    var dot = document.createElementNS(SVG_NS, "circle");
+    var dot = svgEl("circle", "map-dot");
     dot.setAttribute("cx", a.x);
     dot.setAttribute("cy", a.y);
-    dot.setAttribute("class", "map-dot");
     dot.dataset.place = a.node.code;
     a.el = dot;
+    dotByCode[a.node.code] = dot;
     gDots.appendChild(dot);
   });
 
@@ -155,12 +158,11 @@ window.RegionData.ready(function (DATA) {
     // for the ones it can't, like a coastal strip whose own centre is at sea.
     var nudge = place.nudge || [0, 0];
 
-    var text = document.createElementNS(SVG_NS, "text");
+    var text = svgEl("text", "map-label");
     text.dataset.baseX = cx + nudge[0];
     text.dataset.baseY = cy + nudge[1];
     text.setAttribute("x", text.dataset.baseX);
     text.setAttribute("y", text.dataset.baseY);
-    text.setAttribute("class", "map-label");
     text.dataset.place = place.code;
     // Codes are words now, and "SACRAMENTOVALLEY" across the valley floor is
     // unreadable, so a place may carry a `short` for the label only.
@@ -168,10 +170,8 @@ window.RegionData.ready(function (DATA) {
     gLabels.appendChild(text);
   });
 
-  var markRing = document.createElementNS(SVG_NS, "circle");
-  markRing.setAttribute("class", "map-mark-ring");
-  var markDot = document.createElementNS(SVG_NS, "circle");
-  markDot.setAttribute("class", "map-mark-dot");
+  var markRing = svgEl("circle", "map-mark-ring");
+  var markDot = svgEl("circle", "map-mark-dot");
   gMark.appendChild(markRing);
   gMark.appendChild(markDot);
 
@@ -207,9 +207,13 @@ window.RegionData.ready(function (DATA) {
     view.y = Math.min(Math.max(view.y, vb.y), vb.y + vb.height - view.height);
   }
 
+  function setViewBox() {
+    svg.setAttribute("viewBox", view.x + " " + view.y + " " + view.width + " " + view.height);
+  }
+
   function applyView() {
     clampView();
-    svg.setAttribute("viewBox", view.x + " " + view.y + " " + view.width + " " + view.height);
+    setViewBox();
     // Marks are sized in screen pixels, so their size in map units changes with
     // the zoom — they stay the same size on screen while the map grows.
     resize();
@@ -262,8 +266,8 @@ window.RegionData.ready(function (DATA) {
 
   /* ---------- keeping labels off the dots ----------
    * A label that covers a dot makes that area unreachable: the label is hit
-   * first, by design, so that a label among dots stays clickable. Yuba City and
-   * Marysville sat under SV, and Temecula under SOC.
+   * first, by design, so that a label among dots stays clickable — and with this
+   * many dots, several of them sat squarely under their region's label.
    *
    * Nudging those by hand would fix today and break the next time somebody adds
    * an area near a label, so the label looks for its own clear spot instead —
@@ -376,9 +380,11 @@ window.RegionData.ready(function (DATA) {
   var pinchFrom = null;
 
   function twoPointers() {
-    var out = [];
-    for (var id in pointers) { out.push(pointers[id]); }
-    return out;
+    return Object.keys(pointers).map(function (id) { return pointers[id]; });
+  }
+
+  function pinchDistance(two) {
+    return Math.hypot(two[0].x - two[1].x, two[0].y - two[1].y);
   }
 
   svg.addEventListener("pointerdown", function (evt) {
@@ -388,8 +394,7 @@ window.RegionData.ready(function (DATA) {
     dragged = 0;
 
     if (pointerCount === 2) {
-      var two = twoPointers();
-      pinchFrom = { dist: Math.hypot(two[0].x - two[1].x, two[0].y - two[1].y), zoom: zoom() };
+      pinchFrom = { dist: pinchDistance(twoPointers()), zoom: zoom() };
       dragFrom = null;
       return;
     }
@@ -409,7 +414,7 @@ window.RegionData.ready(function (DATA) {
 
     if (pinchFrom && pointerCount === 2) {
       var two = twoPointers();
-      var dist = Math.hypot(two[0].x - two[1].x, two[0].y - two[1].y);
+      var dist = pinchDistance(two);
       var mid = clientPoint((two[0].x + two[1].x) / 2, (two[0].y + two[1].y) / 2);
       zoomAt((pinchFrom.zoom * (dist / pinchFrom.dist)) / zoom(), mid.x, mid.y);
       return;
@@ -423,7 +428,7 @@ window.RegionData.ready(function (DATA) {
     view.x += dragFrom.x - now.x;
     view.y += dragFrom.y - now.y;
     clampView();
-    svg.setAttribute("viewBox", view.x + " " + view.y + " " + view.width + " " + view.height);
+    setViewBox();
   });
 
   function endPointer(evt) {
@@ -500,7 +505,7 @@ window.RegionData.ready(function (DATA) {
 
     // Order matters. A label is only ever hit dead-on, so landing on one is a
     // clear statement of intent and outranks the proximity guess below —
-    // otherwise a label sitting among dots (SJV does) could never be reached.
+    // otherwise a label sitting among dots could never be reached.
     var label = hitLabel(evt);
     if (label) {
       var place = DATA.byCode[label.dataset.place];
@@ -550,9 +555,7 @@ window.RegionData.ready(function (DATA) {
   function setHover(next, evt) {
     if (!hovered || hovered.code !== next.code) {
       clearMarks("is-hover");
-      (next.els || []).forEach(function (el) {
-        if (el) { el.classList.add("is-hover"); }
-      });
+      (next.els || []).forEach(function (el) { mark(el, "is-hover"); });
       hovered = next;
     }
     // textContent, not innerHTML: these names come from a data file that
@@ -587,15 +590,13 @@ window.RegionData.ready(function (DATA) {
   }
 
   function clearMarks(cls) {
-    var marked = svg.querySelectorAll("." + cls);
-    for (var i = 0; i < marked.length; i++) { marked[i].classList.remove(cls); }
+    svg.querySelectorAll("." + cls).forEach(function (marked) {
+      marked.classList.remove(cls);
+    });
   }
 
-  function dotEl(code) {
-    for (var i = 0; i < points.length; i++) {
-      if (points[i].node.code === code) { return points[i].el; }
-    }
-    return null;
+  function mark(el, cls) {
+    if (el) { el.classList.add(cls); }
   }
 
   /* ---------- clicking ---------- */
@@ -635,18 +636,15 @@ window.RegionData.ready(function (DATA) {
     clearMarks("is-in-region");
 
     window.SettingsState.picked().forEach(function (pick) {
-      (outlineEls[pick.code] || []).forEach(function (el) { el.classList.add("is-on"); });
-
-      var dot = dotEl(pick.code);
-      if (dot) { dot.classList.add("is-on"); }
-
-      var label = gLabels.querySelector('[data-place="' + pick.code + '"]');
-      if (label) { label.classList.add("is-on"); }
+      (outlineEls[pick.code] || []).forEach(function (el) { mark(el, "is-on"); });
+      mark(dotByCode[pick.code], "is-on");
+      mark(gLabels.querySelector('[data-place="' + pick.code + '"]'), "is-on");
 
       // Tint every shape inside it, so picking something with no outline of its
       // own — a region, today — still shows its extent.
-      var inside = gCounties.querySelectorAll('[data-trail~="' + pick.code + '"]');
-      for (var i = 0; i < inside.length; i++) { inside[i].classList.add("is-in-region"); }
+      gCounties.querySelectorAll('[data-trail~="' + pick.code + '"]').forEach(function (el) {
+        mark(el, "is-in-region");
+      });
     });
   }
 

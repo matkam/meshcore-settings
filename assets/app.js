@@ -58,6 +58,30 @@ window.RegionData.ready(function (DATA) {
     expandPicks: $("expand-picks")
   };
 
+  /* ---------- small helpers ---------- */
+
+  // Every list on this page is built the same way — an element, a class, some
+  // text — and textContent throughout, since these strings come from a data file
+  // contributors edit.
+  function el(tag, className, text) {
+    var node = document.createElement(tag);
+    if (className) { node.className = className; }
+    if (text != null) { node.textContent = text; }
+    return node;
+  }
+
+  function clamp(v, lo, hi) { return Math.min(Math.max(v, lo), hi); }
+
+  function haversineKm(lat1, lon1, lat2, lon2) {
+    var R = 6371;
+    var toRad = function (d) { return (d * Math.PI) / 180; };
+    var dLat = toRad(lat2 - lat1);
+    var dLon = toRad(lon2 - lon1);
+    var s = Math.pow(Math.sin(dLat / 2), 2) +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.pow(Math.sin(dLon / 2), 2);
+    return 2 * R * Math.asin(Math.sqrt(s));
+  }
+
   /* ---------- firmware capabilities ---------- */
 
   // Version gates, from the MeshCore CLI reference:
@@ -99,6 +123,22 @@ window.RegionData.ready(function (DATA) {
     110: "Predates set dutycycle (1.15), and set path.hash.mode and set loop.detect (both 1.14), so those are handled differently or skipped."
   };
 
+  var HASH_WHY = {
+    "0": "1-byte advert path hash: 256 unique ids, up to 64 flood hops. This is the firmware default and the safest for meshes still running 1.13 or older.",
+    "1": "2-byte advert path hash: 65,536 unique ids instead of 256, so repeaters stay distinguishable as the mesh grows. Costs a little flood range (32 hops) and needs firmware 1.14+.",
+    "2": "3-byte advert path hash: 16.7 million unique ids, but only 21 flood hops, and nodes older than 1.14 drop these adverts. Only worth it in very dense meshes."
+  };
+
+  // Thresholds are per the CLI reference. They key off the path hash size of the
+  // packet being judged — not this node's path.hash.mode, which only governs the
+  // hashes it stamps on its own adverts.
+  var LOOP_WHY = {
+    off: "No loop detection: a flood packet is forwarded again even if this repeater's own id is already in its path. This is the firmware default.",
+    minimal: "Rejects a flood packet once this repeater's own id already appears 4 times in a 1-byte path, twice in a 2-byte path, or once in a 3-byte path. The most forgiving setting.",
+    moderate: "Rejects a flood packet once this repeater's own id already appears twice in a 1-byte path, or once in a 2- or 3-byte path. A packet that has been through here and come back is dropped rather than repeated.",
+    strict: "Rejects a flood packet the moment this repeater's own id appears in its path at all, whatever the hash size. The least likely to let a loop through, and the most likely to drop a legitimate re-flood."
+  };
+
   /* ---------- index ---------- */
 
   // Flat, searchable list of every place, however deep it sits.
@@ -138,6 +178,13 @@ window.RegionData.ready(function (DATA) {
 
   var current = null;
   var settingsListeners = [];
+
+  // Listeners are handed what will actually be sent, edits included — which is
+  // why this goes through SettingsState.get() rather than the built commands.
+  function notify() {
+    var state = window.SettingsState.get();
+    settingsListeners.forEach(function (fn) { fn(state); });
+  }
 
   // Consumed by push.js so the over-the-air flow sends exactly what the
   // copy block shows, and so a connected repeater can drive the selections.
@@ -269,33 +316,17 @@ window.RegionData.ready(function (DATA) {
     render();
   }
 
-  els.editBtn.addEventListener("click", function () {
-    if (isEditing()) {
-      setEditing(false);
-    } else {
-      setEditing(true);
-    }
-  });
+  els.editBtn.addEventListener("click", function () { setEditing(!isEditing()); });
 
   els.commandsEdit.addEventListener("input", function () {
     edited = els.commandsEdit.value;
     autoGrow();
     renderEditNote();
     // The push panel watches this to keep its own state honest.
-    settingsListeners.forEach(function (fn) { fn(window.SettingsState.get()); });
+    notify();
   });
 
   els.resetBtn.addEventListener("click", stopEditing);
-
-  function haversineKm(lat1, lon1, lat2, lon2) {
-    var R = 6371;
-    var toRad = function (d) { return (d * Math.PI) / 180; };
-    var dLat = toRad(lat2 - lat1);
-    var dLon = toRad(lon2 - lon1);
-    var s = Math.pow(Math.sin(dLat / 2), 2) +
-            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.pow(Math.sin(dLon / 2), 2);
-    return 2 * R * Math.asin(Math.sqrt(s));
-  }
 
   function selectEntry(entry, opts) {
     selectEntries([entry], opts);
@@ -402,18 +433,16 @@ window.RegionData.ready(function (DATA) {
 
   function row(entry) {
     var place = entry.node;
-    var el = document.createElement("div");
     // Depth, not a level name: the styling is "how far in is this", which is a
     // question any tree can answer.
-    el.className = "pick-row lvl-" + entry.depth;
+    var rowEl = el("div", "pick-row lvl-" + entry.depth);
 
-    el.appendChild(place.children.length ? toggle(place) : spacer());
+    rowEl.appendChild(place.children.length ? toggle(place) : spacer());
 
     // The checkbox lives in its own label rather than the label wrapping the
     // whole row: a <button> inside a <label> is activated by that label, so a
     // row-wide label would tick the box every time the disclosure was clicked.
-    var main = document.createElement("label");
-    main.className = "pick-main";
+    var main = el("label", "pick-main");
 
     var box = document.createElement("input");
     box.type = "checkbox";
@@ -438,44 +467,32 @@ window.RegionData.ready(function (DATA) {
       onPicked();
     });
 
-    var code = document.createElement("span");
-    code.className = "pick-code";
-    code.textContent = entry.code;
-
-    var name = document.createElement("span");
-    name.className = "pick-name";
-    name.textContent = entry.name;
-
     // Code and name are one unit that never breaks between them: a wrapping
     // flex line breaks on an item's max-content width before it will shrink one,
     // which otherwise drops a long name onto the line below its own code.
-    var titleEl = document.createElement("span");
-    titleEl.className = "pick-title";
-    titleEl.appendChild(code);
-    titleEl.appendChild(name);
+    var title = el("span", "pick-title");
+    title.appendChild(el("span", "pick-code", entry.code));
+    title.appendChild(el("span", "pick-name", entry.name));
 
     main.appendChild(box);
-    main.appendChild(titleEl);
+    main.appendChild(title);
 
     var text = describe(place);
     if (text) {
-      var desc = document.createElement("span");
-      desc.className = "pick-desc";
-      desc.textContent = text;
+      var desc = el("span", "pick-desc", text);
       // Clipped to one line so the list stays scannable, so the whole of it has
       // to be available some other way.
       desc.title = text;
       main.appendChild(desc);
     }
 
-    el.appendChild(main);
-    return el;
+    rowEl.appendChild(main);
+    return rowEl;
   }
 
   function toggle(place) {
-    var btn = document.createElement("button");
+    var btn = el("button", "pick-toggle");
     btn.type = "button";
-    btn.className = "pick-toggle";
     btn.dataset.code = place.code;
     btn.setAttribute("aria-expanded", String(isExpanded(place.code)));
     // The count has nowhere to go visually — the description has that space —
@@ -497,9 +514,7 @@ window.RegionData.ready(function (DATA) {
 
   // Keeps the names of childless rows in line with their siblings'.
   function spacer() {
-    var el = document.createElement("span");
-    el.className = "pick-toggle is-leaf";
-    return el;
+    return el("span", "pick-toggle is-leaf");
   }
 
   function renderPicker() {
@@ -522,8 +537,7 @@ window.RegionData.ready(function (DATA) {
     places.forEach(function (place) {
       frag.appendChild(row(byCode[place.code]));
       if (!isExpanded(place.code) || !place.children.length) { return; }
-      var kids = document.createElement("div");
-      kids.className = "pick-children";
+      var kids = el("div", "pick-children");
       kids.appendChild(branch(place.children));
       frag.appendChild(kids);
     });
@@ -532,19 +546,19 @@ window.RegionData.ready(function (DATA) {
 
   /* ---------- expand all ---------- */
 
+  function allOpen() {
+    return openable().every(function (node) { return isExpanded(node.code); });
+  }
+
   function relabelExpand() {
-    var all = openable();
-    var open = all.filter(function (node) { return isExpanded(node.code); }).length;
-    els.expandPicks.textContent = open === all.length ? "Collapse all" : "Expand all";
+    els.expandPicks.textContent = allOpen() ? "Collapse all" : "Expand all";
   }
 
   els.expandPicks.addEventListener("click", function () {
-    var all = openable();
-    var open = all.filter(function (node) { return isExpanded(node.code); }).length;
-    if (open === all.length) {
+    if (allOpen()) {
       expanded = {};
     } else {
-      all.forEach(function (node) { expanded[node.code] = true; });
+      openable().forEach(function (node) { expanded[node.code] = true; });
     }
     renderPicker();
   });
@@ -675,11 +689,9 @@ window.RegionData.ready(function (DATA) {
     }
 
     if (!shown.length) {
-      var none = document.createElement("li");
-      none.className = "empty";
-      none.textContent = 'No match for "' + q.trim() + '". Try a ' +
-        DATA.levelNameAt(1) + ' or a nearby place name.';
-      els.results.appendChild(none);
+      els.results.appendChild(el("li", "empty",
+        'No match for "' + q.trim() + '". Try a ' +
+        DATA.levelNameAt(1) + ' or a nearby place name.'));
     }
 
     shown.forEach(function (entry, i) {
@@ -687,21 +699,10 @@ window.RegionData.ready(function (DATA) {
       li.setAttribute("role", "option");
       li.id = "result-" + i;
 
-      var name = document.createElement("span");
-      name.className = "r-name";
-      name.textContent = entry.name;
-      li.appendChild(name);
-
-      var code = document.createElement("span");
-      code.className = "r-code";
-      code.textContent = "  " + entry.code;
-      li.appendChild(code);
-
-      var ctx = document.createElement("span");
-      ctx.className = "r-ctx";
       var city = matchedCity(entry, q);
-      ctx.textContent = city ? city + " — " + entry.context : entry.context;
-      li.appendChild(ctx);
+      li.appendChild(el("span", "r-name", entry.name));
+      li.appendChild(el("span", "r-code", "  " + entry.code));
+      li.appendChild(el("span", "r-ctx", city ? city + " — " + entry.context : entry.context));
 
       li.addEventListener("mousedown", function (ev) {
         ev.preventDefault();
@@ -784,18 +785,13 @@ window.RegionData.ready(function (DATA) {
 
   function dutyValue() {
     var v = parseInt(els.duty.value, 10);
-    if (isNaN(v) || v < 1) { v = 1; }
-    if (v > 100) { v = 100; }
-    return v;
+    return isNaN(v) ? 1 : clamp(v, 1, 100);
   }
 
   // Older firmware sets duty cycle indirectly: after each transmission the node
   // stays silent for airtime * af, giving a long-term duty of about 1/(1+af).
   function afValue() {
-    var af = Math.round(100 / dutyValue() - 1);
-    if (af < 0) { af = 0; }
-    if (af > 9) { af = 9; }
-    return af;
+    return clamp(Math.round(100 / dutyValue() - 1), 0, 9);
   }
 
   function afDuty() {
@@ -808,10 +804,7 @@ window.RegionData.ready(function (DATA) {
   function floodValue() {
     if (els.flood.value.trim() === "") { return null; }
     var v = parseInt(els.flood.value, 10);
-    if (isNaN(v)) { return null; }
-    if (v < 0) { v = 0; }
-    if (v > 168) { v = 168; }
-    return v;
+    return isNaN(v) ? null : clamp(v, 0, 168);
   }
 
   /* ---------- what this repeater carries ----------
@@ -825,9 +818,10 @@ window.RegionData.ready(function (DATA) {
   function chainsFor() {
     var all = chosen().map(chainOf);
     // A chain that is a prefix of another says nothing extra: `region def west
-    // ca cc slo prb` already creates cc and slo on the way past. So ticking a
-    // place and something inside it is not a contradiction to resolve, it is a
-    // duplicate to drop — which is why the picker needs no "deepest wins" rule.
+    // ca centralcoast slo slonorth` already creates centralcoast and slo on the
+    // way past. So ticking a place and something inside it is not a contradiction
+    // to resolve, it is a duplicate to drop — which is why the picker needs no
+    // "deepest wins" rule.
     return all.filter(function (chain) {
       return !all.some(function (other) {
         return other.length > chain.length && chain.every(function (t, i) {
@@ -847,8 +841,7 @@ window.RegionData.ready(function (DATA) {
     return els.owner.value
       .replace(/[\r\n]+/g, " | ")
       .replace(/\t/g, " ")
-      .replace(/\s+$/, "")
-      .replace(/^\s+/, "");
+      .trim();
   }
 
   /* ---------- region def, with branches ----------
@@ -858,7 +851,7 @@ window.RegionData.ready(function (DATA) {
    * cursor to `jump`, which lets one line define several branches instead of
    * repeating the shared ancestry in a second command.
    *
-   *   region def west ca cc slo prb|ca sfb ala oak
+   *   region def west ca centralcoast slo slonorth|ca bayarea eastbay oakland
    *
    * builds the North County chain, hops the cursor back up to `ca`, and carries
    * on into Oakland's. The 160-character serial limit still applies, so a line
@@ -949,7 +942,6 @@ window.RegionData.ready(function (DATA) {
     // normally; a bridge site emits a second, and shares the ancestry the two
     // have in common rather than repeating it.
     var regionLines = [];
-    var placed = {};
     if (c.regionDef) {
       regionLines = defLines(chains);
       // A tag is one extra name, not a chain, so it is placed with `region put`
@@ -962,21 +954,23 @@ window.RegionData.ready(function (DATA) {
       tagChains.forEach(function (ch) {
         regionLines.push("region put " + ch[ch.length - 1].code + " " + ch[ch.length - 2].code);
       });
-    }
-    allChains.forEach(function (ch) {
-      var chCodes = ch.map(function (x) { return x.code; });
-      if (c.regionDef) { return; }
-      chCodes.forEach(function (code, i) {
-        if (placed[code]) { return; }
-        placed[code] = true;
-        // No parent argument on the first token, so it lands under the reserved
-        // root entry `*`. That root is not a wildcard: it does not match
-        // configured names, it is the bucket the firmware uses for unscoped
-        // flood traffic. Scoped traffic only matches regions the node carries.
-        regionLines.push(i === 0 ? "region put " + code : "region put " + code + " " + chCodes[i - 1]);
-        if (c.explicitAllowf) { regionLines.push("region allowf " + code); }
+    } else {
+      // One `region put` per name, with any ancestry two chains share placed
+      // once — the same tree, built a name at a time.
+      var placed = {};
+      allChains.forEach(function (ch) {
+        ch.map(function (x) { return x.code; }).forEach(function (code, i, chCodes) {
+          if (placed[code]) { return; }
+          placed[code] = true;
+          // No parent argument on the first token, so it lands under the reserved
+          // root entry `*`. That root is not a wildcard: it does not match
+          // configured names, it is the bucket the firmware uses for unscoped
+          // flood traffic. Scoped traffic only matches regions the node carries.
+          regionLines.push(i === 0 ? "region put " + code : "region put " + code + " " + chCodes[i - 1]);
+          if (c.explicitAllowf) { regionLines.push("region allowf " + code); }
+        });
       });
-    });
+    }
     lines = lines.concat(regionLines);
 
     if (els.home.checked) {
@@ -1043,9 +1037,7 @@ window.RegionData.ready(function (DATA) {
     els.copy.classList.remove("done");
     els.copy.textContent = "Copy";
 
-    // Listeners get what will actually be sent, edits included.
-    var shown = window.SettingsState.get();
-    settingsListeners.forEach(function (fn) { fn(shown); });
+    notify();
   }
 
   function renderFirmwareHints() {
@@ -1124,11 +1116,9 @@ window.RegionData.ready(function (DATA) {
   function renderChain(chain) {
     els.chain.textContent = "";
     chain.forEach(function (c) {
-      var li = document.createElement("li");
-      var tok = document.createElement("span");
-      tok.className = "tok";
-      tok.textContent = c.code;
+      var tok = el("span", "tok", c.code);
       tok.title = c.label;
+      var li = document.createElement("li");
       li.appendChild(tok);
       els.chain.appendChild(li);
     });
@@ -1193,33 +1183,23 @@ window.RegionData.ready(function (DATA) {
     if (built.caps.loopDetect && els.loop.value) { lines.push("get loop.detect"); }
     if (built.caps.ownerInfo && ownerValue()) { lines.push("get owner.info"); }
 
-    var block = document.createElement("div");
-    block.className = "code-block";
+    var block = el("div", "code-block");
     block.style.marginTop = "14px";
 
-    var head = document.createElement("div");
-    head.className = "code-head";
-    var title = document.createElement("span");
-    title.className = "code-title";
-    title.textContent = "Check it worked";
-    head.appendChild(title);
+    var head = el("div", "code-head");
+    head.appendChild(el("span", "code-title", "Check it worked"));
     block.appendChild(head);
 
-    var pre = document.createElement("pre");
+    var pre = el("pre", null, lines.join("\n"));
     pre.tabIndex = 0;
-    pre.textContent = lines.join("\n");
     block.appendChild(pre);
 
     els.verifyBlock.appendChild(block);
-
-    var note = document.createElement("p");
-    note.className = "line-note";
-    note.textContent =
+    els.verifyBlock.appendChild(el("p", "line-note",
       (built.caps.regionList
         ? "region list allowed prints every region that may flood. "
         : "region prints the whole tree (serial only on this firmware). ") +
-      "region get " + built.leaf + " confirms the leaf exists and is flood-allowed (F).";
-    els.verifyBlock.appendChild(note);
+      "region get " + built.leaf + " confirms the leaf exists and is flood-allowed (F)."));
   }
 
   function renderExplain(built) {
@@ -1240,7 +1220,8 @@ window.RegionData.ready(function (DATA) {
     }
 
     if (built.caps.hashMode) {
-      items.push(["set path.hash.mode " + els.hash.value, hashExplanation(els.hash.value)]);
+      items.push(["set path.hash.mode " + els.hash.value,
+        HASH_WHY[els.hash.value] || HASH_WHY["1"]]);
     }
 
     if (built.caps.floodAdvert && floodValue() !== null) {
@@ -1253,15 +1234,6 @@ window.RegionData.ready(function (DATA) {
     }
 
     if (built.caps.loopDetect && els.loop.value) {
-      // Thresholds are per the CLI reference. They key off the path hash size of
-      // the packet being judged — not this node's path.hash.mode, which only
-      // governs the hashes it stamps on its own adverts.
-      var LOOP_WHY = {
-        off: "No loop detection: a flood packet is forwarded again even if this repeater's own id is already in its path. This is the firmware default.",
-        minimal: "Rejects a flood packet once this repeater's own id already appears 4 times in a 1-byte path, twice in a 2-byte path, or once in a 3-byte path. The most forgiving setting.",
-        moderate: "Rejects a flood packet once this repeater's own id already appears twice in a 1-byte path, or once in a 2- or 3-byte path. A packet that has been through here and come back is dropped rather than repeated.",
-        strict: "Rejects a flood packet the moment this repeater's own id appears in its path at all, whatever the hash size. The least likely to let a loop through, and the most likely to drop a legitimate re-flood."
-      };
       items.push(["set loop.detect " + els.loop.value, LOOP_WHY[els.loop.value]]);
     }
 
@@ -1302,37 +1274,20 @@ window.RegionData.ready(function (DATA) {
 
     var dl = document.createElement("dl");
     items.forEach(function (pair) {
-      var dt = document.createElement("dt");
-      dt.textContent = pair[0];
-      var dd = document.createElement("dd");
-      dd.textContent = pair[1];
-      dl.appendChild(dt);
-      dl.appendChild(dd);
+      dl.appendChild(el("dt", null, pair[0]));
+      dl.appendChild(el("dd", null, pair[1]));
     });
 
     els.explain.textContent = "";
     els.explain.appendChild(dl);
   }
 
-  function hashExplanation(mode) {
-    if (mode === "0") {
-      return "1-byte advert path hash: 256 unique ids, up to 64 flood hops. This is the firmware default and the safest for meshes still running 1.13 or older.";
-    }
-    if (mode === "2") {
-      return "3-byte advert path hash: 16.7 million unique ids, but only 21 flood hops, and nodes older than 1.14 drop these adverts. Only worth it in very dense meshes.";
-    }
-    return "2-byte advert path hash: 65,536 unique ids instead of 256, so repeaters stay distinguishable as the mesh grows. Costs a little flood range (32 hops) and needs firmware 1.14+.";
-  }
-
   function renderScopes(chain, tagChains) {
     els.scopeList.textContent = "";
 
-    var row = function (code, text) {
+    var scopeRow = function (code, text) {
       var li = document.createElement("li");
-      var span = document.createElement("span");
-      span.className = "s-code";
-      span.textContent = code;
-      li.appendChild(span);
+      li.appendChild(el("span", "s-code", code));
       li.appendChild(document.createTextNode(" — " + text));
       els.scopeList.appendChild(li);
     };
@@ -1341,12 +1296,12 @@ window.RegionData.ready(function (DATA) {
     // it goes above rather than being slotted in by depth.
     (tagChains || []).forEach(function (ch) {
       var tag = ch[ch.length - 1];
-      row(tag.code, tag.label + " (carried alongside, not part of the chain)");
+      scopeRow(tag.code, tag.label + " (carried alongside, not part of the chain)");
     });
 
     // Widest first reads more naturally as "how far do you want this to go".
     chain.slice().reverse().forEach(function (c, i) {
-      row(c.code, c.label + (i === 0 ? " (your immediate area)" : ""));
+      scopeRow(c.code, c.label + (i === 0 ? " (your immediate area)" : ""));
     });
   }
 
@@ -1386,11 +1341,11 @@ window.RegionData.ready(function (DATA) {
 
   /* ---------- options ---------- */
 
-  [els.duty, els.hash, els.home, els.verify, els.fw, els.loop, els.flood, els.owner,
-   ].forEach(function (el) { el.addEventListener("change", render); });
-  els.duty.addEventListener("input", render);
-  els.flood.addEventListener("input", render);
-  els.owner.addEventListener("input", render);
+  [els.duty, els.hash, els.home, els.verify, els.fw, els.loop, els.flood, els.owner]
+    .forEach(function (input) { input.addEventListener("change", render); });
+  // The typed fields re-render as you go, rather than waiting for a blur.
+  [els.duty, els.flood, els.owner]
+    .forEach(function (input) { input.addEventListener("input", render); });
 
   /* ---------- boot ---------- */
 

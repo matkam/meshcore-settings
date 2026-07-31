@@ -92,11 +92,8 @@ check that `npm run validate` doesn't warn the tree has outgrown that list.
 
 Depth should follow how big the local mesh community actually is, not a wish to
 make every branch look the same. Every level costs each node in that branch
-another region-table entry, and a node holds 32.
-
-Whether a *new* level is a good idea is a question for your local mesh group
-first. It costs every repeater in that branch another region-table entry, and a
-node holds 32.
+another region-table entry, against the 32 a node holds — so whether a *new*
+level is worth it is a question for your local mesh group first.
 
 ## Adding a tag
 
