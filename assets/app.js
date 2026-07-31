@@ -53,7 +53,9 @@ window.RegionData.ready(function (DATA) {
     editNoteText: $("edit-note-text"),
     resetBtn: $("reset-cmds"),
     pickNote: $("pick-note"),
-    clearPicks: $("clear-picks")
+    pickScope: $("pick-scope"),
+    clearPicks: $("clear-picks"),
+    expandPicks: $("expand-picks")
   };
 
   /* ---------- firmware capabilities ---------- */
@@ -308,10 +310,14 @@ window.RegionData.ready(function (DATA) {
 
     picked = {};
     entries.forEach(function (e) {
-      // The levels above have to be ticked too, or the rows underneath them are
-      // never shown and the pick would be invisible.
-      e.node.trail.forEach(function (code) { picked[code] = true; });
+      // The levels above have to be ticked too, or the chain would be missing
+      // its middle, and opened, or the row would exist nowhere on screen.
+      e.node.trail.forEach(function (code) {
+        picked[code] = true;
+        expanded[code] = true;
+      });
       picked[e.code] = true;
+      if (e.node.children.length) { expanded[e.code] = true; }
     });
 
     renderPicker();
@@ -329,8 +335,17 @@ window.RegionData.ready(function (DATA) {
    * A tree of checkboxes rather than one list per level. The tags form a
    * hierarchy, so showing it as one makes the shape of what you are configuring
    * visible, and it needs no modifier keys: tick what the repeater covers,
-   * untick what it does not. Ticking a place reveals what is inside it — so the
-   * list stays short and the cascade is the same one the chain itself follows.
+   * untick what it does not.
+   *
+   * Opening a place and choosing it are separate gestures. They used not to be —
+   * ticking was the only way to see inside something — which meant looking a code
+   * up required selecting two places you did not want and then unselecting them.
+   * So each place with children has its own disclosure control, and the tree can
+   * be read end to end without touching a checkbox.
+   *
+   * Ticking still opens what it ticks, because that cascade is a good way to work
+   * downwards. Unticking deliberately does not close anything: you may still want
+   * to look at what you just decided against.
    *
    * You carry exactly what you tick, plus the ancestry each pick implies. There
    * is no "deepest level wins" rule to learn: ticking a place and something
@@ -338,19 +353,67 @@ window.RegionData.ready(function (DATA) {
    * the outer, and the redundant chain is dropped when the commands are built.
    */
 
-  var picked = {};   // code -> true
+  var picked = {};     // code -> true, what the repeater will carry
+  var expanded = {};   // code -> true, purely what is on screen
 
   function isPicked(code) { return picked[code] === true; }
+  function isExpanded(code) { return expanded[code] === true; }
+
+  // Places carry different kinds of description at different levels: a region has
+  // a blurb, a local area has the towns inside it, a county has neither and needs
+  // neither. Take whichever exists — nothing here is written for one level.
+  function describe(place) {
+    if (place.blurb) { return place.blurb; }
+    if (place.aliases && place.aliases.length) { return place.aliases.join(", "); }
+    return "";
+  }
+
+  // Everything with children, which is what "expand all" acts on and what its
+  // label has to be counted against.
+  function openable() {
+    return DATA.nodes.filter(function (node) { return node.children.length; });
+  }
+
+  // How many places sit at each level under `places`, outermost first — used for
+  // the toggle's accessible label and the scope line.
+  function tally(places) {
+    var counts = [];
+    (function walk(list, d) {
+      if (!list.length) { return; }
+      counts[d] = (counts[d] || 0) + list.length;
+      list.forEach(function (p) { walk(p.children, d + 1); });
+    })(places, 0);
+    return counts;
+  }
+
+  // "5 counties and 8 local areas", in the data's own words for each level.
+  function countsFrom(places, depth, join) {
+    var parts = tally(places).map(function (count, i) {
+      var at = depth + i;
+      return count + " " + (count === 1 ? DATA.levelNameAt(at) : DATA.levelPluralAt(at));
+    });
+    if (parts.length < 2) { return parts.join(""); }
+    return parts.slice(0, -1).join(", ") + join + parts[parts.length - 1];
+  }
 
   function chosen() {
     return index.filter(function (e) { return isPicked(e.code); });
   }
 
   function row(entry) {
-    var label = document.createElement("label");
+    var place = entry.node;
+    var el = document.createElement("div");
     // Depth, not a level name: the styling is "how far in is this", which is a
     // question any tree can answer.
-    label.className = "pick-row lvl-" + entry.depth;
+    el.className = "pick-row lvl-" + entry.depth;
+
+    el.appendChild(place.children.length ? toggle(place) : spacer());
+
+    // The checkbox lives in its own label rather than the label wrapping the
+    // whole row: a <button> inside a <label> is activated by that label, so a
+    // row-wide label would tick the box every time the disclosure was clicked.
+    var main = document.createElement("label");
+    main.className = "pick-main";
 
     var box = document.createElement("input");
     box.type = "checkbox";
@@ -359,29 +422,84 @@ window.RegionData.ready(function (DATA) {
     box.addEventListener("change", function () {
       if (box.checked) {
         picked[entry.code] = true;
+        // Choosing something is also a statement of interest in what is inside
+        // it, and this is the cascade the tree has always had.
+        expanded[entry.code] = true;
       } else {
         delete picked[entry.code];
         // Whatever sat under it goes too, since it is no longer reachable.
         index.forEach(function (e) {
           if (e.node.trail.indexOf(entry.code) !== -1) { delete picked[e.code]; }
         });
+        // Note it stays open: unticking is not a reason to hide what you were
+        // just looking at.
       }
       renderPicker();
       onPicked();
     });
 
-    var name = document.createElement("span");
-    name.className = "pick-name";
-    name.textContent = entry.name;
-
     var code = document.createElement("span");
     code.className = "pick-code";
     code.textContent = entry.code;
 
-    label.appendChild(box);
-    label.appendChild(name);
-    label.appendChild(code);
-    return label;
+    var name = document.createElement("span");
+    name.className = "pick-name";
+    name.textContent = entry.name;
+
+    // Code and name are one unit that never breaks between them: a wrapping
+    // flex line breaks on an item's max-content width before it will shrink one,
+    // which otherwise drops a long name onto the line below its own code.
+    var titleEl = document.createElement("span");
+    titleEl.className = "pick-title";
+    titleEl.appendChild(code);
+    titleEl.appendChild(name);
+
+    main.appendChild(box);
+    main.appendChild(titleEl);
+
+    var text = describe(place);
+    if (text) {
+      var desc = document.createElement("span");
+      desc.className = "pick-desc";
+      desc.textContent = text;
+      // Clipped to one line so the list stays scannable, so the whole of it has
+      // to be available some other way.
+      desc.title = text;
+      main.appendChild(desc);
+    }
+
+    el.appendChild(main);
+    return el;
+  }
+
+  function toggle(place) {
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "pick-toggle";
+    btn.dataset.code = place.code;
+    btn.setAttribute("aria-expanded", String(isExpanded(place.code)));
+    // The count has nowhere to go visually — the description has that space —
+    // but it is exactly what someone deciding whether to open this wants, so it
+    // goes to anyone listening rather than nobody.
+    btn.setAttribute("aria-label",
+      (isExpanded(place.code) ? "Hide the " : "Show the ") +
+      countsFrom(place.children, place.depth + 1, " and ") + " in " + place.name);
+    btn.addEventListener("click", function () {
+      if (isExpanded(place.code)) {
+        delete expanded[place.code];
+      } else {
+        expanded[place.code] = true;
+      }
+      renderPicker();
+    });
+    return btn;
+  }
+
+  // Keeps the names of childless rows in line with their siblings'.
+  function spacer() {
+    var el = document.createElement("span");
+    el.className = "pick-toggle is-leaf";
+    return el;
   }
 
   function renderPicker() {
@@ -394,15 +512,16 @@ window.RegionData.ready(function (DATA) {
 
     els.picker.scrollTop = scroll;
     els.clearPicks.hidden = !chosen().length;
+    relabelExpand();
   }
 
-  // One level of the tree, plus whatever sits under anything ticked. Recursive
+  // One level of the tree, plus whatever sits under anything opened. Recursive
   // because the data is: nothing here decides how deep it goes.
   function branch(places) {
     var frag = document.createDocumentFragment();
     places.forEach(function (place) {
       frag.appendChild(row(byCode[place.code]));
-      if (!isPicked(place.code) || !place.children.length) { return; }
+      if (!isExpanded(place.code) || !place.children.length) { return; }
       var kids = document.createElement("div");
       kids.className = "pick-children";
       kids.appendChild(branch(place.children));
@@ -410,6 +529,67 @@ window.RegionData.ready(function (DATA) {
     });
     return frag;
   }
+
+  /* ---------- expand all ---------- */
+
+  function relabelExpand() {
+    var all = openable();
+    var open = all.filter(function (node) { return isExpanded(node.code); }).length;
+    els.expandPicks.textContent = open === all.length ? "Collapse all" : "Expand all";
+  }
+
+  els.expandPicks.addEventListener("click", function () {
+    var all = openable();
+    var open = all.filter(function (node) { return isExpanded(node.code); }).length;
+    if (open === all.length) {
+      expanded = {};
+    } else {
+      all.forEach(function (node) { expanded[node.code] = true; });
+    }
+    renderPicker();
+  });
+
+  // Where the chain starts and how much of it there is. Both come from the data,
+  // so a differently shaped tree describes itself correctly.
+  function renderScope() {
+    var root = DATA.root.map(function (r) { return r.code; }).join(" \u203a ");
+    els.pickScope.textContent =
+      (root ? root + " prefixes every chain \u00b7 " : "") +
+      countsFrom(DATA.places, 0, " and ") + " to choose from.";
+  }
+
+  /* ---------- the resize handle ----------
+   *
+   * `resize` writes an inline height as you drag, but `max-height` still clamps
+   * what that height renders as — so the handle could not pass the cap, which is
+   * exactly the point at which someone reaches for it.
+   *
+   * Grabbing the handle is a statement that the person wants to choose the
+   * height, so the automatic cap gets out of the way at that moment. The height
+   * is pinned first so the box does not jump, and both are put back if the grab
+   * turned out to be a click that never dragged anywhere.
+   */
+
+  var GRAB_PX = 18;   // the corner the browser draws its grip in
+
+  els.picker.addEventListener("pointerdown", function (evt) {
+    if (getComputedStyle(els.picker).resize === "none") { return; }
+
+    var box = els.picker.getBoundingClientRect();
+    if (evt.clientX < box.right - GRAB_PX || evt.clientY < box.bottom - GRAB_PX) { return; }
+
+    var from = box.height;
+    els.picker.style.height = from + "px";
+    els.picker.style.maxHeight = "none";
+
+    window.addEventListener("pointerup", function restore() {
+      window.removeEventListener("pointerup", restore);
+      if (Math.abs(els.picker.getBoundingClientRect().height - from) < 1) {
+        els.picker.style.height = "";
+        els.picker.style.maxHeight = "";
+      }
+    });
+  });
 
   els.clearPicks.addEventListener("click", function () {
     picked = {};
@@ -424,7 +604,7 @@ window.RegionData.ready(function (DATA) {
   function revealPick() {
     var deepest = els.picker.querySelectorAll(".pick-row input:checked");
     if (!deepest.length) { return; }
-    var row = deepest[deepest.length - 1].parentNode;
+    var row = deepest[deepest.length - 1].closest(".pick-row");
     var top = row.offsetTop - els.picker.offsetTop;
     if (top < els.picker.scrollTop || top > els.picker.scrollTop + els.picker.clientHeight - 40) {
       els.picker.scrollTop = Math.max(0, top - els.picker.clientHeight / 2);
@@ -1167,6 +1347,7 @@ window.RegionData.ready(function (DATA) {
 
   /* ---------- boot ---------- */
 
+  renderScope();
   renderPicker();
   render();
 
