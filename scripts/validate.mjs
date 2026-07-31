@@ -84,6 +84,19 @@ function claim(code, path) {
 
 rootTokens.forEach((r) => claim(r.code, "root"));
 
+/* ---------- tags ----------
+ * A tag is a region name that is not a level: it hangs off the root as its own
+ * short chain, and places opt into it. It shares the one flat namespace with
+ * every place, so it is claimed the same way.
+ */
+const tags = data.tags ?? [];
+const tagCodes = new Set();
+for (const tag of tags) {
+  if (!tag.name) { fail(`tag "${tag.code}": missing name`); }
+  claim(tag.code, `tag ${tag.code}`);
+  tagCodes.add(tag.code);
+}
+
 /* ---------- walk ---------- */
 
 const places = [];      // every place, with its ancestry
@@ -137,6 +150,16 @@ const points = [];      // every place carrying a position
         fail(`${label}: county "${name}" is not in data/outlines.json`);
       }
     }
+    for (const tag of names(node.tags)) {
+      if (!tagCodes.has(tag)) {
+        fail(`${label}: tag "${tag}" is not defined in the tags list`);
+      }
+      // A tag on a place inside a place that already carries it is dead weight:
+      // it is inherited, so saying it twice only invites the two to drift.
+      if (trail.some((t) => names(t.tags).includes(tag))) {
+        fail(`${label}: tag "${tag}" is already carried from an ancestor`);
+      }
+    }
     if (kids.length && node.county) {
       fail(`${label}: county is for places with no children — this has ${kids.length}`);
     }
@@ -154,7 +177,14 @@ if (deepest > levels.length) {
 // One chain per place is the worst case a single pick can produce, but a
 // bridging site picks several. This is the ceiling for one, which is the only
 // thing checkable without knowing what somebody will tick.
-const longest = places.reduce((d, p) => Math.max(d, p.depth), 0) + 1 + rootTokens.length;
+// A tag adds its own chain — the root again, plus the tag — so a node under a
+// tagged place holds its own chain plus one more name.
+const deepestTagged = places.reduce((d, p) => {
+  const tagged = names(p.node.tags).length || p.trail.some((t) => names(t.tags).length);
+  return tagged ? Math.max(d, p.depth) : d;
+}, -1);
+const tagCost = deepestTagged >= 0 ? 1 : 0;
+const longest = places.reduce((d, p) => Math.max(d, p.depth), 0) + 1 + rootTokens.length + tagCost;
 if (longest > maxNames) {
   fail(`a single chain needs ${longest} region names, over the ${maxNames} a node holds`);
 }

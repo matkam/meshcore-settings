@@ -293,6 +293,44 @@ whole western mesh. Matching is **per name, not per level** — a repeater that 
 which is why every node defines the whole chain even though it only sits in one
 spot.
 
+### Tags: a scope that cuts across the tree
+
+Some scopes don't fit the hierarchy. `socal` reaches Los Angeles, Orange County,
+the Inland Empire, the deserts and San Diego — six regions with no common parent,
+and giving them one would be wrong: they sit in four RF-separate basins, so a
+single region implying they hear each other is exactly what this scheme is trying
+to avoid.
+
+A **tag** is the answer. It is a region name that is not a level: it hangs off the
+root as its own short chain, and a place opts into it rather than inheriting one
+by position. Everything beneath an opted-in place carries it too.
+
+```
+region def west ca losangeles dtla|ca socal
+```
+
+That is one line building two chains — `west › ca › losangeles › dtla`, then back
+to `ca` for `socal`. The node ends up holding five names and matching traffic
+scoped to any of them.
+
+Tags are declared once at the top of `data/regions.yaml` and referenced by the
+places that carry them:
+
+```yaml
+tags:
+  - code: socal
+    name: Southern California
+
+places:
+  - code: losangeles
+    tags: [socal]
+```
+
+The cost is one region-table entry on the nodes that carry it, and **only** those
+nodes — which is the point. Making `socal` a level instead would have cost every
+node beneath it a table entry whether or not its operator wanted the wider scope,
+and would have pushed 44 southern places from a four-token chain to five.
+
 ### These codes are a convention, not a standard
 
 MeshCore does not ship a national region list, and there is no body that assigns
@@ -305,8 +343,8 @@ Region names never appear in packets — a scoped packet carries two 16-bit
 transport codes derived from the region's key, so a code's length has no effect on
 airtime. The firmware's ceiling is 30 characters (`RegionEntry.name` is
 `char[31]`), and the longest chain this file generates is 60 of the 160 characters
-a serial line allows, so codes are words rather than abbreviations: `sanjoaquinvalley`
-beats `sjv` when nobody has to look it up. Established vernacular is the exception
+a serial line allows, so codes are words rather than abbreviations: `centralvalley`
+beats `cv` when nobody has to look it up. Established vernacular is the exception
 worth making — `sf`, `oc`, `ie`, `sfv` and `dtla` are what operators already type.
 Two-letter codes that collide with a US state abbreviation are avoided, which is
 why Los Angeles is not `la`.

@@ -98,6 +98,33 @@ Whether a *new* level is a good idea is a question for your local mesh group
 first. It costs every repeater in that branch another region-table entry, and a
 node holds 32.
 
+## Adding a tag
+
+A tag is a region name that is **not** a level — use one for a scope that cuts
+across the tree, where making it a parent would be wrong. Declare it once at the
+top of `data/regions.yaml`, then opt places into it:
+
+```yaml
+tags:
+  - code: socal
+    name: Southern California
+    blurb: One line on what it reaches.
+
+places:
+  - code: losangeles
+    tags: [socal]
+```
+
+Everything beneath an opted-in place carries it, so tag the highest place that
+should have it and don't repeat it below — `npm run validate` rejects a tag that
+is already inherited, since two copies only invite the two to drift.
+
+A tag costs one region-table entry on every node that carries it, against the 32
+a node holds. That is cheaper than a level, which would cost the same entry *and*
+lengthen every chain beneath it — but it is not free, and a tag nobody scopes
+traffic to is dead weight on real hardware. Ask your mesh group whether they'd
+actually use the scope before adding one.
+
 ## Renaming a code
 
 Please don't, unless it's genuinely wrong and barely deployed. Once a code is on

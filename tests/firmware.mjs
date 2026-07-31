@@ -101,6 +101,23 @@ await tick(page, "slonorth");
 await page.evaluate(() => { document.querySelector("details.advanced").open = false; });
 await page.screenshot({ path: shot("fw-old.png"), clip: { x: 0, y: 180, width: 1000, height: 1250 } });
 
+/* ---------- tags on old firmware ----------
+ * A tag is not a level, so it cannot ride the chain: it is placed as its own
+ * child of the root, which is a separate `region put` (and its own allowf).
+ */
+await page.goto(SITE + "#dtla", { waitUntil: "networkidle" });
+await page.selectOption("#opt-fw", "110");
+check("a tag is placed as its own name on 1.10", await cmds(), [
+  "set af 0", "set flood.advert.interval 24",
+  "region put west", "region allowf west",
+  "region put ca west", "region allowf ca",
+  "region put losangeles ca", "region allowf losangeles",
+  "region put dtla losangeles", "region allowf dtla",
+  "region put socal ca", "region allowf socal",
+  "region save"].join("\n"));
+await page.goto(SITE + "#slonorth", { waitUntil: "networkidle" });
+await page.selectOption("#opt-fw", "116");
+
 for (const w of [390, 768, 1200]) {
   await page.setViewportSize({ width: w, height: 900 });
   await page.waitForTimeout(80);

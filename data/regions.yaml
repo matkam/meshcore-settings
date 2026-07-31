@@ -13,6 +13,13 @@
 #   places    The tree. Nesting is arbitrary and deliberately ragged: a region
 #             may hold areas which hold local areas, or hold local areas
 #             directly where there is nothing in between worth naming.
+#   tags      Extra region names that are NOT levels. A tag sits directly under
+#             the root and nothing nests inside it; places opt into one with
+#             `tags:`, and every place beneath them carries it too. Use one for
+#             a scope that cuts across the tree — `socal` reaches six regions
+#             that have no common parent and should not be given one, because
+#             making it a level would cost every node beneath it a table entry
+#             whether or not its operator wanted the wider scope.
 #
 # A place:
 #
@@ -57,6 +64,8 @@
 #   aliases   Optional search terms — town names, nicknames. They never appear
 #             in the generated commands; they exist so someone can type
 #             "Paso Robles" and land on `pasorobles`.
+#   tags      Optional. Codes from the `tags` list above, carried by this place
+#             and everything under it, as a second short chain from the root.
 #   children  Optional. More places, same shape.
 #
 # ---------------------------------------------------------------------------
@@ -111,6 +120,15 @@ levels:
   - { name: region, plural: regions }
   - { name: area, plural: areas }
   - { name: local area, plural: local areas }
+
+# Extra region names carried alongside a place's chain. Not levels: nothing
+# nests under a tag, and a place opts in rather than inheriting one by position.
+tags:
+  - code: socal
+    name: Southern California
+    blurb: Ventura and the Mojave south — LA, Orange County, the Inland Empire,
+      the deserts and San Diego. SoCal Mesh treats this as one community; the
+      regions inside it are separate because they cannot hear each other.
 
 places:
   - code: northcoast
@@ -821,14 +839,14 @@ places:
         lat: 36.852
         lon: -121.402
         aliases: ["Hollister", "San Juan Bautista", "Tres Pinos", "Pinnacles"]
-  - code: sanjoaquinvalley
-    name: San Joaquin Valley
-    blurb: Stockton down to Bakersfield.
-    short: SJ VALLEY
+  - code: centralvalley
+    name: Central Valley
+    blurb: Stockton down to Bakersfield — the stretch Central Valley Mesh covers.
+    short: C VALLEY
     aliases: ["Kern County"]
     nudge: [10, 22]
     children:
-      - code: sjvnorth
+      - code: cvnorth
         name: North Valley
         blurb: "Stockton, Modesto and the northern valley floor."
         outline: ["San Joaquin", "Stanislaus"]
@@ -864,7 +882,7 @@ places:
             lat: 37.495
             lon: -120.847
             aliases: ["Turlock", "Patterson", "Newman", "Hughson", "Denair"]
-      - code: sjvmid
+      - code: cvmid
         name: Mid Valley
         blurb: Merced through Fresno.
         outline: ["Fresno", "Madera", "Merced"]
@@ -912,7 +930,7 @@ places:
             lat: 36.14
             lon: -120.36
             aliases: ["Coalinga", "Firebaugh", "Mendota", "Huron", "San Joaquin"]
-      - code: sjvsouth
+      - code: cvsouth
         name: South Valley
         blurb: Hanford down to Bakersfield.
         outline: ["Kings", "Tulare"]
@@ -972,6 +990,7 @@ places:
     short: LA
     aliases: ["Los Angeles County"]
     nudge: [-14, 14]
+    tags: [socal]
     children:
       - code: dtla
         name: Central LA
@@ -1057,6 +1076,7 @@ places:
     outline: ["Orange"]
     aliases: ["Orange County"]
     nudge: [6, 12]
+    tags: [socal]
     children:
       - code: anaheim
         name: North OC
@@ -1088,6 +1108,7 @@ places:
     short: IE
     aliases: ["Riverside County"]
     nudge: [6, -8]
+    tags: [socal]
     children:
       - code: ontario
         name: West End
@@ -1144,6 +1165,7 @@ places:
     outline: ["Imperial"]
     aliases: ["Imperial County"]
     nudge: [10, 14]
+    tags: [socal]
     children:
       - code: palmsprings
         name: Coachella Valley
@@ -1187,6 +1209,7 @@ places:
     short: MOJAVE
     aliases: ["San Bernardino County"]
     nudge: [0, -22]
+    tags: [socal]
     children:
       - code: lancaster
         name: Antelope Valley
@@ -1236,6 +1259,7 @@ places:
     outline: ["San Diego"]
     aliases: ["San Diego County"]
     nudge: [0, 56]
+    tags: [socal]
     children:
       - code: sdmetro
         name: Metro San Diego

@@ -82,11 +82,20 @@ await page.selectOption("#opt-hash", "1");
 
 // --- 5. deep link
 await page.goto(SITE + "#palmsprings", { waitUntil: "networkidle" });
-pass &= check("deep link #palmsprings",
+// The Low Desert carries the `socal` tag, which is not part of the chain: it
+// becomes a second short chain from the root, joined onto the same def line.
+pass &= check("deep link #palmsprings, with the socal tag",
   (await page.textContent("#commands")).trim(),
   ["set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
-   "region def west ca lowdesert palmsprings", "region save"].join("\n"));
+   "region def west ca lowdesert palmsprings|ca socal", "region save"].join("\n"));
 console.log("deep-link search box:", JSON.stringify(await page.inputValue("#search")));
+
+// --- 5b. a tag is opt-in: places outside it carry nothing extra
+await page.goto(SITE + "#eureka", { waitUntil: "networkidle" });
+pass &= check("a place outside the tag carries no extra name",
+  (await page.textContent("#commands")).trim(),
+  ["set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
+   "region def west ca northcoast eureka", "region save"].join("\n"));
 
 // --- 6. searches that should resolve
 for (const [q, want] of [["Big Bear", "bigbear"], ["Humboldt", "eureka"], ["Truckee", "truckee"],

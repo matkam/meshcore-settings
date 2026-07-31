@@ -130,12 +130,12 @@ async function pointFor(code) {
 // --- clicking a region label
 {
   await clickPoint(() => {
-    const r = document.querySelector('.map-label[data-place="sanjoaquinvalley"]').getBoundingClientRect();
+    const r = document.querySelector('.map-label[data-place="centralvalley"]').getBoundingClientRect();
     return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
   }, "region label");
   const afterLabel = await page.$$eval(".picker input:checked", (n) => n.map((x) => x.dataset.code));
   check("clicking a region label selects just that region",
-    JSON.stringify(afterLabel) === JSON.stringify(["sanjoaquinvalley"]), JSON.stringify(afterLabel));
+    JSON.stringify(afterLabel) === JSON.stringify(["centralvalley"]), JSON.stringify(afterLabel));
 }
 
 // --- clicking a county away from any dot

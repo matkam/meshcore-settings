@@ -897,12 +897,39 @@ window.RegionData.ready(function (DATA) {
     return lines;
   }
 
+  // A tag is a region name that is not a level — see the header of regions.yaml.
+  // It becomes its own short chain from the root, which is all a node needs to
+  // carry the name and match traffic scoped to it. Building it as a chain rather
+  // than a special case means line splitting, `region put` on old firmware and
+  // the region-name count all handle it without knowing what a tag is.
+  function tagChainsFor(chains) {
+    var seen = [];
+    chains.forEach(function (ch) {
+      ch.forEach(function (t) {
+        var node = DATA.byCode[t.code];
+        if (!node) { return; }
+        DATA.tagsFor(node).forEach(function (code) {
+          if (seen.indexOf(code) === -1) { seen.push(code); }
+        });
+      });
+    });
+    return seen.map(function (code) {
+      var tag = DATA.tag(code);
+      return ROOT.map(function (r) { return { code: r.code, label: r.name }; })
+                 .concat([{ code: code, label: (tag && tag.name) || code, isTag: true }]);
+    });
+  }
+
   function buildCommands(entry) {
     var c = caps();
     var chains = chainsFor();
     var chain = chains[0];
     var codes = chain.map(function (x) { return x.code; });
     var leaf = codes[codes.length - 1];
+    // Tags go last, so the picked places lead the command block and `chains[0]`
+    // is still what the operator chose.
+    var tagChains = tagChainsFor(chains);
+    var allChains = chains.concat(tagChains);
 
     var lines = [];
 
@@ -924,9 +951,9 @@ window.RegionData.ready(function (DATA) {
     var regionLines = [];
     var placed = {};
     if (c.regionDef) {
-      regionLines = defLines(chains);
+      regionLines = defLines(allChains);
     }
-    chains.forEach(function (ch) {
+    allChains.forEach(function (ch) {
       var chCodes = ch.map(function (x) { return x.code; });
       if (c.regionDef) { return; }
       chCodes.forEach(function (code, i) {
@@ -948,8 +975,8 @@ window.RegionData.ready(function (DATA) {
     }
     lines.push("region save");
 
-    return { lines: lines, regionLines: regionLines, chain: chain, chains: chains,
-             leaf: leaf, caps: c };
+    return { lines: lines, regionLines: regionLines, chain: chain, chains: allChains,
+             picks: chains, tagChains: tagChains, leaf: leaf, caps: c };
   }
 
   /* ---------- render ---------- */
@@ -1001,7 +1028,7 @@ window.RegionData.ready(function (DATA) {
     renderLineNote(built);
     renderVerify(built);
     renderExplain(built);
-    renderScopes(built.chain);
+    renderScopes(built.chain, built.tagChains);
 
     els.copy.classList.remove("done");
     els.copy.textContent = "Copy";
@@ -1287,19 +1314,29 @@ window.RegionData.ready(function (DATA) {
     return "2-byte advert path hash: 65,536 unique ids instead of 256, so repeaters stay distinguishable as the mesh grows. Costs a little flood range (32 hops) and needs firmware 1.14+.";
   }
 
-  function renderScopes(chain) {
+  function renderScopes(chain, tagChains) {
     els.scopeList.textContent = "";
+
+    var row = function (code, text) {
+      var li = document.createElement("li");
+      var span = document.createElement("span");
+      span.className = "s-code";
+      span.textContent = code;
+      li.appendChild(span);
+      li.appendChild(document.createTextNode(" — " + text));
+      els.scopeList.appendChild(li);
+    };
+
+    // A tag is not part of the chain and is wider than any one level of it, so
+    // it goes above rather than being slotted in by depth.
+    (tagChains || []).forEach(function (ch) {
+      var tag = ch[ch.length - 1];
+      row(tag.code, tag.label + " (carried alongside, not part of the chain)");
+    });
+
     // Widest first reads more naturally as "how far do you want this to go".
     chain.slice().reverse().forEach(function (c, i) {
-      var li = document.createElement("li");
-      var code = document.createElement("span");
-      code.className = "s-code";
-      code.textContent = c.code;
-      li.appendChild(code);
-      li.appendChild(document.createTextNode(
-        " — " + c.label + (i === 0 ? " (your immediate area)" : "")
-      ));
-      els.scopeList.appendChild(li);
+      row(c.code, c.label + (i === 0 ? " (your immediate area)" : ""));
     });
   }
 

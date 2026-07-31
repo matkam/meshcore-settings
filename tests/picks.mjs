@@ -203,7 +203,7 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
     await page.textContent("#line-note"));
 
   for (const code of ["northcoast", "shastacascade", "sacramentovalley", "sierranevada",
-                      "bayarea", "centralcoast", "sanjoaquinvalley", "losangeles"]) {
+                      "bayarea", "centralcoast", "centralvalley", "losangeles"]) {
     await page.check(`.picker input[data-code="${code}"]`);
     await page.waitForTimeout(35);
   }
