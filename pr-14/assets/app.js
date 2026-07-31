@@ -951,7 +951,12 @@ window.RegionData.ready(function (DATA) {
     var regionLines = [];
     var placed = {};
     if (c.regionDef) {
-      regionLines = defLines(allChains);
+      // Picks and tags are built as separate commands. Joining them would be
+      // correct — `dtla|ca socal` does put socal under ca — but the `name|jump`
+      // form means "another branch of what you picked", and a tag is not that.
+      // On one line it reads as though the tag hangs off the leaf, and a single
+      // pick would carry a `|` whose only explanation is about bridge sites.
+      regionLines = defLines(chains).concat(defLines(tagChains));
     }
     allChains.forEach(function (ch) {
       var chCodes = ch.map(function (x) { return x.code; });
