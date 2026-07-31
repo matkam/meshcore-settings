@@ -109,9 +109,12 @@
     <figure class="map-figure">
       <div class="map-host" id="map-host"></div>
       <figcaption class="map-caption">
-        Click a dot for a local area, or a county for a county-wide scope. County
-        lines are real boundaries; local areas are a community convention with no
-        official shape, so they're marked as points.
+        Click a dot for a local area, or a boundary for an area-wide scope. The
+        boundaries are real county lines, claimed by whichever place wholly
+        contains them; where a place crosses a county line — Lake Tahoe spans
+        three — nobody claims that shape and the dots inside carry the meaning.
+        Local areas are a community convention with no official shape, so
+        they're marked as points.
       </figcaption>
     </figure>
 
@@ -252,24 +255,33 @@
     <h2 id="how-heading">How the region tree works</h2>
     <p>
       <code>region def</code> walks a chain: each token becomes a child of the one before it.
-      So <code>region def west ca cc slo prb</code> builds this, top to bottom:
+      So <code>region def west ca centralcoast slocounty pasorobles</code> builds this,
+      top to bottom:
     </p>
 <pre class="tree">*
-└─ west          Western US
-   └─ ca         California
-      └─ cc      Central Coast
-         └─ slo  San Luis Obispo County
-            └─ prb   North County (Paso Robles, Atascadero, Templeton)</pre>
+└─ west                    Western US
+   └─ ca                   California
+      └─ centralcoast      Central Coast
+         └─ slocounty      SLO County
+            └─ pasorobles  Paso Robles / Atascadero</pre>
     <p>
-      Your repeater now carries all five names. Traffic scoped <code>prb</code> stays in North
-      County. Traffic scoped <code>slo</code> covers the whole county. Traffic scoped
-      <code>west</code> reaches every repeater in the western US that follows this convention.
+      Your repeater now carries all five names. Traffic scoped <code>pasorobles</code> stays
+      around Paso Robles. Traffic scoped <code>slocounty</code> covers the whole county.
+      Traffic scoped <code>west</code> reaches every repeater in the western US that follows
+      this convention.
+    </p>
+    <p>
+      Not every chain is five names. Depth follows how big the local mesh community is:
+      the North Coast lists its towns straight under the region because there is nothing
+      in between worth naming, and Los Angeles holds its local areas directly because the
+      county already <em>is</em> the mesh. Both are four names, and <code>region def</code>
+      does not care.
     </p>
     <p>
       Region matching is <strong>per name, not per level</strong> — a repeater that only has
-      <code>slo</code> and not <code>cc</code> will not forward <code>cc</code>-scoped traffic.
-      That is why every node defines the whole chain from <code>west</code> down, even though
-      it only physically sits in one spot.
+      <code>slocounty</code> and not <code>centralcoast</code> will not forward
+      <code>centralcoast</code>-scoped traffic. That is why every node defines the whole
+      chain from <code>west</code> down, even though it only physically sits in one spot.
     </p>
     <p>
       <code>region def</code> arrived in firmware 1.16. Before that the same tree is built one
@@ -285,8 +297,9 @@
         <strong>Region names never travel.</strong> A scoped packet carries two 16-bit
         transport codes — an HMAC of the region's key over the packet — not the name. So a
         code costs the same airtime however long it is: <code>slo</code> and
-        <code>san-luis-obispo-county</code> are identical on the air. Short codes are for
-        your own sake at the console, not the mesh's.
+        <code>slocounty</code> are identical on the air. The firmware allows 30 characters,
+        so the codes here are words rather than abbreviations — nobody should have to look
+        up what <code>sjv</code> meant.
       </li>
       <li>
         <strong>Region names are one flat namespace.</strong> Two different places using the same
