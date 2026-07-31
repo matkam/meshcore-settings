@@ -32,7 +32,10 @@ const data = parse(readFileSync(SRC, "utf8"));
  * so re-ordering keys in the source doesn't churn the JSON.
  */
 
-const PLACE_KEYS = ["code", "name", "kind", "blurb", "outline", "nudge", "lat", "lon", "aliases"];
+const PLACE_KEYS = [
+  "code", "name", "kind", "blurb", "short", "outline", "county", "nudge", "lat", "lon",
+  "aliases", "tags"
+];
 
 function place(node, trail) {
   if (!node || typeof node !== "object") {
@@ -76,6 +79,8 @@ const built = {
   limits: data.limits,
   root: (data.root || []).map((r) => ({ code: r.code, name: r.name })),
   levels: (data.levels || []).map((l) => ({ name: l.name, plural: l.plural })),
+  // Extra region names that are not levels — see the header of regions.yaml.
+  tags: (data.tags || []).map((t) => ({ code: t.code, name: t.name, blurb: t.blurb })),
   places: (data.places || []).map((node) => place(node, []))
 };
 

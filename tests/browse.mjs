@@ -40,28 +40,28 @@ const cmds = async () => (await page.textContent("#commands")).trim();
 
 /* ---------- browsing, with nothing selected ---------- */
 
-check("only the top level is listed at rest", (await rows()) === 8, await rows());
+check("only the top level is listed at rest", (await rows()) === 13, await rows());
 check("every top-level place can be opened",
-  (await page.$$eval(".pick-toggle:not(.is-leaf)", (n) => n.length)) === 8);
+  (await page.$$eval(".pick-toggle:not(.is-leaf)", (n) => n.length)) === 13);
 
-await expand(page, "nco");
-check("opening a region reveals its counties", (await rowsAt(1)) === 5, await rowsAt(1));
+await expand(page, "bayarea");
+check("opening a region reveals its areas", (await rowsAt(1)) === 5, await rowsAt(1));
 check("and ticks nothing", (await picks(page)).length === 0, JSON.stringify(await picks(page)));
 check("so the settings panel stays away", await page.isHidden("#output-panel"));
-check("the toggle reports itself as open", (await isOpen("nco")) === "true");
+check("the toggle reports itself as open", (await isOpen("bayarea")) === "true");
 
-await expand(page, "hum");
-check("opening a county reveals its areas", (await rowsAt(2)) === 3, await rowsAt(2));
+await expand(page, "eastbay");
+check("opening an area reveals its local areas", (await rowsAt(2)) === 8, await rowsAt(2));
 check("still nothing ticked", (await picks(page)).length === 0);
 
 /* ---------- a leaf has nothing to open ----------
  * Checked with the row actually rendered: asserting the toggle is missing while
  * its row is collapsed out of the DOM would pass for the wrong reason. */
 
-check("the area's row is on screen to be judged",
-  (await page.$$('input[data-code="eka"]')).length === 1);
+check("the local area's row is on screen to be judged",
+  (await page.$$('input[data-code="oakland"]')).length === 1);
 check("and a place with no children gets no toggle",
-  (await page.$$('.pick-toggle[data-code="eka"]')).length === 0);
+  (await page.$$('.pick-toggle[data-code="oakland"]')).length === 0);
 
 /* ---------- descriptions ---------- */
 
@@ -71,33 +71,31 @@ const descOf = (code) =>
   })).catch(() => null);
 
 check("a region describes itself with its blurb",
-  (await descOf("nco")).text === "Redwood coast from the Oregon line down to Lake County.",
-  JSON.stringify(await descOf("nco")));
+  (await descOf("bayarea")).text === "The nine Bay Area counties.",
+  JSON.stringify(await descOf("bayarea")));
 
 check("a local area describes itself with its towns",
-  (await descOf("eka")).text === "Eureka, Arcata, McKinleyville, Fortuna, Ferndale, Trinidad",
-  JSON.stringify(await descOf("eka")));
-
-check("a county has no description, and needs none", (await descOf("hum")) === null);
+  (await descOf("oakland")).text === "Oakland, Berkeley, Emeryville, Alameda, Piedmont, Albany",
+  JSON.stringify(await descOf("oakland")));
 
 check("the full text is on the element, since the visible text may be clipped",
-  (await descOf("eka")).title === (await descOf("eka")).text);
+  (await descOf("oakland")).title === (await descOf("oakland")).text);
 
 check("rows stay one line so the tree's shape survives",
-  await page.$eval('.pick-row:has(input[data-code="eka"])',
+  await page.$eval('.pick-row:has(input[data-code="oakland"])',
     (r) => r.getBoundingClientRect().height < 40),
-  await page.$eval('.pick-row:has(input[data-code="eka"])',
+  await page.$eval('.pick-row:has(input[data-code="oakland"])',
     (r) => r.getBoundingClientRect().height));
 
 /* ---------- closing, and what is remembered ---------- */
 
-await expand(page, "nco");
+await expand(page, "bayarea");
 check("closing a region hides what was under it", (await rowsAt(1)) === 0, await rowsAt(1));
-check("and says so", (await isOpen("nco")) === "false");
+check("and says so", (await isOpen("bayarea")) === "false");
 
-await expand(page, "nco");
-check("reopening it remembers the county that was open inside",
-  (await rowsAt(2)) === 3, await rowsAt(2));
+await expand(page, "bayarea");
+check("reopening it remembers the area that was open inside",
+  (await rowsAt(2)) === 8, await rowsAt(2));
 
 /* ---------- expand all ---------- */
 
@@ -106,7 +104,7 @@ check("the button offers to expand while anything is closed",
 
 await page.click("#expand-picks");
 await page.waitForTimeout(500);
-check("expand all opens the whole tree", (await rows()) === 228, await rows());
+check("expand all opens the whole tree", (await rows()) === 191, await rows());
 check("and it is still a selection of nothing", (await picks(page)).length === 0);
 check("the button turns into collapse",
   (await page.textContent("#expand-picks")) === "Collapse all");
@@ -115,9 +113,9 @@ check("the list scrolls rather than the page growing without limit",
 
 await page.click("#expand-picks");
 await page.waitForTimeout(300);
-check("collapse all flattens it again", (await rows()) === 8, await rows());
+check("collapse all flattens it again", (await rows()) === 13, await rows());
 
-await expand(page, "sv");
+await expand(page, "sacramentovalley");
 check("opening one by hand puts the button back to expand",
   (await page.textContent("#expand-picks")) === "Expand all");
 
@@ -187,26 +185,26 @@ check("opening one by hand puts the button back to expand",
 /* ---------- selecting still works, and still cascades ---------- */
 
 await collapseAll(page);
-await tick(page, "cc");
-check("ticking a place still opens it", (await isOpen("cc")) === "true");
-check("which is what makes the next level reachable", (await rowsAt(1)) === 5, await rowsAt(1));
+await tick(page, "centralcoast");
+check("ticking a place still opens it", (await isOpen("centralcoast")) === "true");
+check("which is what makes the next level reachable", (await rowsAt(1)) === 7, await rowsAt(1));
 
-await tick(page, "slo", "prb");
+await tick(page, "slo", "slonorth");
 check("the chain builds as before",
-  (await cmds()).includes("region def west ca cc slo prb"), await cmds());
+  (await cmds()).includes("region def west ca centralcoast slo slonorth"), await cmds());
 
 // The name sits inside a wrapper now, so the rule that marks a chosen row is
 // two levels down from the checkbox rather than beside it. Easy to break by
 // restructuring the row and never notice by eye.
 const weightOf = (code) => page.$eval(`.pick-row:has(input[data-code="${code}"]) .pick-name`,
   (e) => getComputedStyle(e).fontWeight);
-check("a ticked row reads as chosen", (await weightOf("prb")) === "600", await weightOf("prb"));
-check("and an unticked one does not", (await weightOf("scz")) === "400", await weightOf("scz"));
+check("a ticked row reads as chosen", (await weightOf("slonorth")) === "600", await weightOf("slonorth"));
+check("and an unticked one does not", (await weightOf("bigsur")) === "400", await weightOf("bigsur"));
 
-await untick(page, "prb");
+await untick(page, "slonorth");
 check("unticking does not close anything", (await isOpen("slo")) === "true");
 check("but it does drop the pick",
-  !(await picks(page)).includes("prb"), JSON.stringify(await picks(page)));
+  !(await picks(page)).includes("slonorth"), JSON.stringify(await picks(page)));
 
 /* ---------- browsing never disturbs a selection ---------- */
 
@@ -219,7 +217,7 @@ await page.waitForTimeout(300);
 check("and collapsing everything leaves them untouched too",
   (await cmds()) === before, await cmds());
 check("including what is ticked",
-  JSON.stringify(await selected()) === JSON.stringify(["cc", "slo"]),
+  JSON.stringify(await selected()) === JSON.stringify(["centralcoast", "slo"]),
   JSON.stringify(await selected()));
 
 // Worth stating outright: only open rows are rendered, so a collapsed tick is
@@ -231,44 +229,44 @@ check("a ticked row inside a closed place leaves the markup, not the selection",
 await page.click("#expand-picks");
 await page.waitForTimeout(500);
 check("and comes back ticked when it is opened again",
-  JSON.stringify(await picks(page)) === JSON.stringify(["cc", "slo"]),
+  JSON.stringify(await picks(page)) === JSON.stringify(["centralcoast", "slo"]),
   JSON.stringify(await picks(page)));
 
 /* ---------- a pick from elsewhere opens its way in ---------- */
 
-await page.goto(SITE + "#prb", { waitUntil: "networkidle" });
+await page.goto(SITE + "#slonorth", { waitUntil: "networkidle" });
 check("a deep link opens the tree down to what it selected",
-  (await isOpen("cc")) === "true" && (await isOpen("slo")) === "true",
-  `cc=${await isOpen("cc")} slo=${await isOpen("slo")}`);
+  (await isOpen("centralcoast")) === "true" && (await isOpen("slo")) === "true",
+  `centralcoast=${await isOpen("centralcoast")} slo=${await isOpen("slo")}`);
 check("so the selected row is actually on screen",
-  await page.$eval('.pick-row:has(input[data-code="prb"])', (r) => r.checkVisibility()));
+  await page.$eval('.pick-row:has(input[data-code="slonorth"])', (r) => r.checkVisibility()));
 
 await page.fill("#search", "Bakersfield");
 await page.waitForSelector("#results li[role=option]");
 await page.click("#results li[role=option]:first-child");
 await page.waitForTimeout(200);
 check("and so does a search result",
-  await page.$eval('.pick-row:has(input[data-code="bak"])', (r) => r.checkVisibility()));
+  await page.$eval('.pick-row:has(input[data-code="bakersfield"])', (r) => r.checkVisibility()));
 
 /* ---------- the scope line ---------- */
 
 check("the scope line says where chains start and how much there is",
   (await page.textContent("#pick-scope")) ===
-    "west › ca prefixes every chain · 8 regions, 58 counties and 162 local areas to choose from.",
+    "west › ca prefixes every chain · 13 regions, 84 areas and 94 local areas to choose from.",
   await page.textContent("#pick-scope"));
 
 /* ---------- keyboard ---------- */
 
 await page.goto(SITE, { waitUntil: "networkidle" });
-await page.focus('.pick-toggle[data-code="nco"]');
+await page.focus('.pick-toggle[data-code="northcoast"]');
 await page.keyboard.press("Enter");
 await page.waitForTimeout(150);
-check("the disclosure works from the keyboard", (await isOpen("nco")) === "true");
+check("the disclosure works from the keyboard", (await isOpen("northcoast")) === "true");
 check("without selecting anything", (await picks(page)).length === 0);
 
 await page.keyboard.press("Tab");
 check("and tab moves on to that row's checkbox",
-  await page.evaluate(() => document.activeElement.dataset.code) === "nco",
+  await page.evaluate(() => document.activeElement.dataset.code) === "northcoast",
   await page.evaluate(() => document.activeElement.tagName + "/" +
     (document.activeElement.dataset.code || "")));
 

@@ -63,17 +63,17 @@ firmware it's converted to the nearest airtime factor, since `set af` only offer
 1/(1+af) steps (100% → `af 0`, 50% → `af 1`, 25% → `af 3`). Check your version on
 the node with `ver`.
 
-Every area has a shareable deep link — [`#prb`](https://matkam.github.io/meshcore-settings/#prb)
-opens the page with North County already selected, which is handy for pasting into
-a group chat when you're helping someone bring a node up.
+Every area has a shareable deep link — [`#slonorth`](https://matkam.github.io/meshcore-settings/#slonorth)
+opens the page with North County already selected, which is handy for
+pasting into a group chat when you're helping someone bring a node up.
 
 ## The map
 
 The picker opens with a map of California. Click a dot for a local area, a
-county for a county-wide scope, or a region label for a region-wide one — the
-three levels of the scope chain, in the three things you can click. Whatever is
-selected is reflected back: the region as a wash across its counties, the county
-as a solid fill, the area as a marked dot. A selection made in the search box or
+boundary for an area-wide scope, or a region label for a region-wide one — the
+levels of the scope chain, in the things you can click. Whatever is selected is
+reflected back: the region as a wash across the shapes inside it, an area as a
+solid fill, a local area as a marked dot. A selection made in the search box or
 the picker shows up on the map too, and vice versa.
 
 None of that is coded per level. A place is drawn as a boundary if it names an
@@ -91,10 +91,12 @@ geography grows under them.
 Two deliberate limits on what it claims:
 
 - **County lines are real; area boundaries are not drawn.** The county outlines
-  are Census TIGER boundaries. Local areas are a community convention with no
-  official shape, so they are marked as points. Drawing them as polygons would
-  invent a precision the data doesn't have.
-- **There is no colour per region.** Eight categorical fills on a map this size
+  are Census TIGER boundaries, and a place claims every one it wholly contains —
+  the North Bay claims Marin, Sonoma, Napa and Solano. Where a place cuts across a
+  county line nobody claims that shape, so Lake Tahoe, the Mojave and Los Angeles
+  draw as dots on plain background. That is deliberate: tinting three whole
+  counties for the Tahoe basin would claim an extent the mesh doesn't have.
+- **There is no colour per region.** Categorical fills on a map this size
   fail colour-blind separation, and they would compete with the one thing colour
   should mean here: what *you* have selected. Region identity comes from labels
   and from hovering instead.
@@ -121,8 +123,10 @@ The projection constants live in the generated file and are shared by the map an
 the validator, so a coordinate lands in the same place in both.
 
 The shapes are a library keyed by name, not a level of the tree: a place claims
-one with `outline: Del Norte`. Today they happen to be counties, which is why the
-input is a counties GeoJSON, but nothing in the site assumes that.
+one with `outline: Del Norte`, or several with `outline: [Marin, Sonoma, Napa,
+Solano]`. Today they happen to be counties, which is why the input is a counties
+GeoJSON, but nothing in the site assumes that — the tree stopped having a county
+level and the shapes carried on working.
 
 ## The other settings
 
@@ -166,8 +170,8 @@ The firmware default is `off`, so sending `moderate` is a deliberate change.
 
 ## Carrying more than one tag
 
-The picker is a **tree of checkboxes**: tick a region and its counties appear
-beneath it, tick a county and its areas appear beneath that. The tags are a
+The picker is a **tree of checkboxes**: tick a region and the places inside it
+appear beneath it, and so on down. The tags are a
 hierarchy, so showing one keeps the list short and makes the shape of what
 you're configuring visible. Each row shows the code that will actually go on the
 air.
@@ -175,11 +179,11 @@ air.
 **You carry exactly what you tick**, plus the ancestry each pick implies. Tick
 several and the repeater carries them all — which is what a high site bridging
 two communities needs, with no separate mode to say so, and no restriction on
-staying inside one county or region.
+staying inside one region.
 
-There is no "deepest level wins" rule to learn. Ticking a county *and* an area
-inside it isn't a contradiction: the area's chain already contains the county, so
-the redundant chain is simply dropped when the commands are built.
+There is no "deepest level wins" rule to learn. Ticking an area *and* a local area
+inside it isn't a contradiction: the local area's chain already contains the area,
+so the redundant chain is simply dropped when the commands are built.
 
 *Clear* empties the picker; ticking otherwise adds rather than replaces. Picking
 from the search box, the map or a connected repeater replaces the whole set and
@@ -216,15 +220,15 @@ overflow starts a fresh command from the root — and on pre-1.16 firmware, wher
 there is no `region def`, it falls back to one `region put` per name with shared
 ancestry placed once.
 
-A link carries every pick: [`#prb,slc`](https://matkam.github.io/meshcore-settings/#prb,slc)
+A link carries every pick: [`#slonorth,slocity`](https://matkam.github.io/meshcore-settings/#slonorth,slocity)
 restores the whole set.
 
 ### Two limits worth knowing
 
 - **160 characters per serial line.** Handled by splitting into more commands.
 - **32 region names per node** (`MAX_REGION_ENTRIES` in the firmware). This one
-  can't be worked around — it's the size of the node's region table. Ten areas in
-  ten different counties is already 32 names. Going over doesn't fail cleanly:
+  can't be worked around — it's the size of the node's region table. Ten local
+  areas in ten different regions is already 32 names. Going over doesn't fail cleanly:
   `region def` places names until the table is full and then rejects the rest,
   leaving the repeater half configured. The line under the commands shows the
   count, and warns when a selection won't fit.
@@ -246,49 +250,114 @@ A chain of names, matching how `region def` is walked — each token becomes a c
 of the one before it:
 
 ```
-west  →  ca  →  cc            →  slo                     →  prb
-US West  California  Central Coast  San Luis Obispo County   North County
+west  →  ca  →  centralcoast  →  slo         →  slonorth
+US West  California  Central Coast  SLO County   North County (Paso Robles, Atascadero)
 ```
 
-California is split into 8 regions covering all 58 counties, with 162 local areas
-under them, and you can generate settings at any of those three levels: pick a
-region for a region-wide chain, a county for a county-wide chain, or a local area
-for the full five-token chain.
+California is split into 13 regions covering all 58 counties, with 161 local areas
+under them, and you can generate settings at any level: pick a region for a
+region-wide chain, an area for an area-wide one, or a local area for the full
+chain.
 
-Three is what California uses, not what the site supports. The tree in
-`data/regions.yaml` nests as deep as you like — a place has `children`, and those
-children may have children — up to MeshCore's eight-level chain limit, with the
-two root tokens counting toward it. Branches can be ragged, so one county can grow
-a level of neighbourhoods without every other county having to. Nothing in the
-page knows what a "county" is: the level names come from a `levels` list in the
-data, the map draws a boundary for any place that names one and a dot for any
-place that carries a lat/lon, and the picker just recurses.
+**The levels follow communities and RF propagation, not administrative lines.**
+County boundaries are ignored wherever they cut through a mesh — Lake Tahoe is one
+place across three counties, the Mojave gathers the high desert out of four, and
+Ventura County is split at the Conejo grade because its east half talks to Los
+Angeles and its west half talks up the coast. Counties survive as a `county` field
+on each local area, which never appears in a generated chain: it gives the
+validator its point-in-boundary check and makes the county name searchable.
+
+**Depth varies by branch, deliberately.** Sparse country needs three levels to
+reach something meaningful, so the North Coast lists its towns directly under the
+region. A metro where the county already *is* the mesh needs two, so Los Angeles,
+Orange County and San Diego hold their local areas with nothing in between. Both
+are correct and `region def` does not care — 67 of the 161 places sit on a
+four-token chain rather than five, which is a region-table entry back on every
+node in those branches.
+
+None of that is coded in. The tree in `data/regions.yaml` nests as deep as you
+like — a place has `children`, and those children may have children — up to
+MeshCore's eight-level chain limit, with the two root tokens counting toward it.
+Nothing in the page knows what a "county" is: the level names come from a `levels`
+list in the data, the map draws a boundary for any place that names one and a dot
+for any place that carries a lat/lon, and the picker just recurses.
 
 On firmware older than 1.16 the same chain is built with `region put <name> [parent]`
 followed by `region allowf <name>` for each level — see
 [Firmware versions](#firmware-versions).
 
-A repeater carries every name in its chain, so scoping a message `prb` keeps it in
-North County, `slo` covers the county, and `west` reaches the whole western mesh.
-Matching is **per name, not per level** — a repeater that has `slo` but not `cc`
-will not forward `cc`-scoped traffic, which is why every node defines the whole
-chain even though it only sits in one spot.
+A repeater carries every name in its chain, so scoping a message `slonorth`
+keeps it in the north county, `slo` covers the county, and `west` reaches the
+whole western mesh. Matching is **per name, not per level** — a repeater that has
+`slo` but not `centralcoast` will not forward `centralcoast`-scoped traffic,
+which is why every node defines the whole chain even though it only sits in one
+spot.
+
+### Tags: a scope that cuts across the tree
+
+Some scopes don't fit the hierarchy. `socal` reaches Los Angeles, Orange County,
+the Inland Empire, the deserts and San Diego — six regions with no common parent,
+and giving them one would be wrong: they sit in four RF-separate basins, so a
+single region implying they hear each other is exactly what this scheme is trying
+to avoid.
+
+A **tag** is the answer. It is a region name that is not a level: it hangs off the
+root as its own short chain, and a place opts into it rather than inheriting one
+by position. Everything beneath an opted-in place carries it too.
+
+```
+region def west ca losangeles dtla
+region put socal ca
+```
+
+`region put`, not a second `region def`, even on firmware that has `def`. A tag is
+one extra name rather than a chain, so `put` says what it is; a `def` would
+re-assert `west` and `ca` that the line above just placed, resetting their flags
+on the way past; and this way the tag looks identical on every firmware version,
+where only the chain form differs. It flood-allows as it creates on 1.15+, so no
+`allowf` is needed there.
+
+The node ends up holding five names and matches traffic scoped to any of them.
+
+Tags are declared once at the top of `data/regions.yaml` and referenced by the
+places that carry them:
+
+```yaml
+tags:
+  - code: socal
+    name: Southern California
+
+places:
+  - code: losangeles
+    tags: [socal]
+```
+
+The cost is one region-table entry on the nodes that carry it, and **only** those
+nodes — which is the point. Making `socal` a level instead would have cost every
+node beneath it a table entry whether or not its operator wanted the wider scope,
+and would have pushed 44 southern places from a four-token chain to five.
 
 ### These codes are a convention, not a standard
 
 MeshCore does not ship a national region list, and there is no body that assigns
 these. What actually matters is that the repeaters around you use the same names.
-The codes here follow the widely used `west` / `ca` top-level tags and stay short
-and lowercase, but **check with your local mesh group before deploying**, and open
-a PR if your area is missing or named wrong.
+The codes here follow the widely used `west` / `ca` top-level tags and stay
+lowercase, but **check with your local mesh group before deploying**, and open a
+PR if your area is missing or named wrong.
 
 Region names never appear in packets — a scoped packet carries two 16-bit
 transport codes derived from the region's key, so a code's length has no effect on
-airtime. Codes are short for legibility at the console, nothing more.
+airtime. The firmware's ceiling is 30 characters (`RegionEntry.name` is
+`char[31]`), and the longest chain this file generates is 60 of the 160 characters
+a serial line allows, so codes are words rather than abbreviations: `centralvalley`
+beats `cv` when nobody has to look it up. Established vernacular is the exception
+worth making — `sf`, `oc`, `ie`, `sfv` and `dtla` are what operators already type.
+Two-letter codes that collide with a US state abbreviation are avoided, which is
+why Los Angeles is not `la`.
 
 Region names live in one flat namespace on a node, so codes must be unique across
 the entire file — `npm run validate` enforces that, along with the 160-character
-serial line limit and MeshCore's 8-level depth cap.
+serial line limit, the 30-character code limit and MeshCore's 8-level depth cap.
 
 ## Browsing, and looking a code up
 
@@ -534,8 +603,9 @@ run against every PR, and screenshots are uploaded when something fails.
 stubbed Web Serial port, so a test can specify what the repeater reports and how
 it replies to each command.
 
-`levels` earns its place: every other suite drives California's three levels and
-would keep passing if three were hard-coded somewhere. It intercepts the fetch of
+`levels` earns its place: every other suite drives California's tree, which is
+ragged but never deeper than three, and would keep passing if that were
+hard-coded somewhere. It intercepts the fetch of
 `data/regions.json` and serves a tree of its own instead, with the outlines and
 positions hung off different levels, then checks the picker, the chain, the map
 and the level names all follow.
@@ -579,8 +649,8 @@ token, which is not worth a preview.
 ## Adding or fixing an area
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). Short version: add an entry under the
-right county in `data/regions.yaml`, run `npm run build:regions` and
-`npm run validate`, commit both files, open a PR.
+right area in `data/regions.yaml`, name the county it sits in, run
+`npm run build:regions` and `npm run validate`, commit both files, open a PR.
 
 ## Sources
 

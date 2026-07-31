@@ -6,23 +6,33 @@ boundaries really fall.
 
 ## Adding a local area
 
-Everything lives in [`data/regions.yaml`](data/regions.yaml). Find your county
-and add an entry to its `children` list:
+Everything lives in [`data/regions.yaml`](data/regions.yaml). Find the area
+yours belongs to and add an entry to its `children` list:
 
 ```yaml
-      - code: prb
-        name: North County
-        lat: 35.627
-        lon: -120.691
-        aliases: ["Paso Robles", "Atascadero", "Templeton", "San Miguel", "Shandon"]
+          - code: slonorth
+            name: North County
+            county: San Luis Obispo
+            lat: 35.627
+            lon: -120.691
+            aliases: ["Paso Robles", "Atascadero", "Templeton", "San Miguel", "Shandon"]
 ```
 
-- **`code`** — the region name. Lowercase `a-z0-9`, 1–8 characters, short as you
-  can make it while staying readable, and unique across the whole file. Short is
-  for legibility at the console, **not** for airtime: a scoped packet carries a
-  16-bit transport code derived from the name, never the name itself, so code
-  length has no effect on the air.
-- **`name`** — what a human picks from the list.
+- **`code`** — the region name. Lowercase `a-z0-9`, 1–30 characters, and unique
+  across the whole file. 30 is the firmware's ceiling (`RegionEntry.name` is
+  `char[31]`), and length costs nothing on the air: a scoped packet carries a
+  16-bit transport code derived from the name, never the name itself. So prefer
+  the word people say over an abbreviation they have to look up — `slonorth`,
+  not `prb`. Established vernacular is the exception worth making: `sf`, `oc`,
+  `ie`, `sfv` and `dtla` are what operators already type. Avoid two-letter codes
+  that collide with a US state abbreviation, since the namespace spans states —
+  that is why Los Angeles is not `la`.
+- **`name`** — what a human picks from the list. It has to stand on its own:
+  "South County" made sense when a county sat above it in the tree and means
+  nothing now that one doesn't.
+- **`county`** — which county the place is in. This is **not** a level and never
+  appears in a generated chain; it gives the validator its point-in-boundary
+  check and makes the county name searchable.
 - **`aliases`** — search terms only. These never appear in the generated
   commands; they exist so someone can type "Paso Robles" and land on `prb`. List
   the towns people would actually type, including unincorporated ones.
@@ -32,10 +42,14 @@ and add an entry to its `children` list:
   nodes actually are (the main town) rather than at the geometric centre of an
   empty valley.
 
-Two more fields exist and are rarely needed:
+Three more fields exist and are rarely needed:
 
-- **`outline`** — the name of a shape in `data/outlines.json`, which makes the
-  map draw this place as a boundary instead of a dot. The counties use it.
+- **`outline`** — the name of a shape in `data/outlines.json`, or a list of them,
+  which makes the map draw this place as a boundary instead of a dot. A place
+  claims every shape it wholly contains, and a shape split across two places is
+  claimed by neither.
+- **`short`** — what the map label says, when the code is too long to read at map
+  size. Defaults to the code.
 - **`kind`** — overrides the level name for a single place, for a branch that
   sits deeper or shallower than its siblings.
 
@@ -58,7 +72,7 @@ within 4 km, since location detection can't tell those apart on distance alone �
 that's a warning rather than an error because some genuinely are that close, and
 the page handles it by offering both and letting the operator pick.
 
-**It also checks your coordinate is inside the outline it sits under**, using the
+**It also checks your coordinate is inside the county you gave it**, using the
 same shapes the map draws, and tells you which one it actually landed in if not.
 That catches a transposed digit or a copy-pasted neighbour, which a bounding-box
 check cannot. A point within about 800 m of the line is accepted without comment
@@ -67,16 +81,49 @@ from them.
 
 ## Adding a level
 
-The tree is not fixed at regions > counties > local areas. A place may have
-`children`, and those children may have children, up to MeshCore's eight-level
-chain limit (the two root tokens count toward it). If you add a level, add a name
-for it to the `levels` list at the top of the file — that's what the interface
-calls it — and check that `npm run validate` doesn't warn the tree has outgrown
-that list.
+The tree is not fixed at regions > areas > local areas, and it is deliberately
+ragged: the North Coast lists its towns straight under the region because there
+is nothing in between worth naming, while the Bay Area has North Bay, East Bay,
+Peninsula and South Bay in between. A place may have `children`, and those
+children may have children, up to MeshCore's eight-level chain limit (the two
+root tokens count toward it). If you add a level, add a name for it to the
+`levels` list at the top of the file — that's what the interface calls it — and
+check that `npm run validate` doesn't warn the tree has outgrown that list.
+
+Depth should follow how big the local mesh community actually is, not a wish to
+make every branch look the same. Every level costs each node in that branch
+another region-table entry, and a node holds 32.
 
 Whether a *new* level is a good idea is a question for your local mesh group
 first. It costs every repeater in that branch another region-table entry, and a
 node holds 32.
+
+## Adding a tag
+
+A tag is a region name that is **not** a level — use one for a scope that cuts
+across the tree, where making it a parent would be wrong. Declare it once at the
+top of `data/regions.yaml`, then opt places into it:
+
+```yaml
+tags:
+  - code: socal
+    name: Southern California
+    blurb: One line on what it reaches.
+
+places:
+  - code: losangeles
+    tags: [socal]
+```
+
+Everything beneath an opted-in place carries it, so tag the highest place that
+should have it and don't repeat it below — `npm run validate` rejects a tag that
+is already inherited, since two copies only invite the two to drift.
+
+A tag costs one region-table entry on every node that carries it, against the 32
+a node holds. That is cheaper than a level, which would cost the same entry *and*
+lengthen every chain beneath it — but it is not free, and a tag nobody scopes
+traffic to is dead weight on real hardware. Ask your mesh group whether they'd
+actually use the scope before adding one.
 
 ## Renaming a code
 
@@ -85,22 +132,29 @@ real hardware, changing it silently splits the mesh — nodes on the old name st
 matching nodes on the new one until every operator reflashes their config. Adding
 a new code is cheap; changing one is not.
 
-If a rename really is necessary, say so explicitly in the PR description so it
-can be announced to the affected operators.
+That window is open now and will not stay open. Nothing here is on hardware yet,
+so getting a name right today costs a pull request; getting it right in a year
+costs every operator in that branch a reflash. If you think a code is wrong, say
+so while it is still free.
+
+If a rename really is necessary later, say so explicitly in the PR description so
+it can be announced to the affected operators.
 
 ## Choosing a code
 
 - Unique across the whole file. The validator will catch collisions, but it can't
   tell you which of the two should give way.
 - Try not to collide with codes other states' meshes are likely to want. Region
-  names are global on any repeater that carries both trees.
-- Prefer something an operator would guess: `bak` for Bakersfield, `trk` for
-  Truckee, `cch` for the Coachella Valley.
+  names are global on any repeater that carries both trees, which rules out bare
+  words like `valley` and any two-letter US state abbreviation.
+- Prefer something an operator would guess, spelled out: `bakersfield`,
+  `truckee`, `palmsprings`. The anchor town makes a good code even when the name
+  is the wider area — `palmsprings` is named "Coachella Valley".
 
 ## Boundaries and splits
 
 If an area has grown enough that one code no longer describes it, add children
-under it rather than redrawing the county — the hierarchy is there to absorb
+under it rather than redrawing anything above — the hierarchy is there to absorb
 that. Open an issue first if you're not sure; someone else may already be running
 nodes under the existing name.
 

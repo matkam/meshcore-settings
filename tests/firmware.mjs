@@ -17,20 +17,20 @@ function check(name, actual, expected) {
   if (!ok) console.log("--- expected ---\n" + expected + "\n--- actual ---\n" + actual + "\n");
 }
 
-await page.goto(SITE + "#prb", { waitUntil: "networkidle" });
+await page.goto(SITE + "#slonorth", { waitUntil: "networkidle" });
 const cmds = async () => (await page.textContent("#commands")).trim();
 
 // 1.16+ default
 check("1.16 default", await cmds(), [
   "set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
-  "region def west ca cc slo prb", "region save"].join("\n"));
+  "region def west ca centralcoast slo slonorth", "region save"].join("\n"));
 
 // 1.15: region put/allowf, dutycycle + hash still present
 await page.selectOption("#opt-fw", "115");
 check("1.15 (no allowf)", await cmds(), [
   "set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
-  "region put west", "region put ca west", "region put cc ca",
-  "region put slo cc", "region put prb slo",
+  "region put west", "region put ca west", "region put centralcoast ca",
+  "region put slo centralcoast", "region put slonorth slo",
   "region save"].join("\n"));
 
 // 1.14: set af, hash still present
@@ -39,9 +39,9 @@ check("1.14", await cmds(), [
   "set af 0", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
   "region put west", "region allowf west",
   "region put ca west", "region allowf ca",
-  "region put cc ca", "region allowf cc",
-  "region put slo cc", "region allowf slo",
-  "region put prb slo", "region allowf prb",
+  "region put centralcoast ca", "region allowf centralcoast",
+  "region put slo centralcoast", "region allowf slo",
+  "region put slonorth slo", "region allowf slonorth",
   "region save"].join("\n"));
 
 // 1.10-1.13: exactly the user's example
@@ -50,9 +50,9 @@ check("1.10-1.13 matches user's example", await cmds(), [
   "set af 0", "set flood.advert.interval 24",
   "region put west", "region allowf west",
   "region put ca west", "region allowf ca",
-  "region put cc ca", "region allowf cc",
-  "region put slo cc", "region allowf slo",
-  "region put prb slo", "region allowf prb",
+  "region put centralcoast ca", "region allowf centralcoast",
+  "region put slo centralcoast", "region allowf slo",
+  "region put slonorth slo", "region allowf slonorth",
   "region save"].join("\n"));
 
 console.log("\nhash select disabled on 1.10-1.13:", await page.isDisabled("#opt-hash"));
@@ -75,31 +75,52 @@ await page.fill("#opt-duty", "100");
 await page.check("#opt-home");
 const withHome = (await cmds()).split("\n");
 check("home/default on old fw", withHome.slice(-3).join("\n"),
-  ["region home prb", "region default prb", "region save"].join("\n"));
+  ["region home slonorth", "region default slonorth", "region save"].join("\n"));
 await page.uncheck("#opt-home");
 
 // county-level chain on old firmware (4 tokens)
-await untick(page, "prb");
+await untick(page, "slonorth");
 check("county-level on 1.10", await cmds(), [
   "set af 0", "set flood.advert.interval 24",
   "region put west", "region allowf west",
   "region put ca west", "region allowf ca",
-  "region put cc ca", "region allowf cc",
-  "region put slo cc", "region allowf slo",
+  "region put centralcoast ca", "region allowf centralcoast",
+  "region put slo centralcoast", "region allowf slo",
   "region save"].join("\n"));
 
 // switching back restores region def
 await page.selectOption("#opt-fw", "116");
 check("back to 1.16", await cmds(), [
   "set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
-  "region def west ca cc slo", "region save"].join("\n"));
+  "region def west ca centralcoast slo", "region save"].join("\n"));
 console.log("hash re-enabled:", !(await page.isDisabled("#opt-hash")));
 
 // screenshot of the old-firmware view
 await page.selectOption("#opt-fw", "110");
-await tick(page, "prb");
+await tick(page, "slonorth");
 await page.evaluate(() => { document.querySelector("details.advanced").open = false; });
 await page.screenshot({ path: shot("fw-old.png"), clip: { x: 0, y: 180, width: 1000, height: 1250 } });
+
+/* ---------- tags ----------
+ * A tag is one extra name rather than a chain, so `region put` places it on
+ * every tier — the only difference further down is that 1.14 and older need an
+ * explicit allowf, the same as every other name.
+ */
+await page.goto(SITE + "#dtla", { waitUntil: "networkidle" });
+await page.selectOption("#opt-fw", "110");
+check("a tag is placed as its own name on 1.10", await cmds(), [
+  "set af 0", "set flood.advert.interval 24",
+  "region put west", "region allowf west",
+  "region put ca west", "region allowf ca",
+  "region put losangeles ca", "region allowf losangeles",
+  "region put dtla losangeles", "region allowf dtla",
+  "region put socal ca", "region allowf socal",
+  "region save"].join("\n"));
+await page.selectOption("#opt-fw", "116");
+check("and the same line on 1.16, where the chain uses region def", await cmds(), [
+  "set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
+  "region def west ca losangeles dtla", "region put socal ca", "region save"].join("\n"));
+await page.goto(SITE + "#slonorth", { waitUntil: "networkidle" });
 
 for (const w of [390, 768, 1200]) {
   await page.setViewportSize({ width: w, height: 900 });
