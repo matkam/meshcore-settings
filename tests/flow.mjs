@@ -38,7 +38,7 @@ check("disabled reason names login",
 const loc = await page.textContent("#detect-loc");
 const locChoices = await page.$$eval("#detect-choices button", (bs) => bs.map((b) => b.textContent));
 check("location suggested with no prior selection",
-  /^North County · /.test(locChoices[0] || ""), loc + " | " + locChoices.join(" | "));
+  /^Paso Robles \/ Atascadero · /.test(locChoices[0] || ""), loc + " | " + locChoices.join(" | "));
 
 await page.fill("#admin-pw", "hunter2");
 await page.click("#btn-login");
@@ -60,8 +60,8 @@ await page.click("#detect-choices button");
 await page.waitForSelector("#output-panel:not([hidden])", { timeout: 5000 });
 check("accepting suggestion reveals the settings", true);
 check("send enabled once an area exists", !(await page.isDisabled("#btn-push")));
-check("area is North County", await page.$eval('.picker input[data-code="prb"]', (x) => x.checked));
-check("commands generated", /region def west ca cc slo prb/.test(await page.textContent("#commands")));
+check("area is Paso Robles / Atascadero", await page.$eval('.picker input[data-code="pasorobles"]', (x) => x.checked));
+check("commands generated", /region def west ca centralcoast slocounty pasorobles/.test(await page.textContent("#commands")));
 
 // --- and it can actually send
 page.once("dialog", d => d.accept());

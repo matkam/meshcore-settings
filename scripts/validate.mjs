@@ -49,6 +49,12 @@ const levels = data.levels ?? [];
 
 if (!rootTokens.length) { fail("root must contain at least one token"); }
 
+// `outline` and `county` both take a name or a list of them: a place claims
+// every shape it wholly contains, and a local area may straddle two counties.
+const names = (v) => (v == null ? [] : Array.isArray(v) ? v : [v]);
+const outlinesOf = (node) => names(node.outline);
+const countiesOf = (node) => names(node.county);
+
 // Boundary shapes, by the name a place claims them with.
 const shapes = new Map();
 for (const shape of map.shapes ?? []) { shapes.set(shape.name, parsePath(shape.d)); }
@@ -58,11 +64,15 @@ if (!shapes.size) { fail("data/outlines.json has no shapes — run npm run build
 
 // code -> human-readable path, for duplicate reporting
 const seen = new Map();
-const CODE_RE = /^[a-z0-9]{1,8}$/;
+// 30 is the firmware's ceiling — RegionEntry.name is char[31]. Length has no
+// effect on airtime, so nothing shorter is enforced here.
+const maxCode = limits.maxCodeLength ?? 30;
+const CODE_RE = new RegExp(`^[a-z0-9]{1,${maxCode}}$`);
 
 function claim(code, path) {
   if (typeof code !== "string" || !CODE_RE.test(code)) {
-    fail(`invalid code ${JSON.stringify(code)} at ${path} (expect 1-8 chars, lowercase a-z0-9)`);
+    fail(`invalid code ${JSON.stringify(code)} at ${path} ` +
+         `(expect 1-${maxCode} chars, lowercase a-z0-9)`);
     return;
   }
   if (seen.has(code)) {
@@ -115,8 +125,20 @@ const points = [];      // every place carrying a position
     if (!kids.length && !(node.aliases ?? []).length) {
       warn(`${label}: no aliases listed, it will be hard to find by search`);
     }
-    if (node.outline && !shapes.has(node.outline)) {
-      fail(`${label}: outline "${node.outline}" is not in data/outlines.json`);
+    for (const name of outlinesOf(node)) {
+      if (!shapes.has(name)) {
+        fail(`${label}: outline "${name}" is not in data/outlines.json`);
+      }
+    }
+    // `county` is metadata, not a level — it names a shape without claiming it,
+    // so two places in the same county don't collide over one boundary.
+    for (const name of countiesOf(node)) {
+      if (!shapes.has(name)) {
+        fail(`${label}: county "${name}" is not in data/outlines.json`);
+      }
+    }
+    if (kids.length && node.county) {
+      fail(`${label}: county is for places with no children — this has ${kids.length}`);
     }
 
     walk(kids, trail.concat([node]));
@@ -188,8 +210,13 @@ for (let i = 0; i < points.length; i++) {
  * machine can answer. It catches a transposed digit or a copy-pasted
  * neighbour, which the bounds check above cannot.
  *
- * The shape checked is the nearest ancestor that claims one — not the parent,
- * because a level may pass through without having a boundary of its own.
+ * A local area's `county` is checked first and is the strong case: it names one
+ * boundary whatever the tree does above it, which is what keeps this check
+ * working now that counties are not places. Failing that, the nearest ancestor
+ * claiming an outline is used — not the parent, because a level may pass
+ * through without a boundary of its own.
+ *
+ * A place may name several shapes, and being inside any one of them passes.
  */
 
 // build-outlines.mjs simplifies the rings with a tolerance of about 600 m, so
@@ -201,15 +228,23 @@ const SIMPLIFY_SLACK_KM = 0.8;
 const OUTSIDE_FAIL_KM = 5;
 
 for (const p of points) {
-  const owner = [p.node, ...p.trail].reverse().find((n) => n.outline);
-  if (!owner) { continue; }
-  const rings = shapes.get(owner.outline);
-  if (!rings) { continue; }
+  const claimed = countiesOf(p.node).length
+    ? countiesOf(p.node)
+    : outlinesOf([p.node, ...p.trail.slice().reverse()].find((n) => outlinesOf(n).length) ?? {});
+  const rings = claimed.map((n) => shapes.get(n)).filter(Boolean);
+  if (!rings.length) { continue; }
 
   const xy = project(p.node.lat, p.node.lon);
-  if (inside(xy, rings)) { continue; }
+  if (rings.some((r) => inside(xy, r))) { continue; }
 
-  const offBy = distanceToRings(xy, rings) * KM_PER_UNIT;
+  // Nearest of the shapes it claims, so the message names the one it missed by
+  // least rather than an arbitrary member of the list.
+  let offBy = Infinity;
+  let missed = claimed[0];
+  rings.forEach((r, i) => {
+    const d = distanceToRings(xy, r) * KM_PER_UNIT;
+    if (d < offBy) { offBy = d; missed = claimed[i]; }
+  });
   if (offBy <= SIMPLIFY_SLACK_KM) { continue; }
 
   // Naming the shape it actually landed in turns "wrong" into "fix it to this".
@@ -221,9 +256,9 @@ for (const p of points) {
 
   const where = `${p.node.lat}, ${p.node.lon}`;
   if (offBy > OUTSIDE_FAIL_KM) {
-    fail(`${p.label}: ${where} is ${offBy.toFixed(1)} km outside ${owner.outline}${landedIn}`);
+    fail(`${p.label}: ${where} is ${offBy.toFixed(1)} km outside ${missed}${landedIn}`);
   } else {
-    warn(`${p.label}: ${where} sits ${offBy.toFixed(1)} km outside ${owner.outline} — ` +
+    warn(`${p.label}: ${where} sits ${offBy.toFixed(1)} km outside ${missed} — ` +
          `close enough to be the simplified outline, but worth a look`);
   }
 }

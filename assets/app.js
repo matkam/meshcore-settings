@@ -134,6 +134,20 @@ window.RegionData.ready(function (DATA) {
     byCode[e.code] = e;
   });
 
+  // Retired codes resolve to wherever the place went, so a link shared before a
+  // rename still restores the right picks and typing the old code still finds
+  // the place. Real codes win; a legacy entry only fills a gap. They are search
+  // terms rather than `aliases` on purpose — aliases are printed as the row's
+  // description, and "Oakland, Berkeley, Emeryville, oak" helps nobody read it.
+  // Selecting rewrites the hash, so the old code doesn't persist in the URL.
+  var legacy = (DATA.regions && DATA.regions.legacy) || {};
+  Object.keys(legacy).forEach(function (old) {
+    var target = byCode[legacy[old]];
+    if (!target) { return; }
+    if (!byCode[old]) { byCode[old] = target; }
+    target.haystack += " " + old;
+  });
+
   /* ---------- selection state ---------- */
 
   var current = null;

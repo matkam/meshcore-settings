@@ -19,11 +19,22 @@ await page.goto(SITE, { waitUntil: "networkidle" });
 check("map rendered", await page.isVisible("#map-host .map-svg"));
 check("58 county paths", (await page.$$eval(".map-county", (e) => e.length)) === 58,
   await page.$$eval(".map-county", (e) => e.length));
-check("162 area dots", (await page.$$eval(".map-dot", (e) => e.length)) === 162,
+check("161 area dots", (await page.$$eval(".map-dot", (e) => e.length)) === 161,
   await page.$$eval(".map-dot", (e) => e.length));
-check("8 region labels", (await page.$$eval(".map-label", (e) => e.length)) === 8);
-check("every county path is wired to a place",
-  (await page.$$eval(".map-county", (e) => e.filter((p) => p.dataset.place).length)) === 58);
+check("13 region labels", (await page.$$eval(".map-label", (e) => e.length)) === 13,
+  await page.$$eval(".map-label", (e) => e.length));
+
+// A shape goes to the deepest place that wholly contains it: a cluster where one
+// does, the region where two of its clusters split it — Placer is Gold Country
+// and Tahoe, but it is all Sierra Nevada. Six counties are split across two
+// regions (the Mojave takes part of Kern, LA and San Bernardino; the low desert
+// part of Riverside; Ventura splits at the Conejo grade), so nobody claims those
+// and they draw as background with the dots inside carrying the meaning.
+check("52 county paths are wired to a place",
+  (await page.$$eval(".map-county", (e) => e.filter((p) => p.dataset.place).length)) === 52,
+  await page.$$eval(".map-county", (e) => e.filter((p) => p.dataset.place).length));
+check("and the 6 split across two regions are left as background",
+  (await page.$$eval(".map-county", (e) => e.filter((p) => !p.dataset.place).length)) === 6);
 
 // --- the position marker is not drawn until asked for
 check("position marker hidden at rest",
@@ -60,15 +71,15 @@ async function pointFor(code) {
 // --- hovering a dot
 {
   await mapInView();
-  const p = await pointFor("prb");
+  const p = await pointFor("pasorobles");
   await page.mouse.move(p.x, p.y);
   await page.waitForSelector(".map-tip:not([hidden])", { timeout: 3000 });
   const tip = await page.textContent(".map-tip");
-  check("hovering a dot names the area", /North County/.test(tip), tip);
-  check("hover tooltip names county and region",
-    /San Luis Obispo County/.test(tip) && /Central Coast/.test(tip), tip);
+  check("hovering a dot names the area", /Paso Robles \/ Atascadero/.test(tip), tip);
+  check("hover tooltip names the area and region",
+    /SLO County/.test(tip) && /Central Coast/.test(tip), tip);
   check("hovered dot is marked",
-    await page.$eval('.map-dot[data-place="prb"]', (d) => d.classList.contains("is-hover")));
+    await page.$eval('.map-dot[data-place="pasorobles"]', (d) => d.classList.contains("is-hover")));
   check("cursor becomes a pointer over a target",
     await page.$eval(".map-svg", (s) => s.classList.contains("is-pointing")));
 }
@@ -76,33 +87,33 @@ async function pointFor(code) {
 // --- clicking a dot selects that area
 {
   await mapInView();
-  const p = await pointFor("prb");
+  const p = await pointFor("pasorobles");
   await page.mouse.click(p.x, p.y);
   await page.waitForSelector("#output-panel:not([hidden])", { timeout: 3000 });
-  check("clicking a dot selects the area", await isTicked(page, "prb"),
+  check("clicking a dot selects the area", await isTicked(page, "pasorobles"),
     JSON.stringify(await page.$$eval(".picker input:checked", (n) => n.map((x) => x.dataset.code))));
   check("clicking a dot generates the commands",
-    /region def west ca cc slo prb/.test(await page.textContent("#commands")));
+    /region def west ca centralcoast slocounty pasorobles/.test(await page.textContent("#commands")));
   check("selected dot is marked on",
-    await page.$eval('.map-dot[data-place="prb"]', (d) => d.classList.contains("is-on")));
-  check("selected area's county is marked on",
-    await page.$eval('.map-county[data-place="slo"]', (c) => c.classList.contains("is-on")));
+    await page.$eval('.map-dot[data-place="pasorobles"]', (d) => d.classList.contains("is-on")));
+  check("selected area's own outline is marked on",
+    await page.$eval('.map-county[data-place="slocounty"]', (c) => c.classList.contains("is-on")));
   check("selected area's region is washed in",
-    await page.$eval('.map-county[data-place="mry"]', (c) => c.classList.contains("is-in-region")));
-  check("a county outside the region is not washed in",
-    await page.$eval('.map-county[data-place="krn"]', (c) => !c.classList.contains("is-in-region")));
+    await page.$eval('.map-county[data-place="sbcounty"]', (c) => c.classList.contains("is-in-region")));
+  check("a shape outside the region is not washed in",
+    await page.$eval('.map-county[data-place="eastbay"]', (c) => !c.classList.contains("is-in-region")));
 }
 
 // --- a selection made elsewhere is reflected on the map
 {
   await clearPicks(page);
-  await tick(page, "sfb");
+  await tick(page, "bayarea");
   check("selecting a region elsewhere washes it in on the map",
-    await page.$eval('.map-county[data-place="ala"]', (c) => c.classList.contains("is-in-region")));
+    await page.$eval('.map-county[data-place="eastbay"]', (c) => c.classList.contains("is-in-region")));
   check("the old selection is cleared",
-    await page.$eval('.map-dot[data-place="prb"]', (d) => !d.classList.contains("is-on")));
+    await page.$eval('.map-dot[data-place="pasorobles"]', (d) => !d.classList.contains("is-on")));
   check("that region's label lights up",
-    await page.$eval('.map-label[data-place="sfb"]', (t) => t.classList.contains("is-on")));
+    await page.$eval('.map-label[data-place="bayarea"]', (t) => t.classList.contains("is-on")));
 }
 
 // --- searching also drives the map
@@ -113,18 +124,18 @@ async function pointFor(code) {
   await page.click("#results li");
   await page.waitForTimeout(120);
   check("search selection is reflected on the map",
-    await page.$eval('.map-dot[data-place="prb"]', (d) => d.classList.contains("is-on")));
+    await page.$eval('.map-dot[data-place="pasorobles"]', (d) => d.classList.contains("is-on")));
 }
 
 // --- clicking a region label
 {
   await clickPoint(() => {
-    const r = document.querySelector('.map-label[data-place="sjv"]').getBoundingClientRect();
+    const r = document.querySelector('.map-label[data-place="sanjoaquinvalley"]').getBoundingClientRect();
     return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
   }, "region label");
   const afterLabel = await page.$$eval(".picker input:checked", (n) => n.map((x) => x.dataset.code));
   check("clicking a region label selects just that region",
-    JSON.stringify(afterLabel) === JSON.stringify(["sjv"]), JSON.stringify(afterLabel));
+    JSON.stringify(afterLabel) === JSON.stringify(["sanjoaquinvalley"]), JSON.stringify(afterLabel));
 }
 
 // --- clicking a county away from any dot
@@ -158,9 +169,9 @@ async function pointFor(code) {
   await page.mouse.click(spot.x, spot.y);
   await page.waitForTimeout(150);
   const county = await isTicked(page, spot.county);
-  check("clicking open county ground selects that county", county,
+  check("clicking open ground selects the place that claims it", county,
     JSON.stringify(await page.$$eval(".picker input:checked", (n) => n.map((x) => x.dataset.code))));
-  check("county click leaves no area ticked",
+  check("that click leaves no local area ticked",
     (await page.$$eval(".pick-row.lvl-2 input:checked", (n) => n.length)) === 0);
 }
 
@@ -172,7 +183,7 @@ async function pointFor(code) {
     await page.$eval(".map-mark", (g) => getComputedStyle(g).display !== "none"));
   const near = await page.evaluate(() => {
     const m = document.querySelector(".map-mark-dot").getBoundingClientRect();
-    const d = document.querySelector('.map-dot[data-place="prb"]').getBoundingClientRect();
+    const d = document.querySelector('.map-dot[data-place="pasorobles"]').getBoundingClientRect();
     return Math.hypot(m.x - d.x, m.y - d.y);
   });
   check("marker lands on the matching area's dot", near < 6, near.toFixed(1) + " px away");
@@ -219,6 +230,15 @@ async function pointFor(code) {
         return !!(e && e.classList && e.classList.contains("map-county"));
       }, [x, y]);
       if (!onLand) { continue; }
+      // Six counties are split across two regions, so no place wholly contains
+      // them and none claims their shape. They draw as background and stay
+      // inert on purpose — the dots inside them carry the meaning. Only claimed
+      // ground is required to respond.
+      const claimed = await page.evaluate(([x, y]) => {
+        const e = document.elementFromPoint(x, y);
+        return !!(e && e.dataset && e.dataset.place);
+      }, [x, y]);
+      if (!claimed) { continue; }
       land++;
       await page.mouse.move(x, y);
       const st = await page.evaluate(() => ({
@@ -229,8 +249,8 @@ async function pointFor(code) {
       if (st.c && !st.d) { countyOnly++; }
     }
   }
-  check("every point over land highlights a county", lit === land, `${lit}/${land}`);
-  check("a good share of land still selects the county rather than a dot",
+  check("every point over claimed land highlights its place", lit === land, `${lit}/${land}`);
+  check("a good share of land still selects the place rather than a dot",
     countyOnly / land > 0.35, `${Math.round((countyOnly / land) * 100)}%`);
 }
 

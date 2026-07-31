@@ -72,6 +72,15 @@
       });
     })(regions.places, [], 0);
 
+    // Codes this file used to use, resolved to wherever the place went, so a
+    // link somebody saved before a rename still opens the right thing. Real
+    // codes always win: a legacy entry can only fill a gap, never shadow.
+    var legacy = regions.legacy || {};
+    Object.keys(legacy).forEach(function (old) {
+      var node = byCode[legacy[old]];
+      if (node && !byCode[old]) { byCode[old] = node; }
+    });
+
     var levels = regions.levels || [];
     var limits = regions.limits || {};
 

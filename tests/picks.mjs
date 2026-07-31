@@ -28,59 +28,60 @@ async function only(...codes) {
 
 /* ---------- one of each level ---------- */
 
-await only("cc");
+await only("centralcoast");
 check("a region alone gives a region chain",
-  (await defs())[0] === "region def west ca cc", await cmds());
+  (await defs())[0] === "region def west ca centralcoast", await cmds());
 check("nothing is generated before anything is picked", true);
 
-await tick(page, "slo");
-check("adding a county deepens the chain",
-  (await defs())[0] === "region def west ca cc slo", await cmds());
+await tick(page, "slocounty");
+check("adding an area deepens the chain",
+  (await defs())[0] === "region def west ca centralcoast slocounty", await cmds());
 
-await tick(page, "prb");
-check("adding an area deepens it again",
-  (await defs())[0] === "region def west ca cc slo prb", await cmds());
+await tick(page, "pasorobles");
+check("adding a local area deepens it again",
+  (await defs())[0] === "region def west ca centralcoast slocounty pasorobles", await cmds());
 
 /* ---------- several at the deepest level ---------- */
 
-await tick(page, "slc");
-check("two areas share their ancestry on one line",
-  (await defs())[0] === "region def west ca cc slo prb|slo slc", await cmds());
+await tick(page, "slocity");
+check("two local areas share their ancestry on one line",
+  (await defs())[0] === "region def west ca centralcoast slocounty pasorobles|slocounty slocity", await cmds());
 check("one def line, not two", (await defs()).length === 1, JSON.stringify(await defs()));
 
 const verifyText = await page.textContent("#verify-block");
 check("both leaves are verified",
-  verifyText.includes("region get prb") && verifyText.includes("region get slc"), verifyText);
+  verifyText.includes("region get pasorobles") && verifyText.includes("region get slocity"), verifyText);
 check("carrying several is explained where they are picked",
   /Carrying 2 places/.test(await page.textContent("#pick-note")),
   await page.textContent("#pick-note"));
 
-/* ---------- across a county, and across a region ---------- */
+/* ---------- across an area, and across a region ---------- */
 
-await only("cc", "sfb", "slo", "ala", "prb", "oak");
-check("counties from every ticked region are shown", (await rows(1)) > 12,
+await only("centralcoast", "bayarea", "slocounty", "eastbay", "pasorobles", "oakland");
+check("areas from every ticked region are shown", (await rows(1)) > 10,
   String(await rows(1)));
-check("areas from every ticked county are shown",
-  (await page.$$eval('.picker input[data-code="oak"]', (n) => n.length)) === 1);
+check("local areas from every ticked area are shown",
+  (await page.$$eval('.picker input[data-code="oakland"]', (n) => n.length)) === 1);
 {
   const line = (await defs())[0];
-  check("a cross-county pick jumps back to the shared region",
-    /\|ca /.test(line) && line.includes("prb") && line.includes("oak"), line);
+  check("a cross-region pick jumps back to the shared root",
+    /\|ca /.test(line) && line.includes("pasorobles") && line.includes("oakland"), line);
   check("still one line", (await defs()).length === 1, JSON.stringify(await defs()));
 }
 
 /* ---------- the deepest level with anything ticked is what counts ---------- */
 
-await untick(page, "prb", "oak");
-check("unticking the areas falls back to the counties",
-  (await defs()).length === 1 && (await defs())[0].includes("slo") && (await defs())[0].includes("ala") &&
-  !(await cmds()).includes("prb"), await cmds());
+await untick(page, "pasorobles", "oakland");
+check("unticking the local areas falls back to the areas",
+  (await defs()).length === 1 && (await defs())[0].includes("slocounty") &&
+  (await defs())[0].includes("eastbay") &&
+  !(await cmds()).includes("pasorobles"), await cmds());
 
-await untick(page, "slo", "ala");
+await untick(page, "slocounty", "eastbay");
 // Order follows the option order, which is the order they appear in the data
-// file — sfb before cc — not the order they were clicked.
-check("unticking the counties falls back to the regions",
-  (await defs())[0] === "region def west ca sfb|ca cc", (await defs())[0]);
+// file — bayarea before centralcoast — not the order they were clicked.
+check("unticking the areas falls back to the regions",
+  (await defs())[0] === "region def west ca bayarea|ca centralcoast", (await defs())[0]);
 
 await clearPicks(page);
 check("clearing everything hides the output", await page.isHidden("#output-panel"));
@@ -116,7 +117,7 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
 /* ---------- pre-1.16, where each name is placed by hand ---------- */
 
 {
-  await only("cc", "sfb", "slo", "ala", "prb", "oak");
+  await only("centralcoast", "bayarea", "slocounty", "eastbay", "pasorobles", "oakland");
   await page.selectOption("#opt-fw", "110");
   await page.waitForTimeout(150);
   const puts = (await lines()).filter((l) => l.startsWith("region put"));
@@ -125,7 +126,7 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
     puts.filter((l) => l === "region put west").length === 1 &&
     puts.filter((l) => l === "region put ca west").length === 1, JSON.stringify(puts));
   check("each pick's own ancestry is placed",
-    puts.includes("region put prb slo") && puts.includes("region put oak ala"), JSON.stringify(puts));
+    puts.includes("region put pasorobles slocounty") && puts.includes("region put oakland eastbay"), JSON.stringify(puts));
   check("every placed region is flood-allowed",
     (await lines()).filter((l) => l.startsWith("region allowf")).length === puts.length,
     JSON.stringify(await lines()));
@@ -137,10 +138,11 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
 {
   await page.goto(SITE + "#prb", { waitUntil: "networkidle" });
   check("a single deep link still works",
-    (await defs())[0] === "region def west ca cc slo prb", await cmds());
-  await tick(page, "slc");
+    (await defs())[0] === "region def west ca centralcoast slocounty pasorobles", await cmds());
+  await tick(page, "slocity");
   check("picking several writes them all to the hash",
-    /^#(prb,slc|cc,slo,prb,slc)$/.test(await page.evaluate(() => location.hash)),
+    /^#(pasorobles,slocity|centralcoast,slocounty,pasorobles,slocity)$/
+      .test(await page.evaluate(() => location.hash)),
     await page.evaluate(() => location.hash));
 }
 
@@ -151,7 +153,7 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
   await page.click("#edit-cmds");
   await page.fill("#commands-edit", "set dutycycle 7\nregion save");
   await page.waitForTimeout(120);
-  await tick(page, "slc");
+  await tick(page, "slocity");
   check("changing the picks does not overwrite an edit",
     (await page.inputValue("#commands-edit")).includes("set dutycycle 7"),
     await page.inputValue("#commands-edit"));
@@ -161,13 +163,14 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
 
 // A link to a bridging site has to restore the whole set, not just its first tag.
 {
+  // Both are retired codes, so this covers the legacy map as well as multi-pick.
   await page.goto(SITE + "#prb,oak", { waitUntil: "networkidle" });
   const line = (await defs())[0];
   check("a multi deep link restores every pick",
-    line.includes("prb") && line.includes("oak") && (await defs()).length === 1, line);
+    line.includes("pasorobles") && line.includes("oakland") && (await defs()).length === 1, line);
   check("ticking a parent is what reveals its children",
     (await rows(1)) > 0 && (await rows(2)) > 0,
-    `${await rows(1)} counties, ${await rows(2)} areas`);
+    `${await rows(1)} areas, ${await rows(2)} local areas`);
   check("and ticks the levels above them, so the rows are visible",
     (await page.$$eval(".pick-row.lvl-0 input:checked", (n) => n.length)) === 2,
     JSON.stringify(await page.$$eval(".picker input:checked", (n) => n.map((x) => x.dataset.code))));
@@ -180,9 +183,13 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
   check("the map marks every picked area",
     (await page.$$eval(".map-dot.is-on", (n) => n.length)) === 2,
     String(await page.$$eval(".map-dot.is-on", (n) => n.length)));
-  check("and every county they sit in",
-    (await page.$$eval(".map-county.is-on", (n) => n.length)) === 2,
-    String(await page.$$eval(".map-county.is-on", (n) => n.length)));
+  // A place may claim several shapes — the East Bay is two counties — so this
+  // is about which places are lit, not how many paths that comes to.
+  check("and every outline the areas above them claim",
+    (await page.$eval('.map-county[data-place="slocounty"]', (c) => c.classList.contains("is-on"))) &&
+    (await page.$$eval('.map-county[data-place="eastbay"]',
+      (ns) => ns.length === 2 && ns.every((c) => c.classList.contains("is-on")))),
+    JSON.stringify(await page.$$eval(".map-county.is-on", (n) => n.map((c) => c.dataset.place))));
 }
 
 /* ---------- the node's own region table has a ceiling ----------
@@ -196,13 +203,14 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
     /5 of 32 region names/.test(await page.textContent("#line-note")),
     await page.textContent("#line-note"));
 
-  for (const code of ["nco", "nor", "sv", "sn", "sfb", "soc", "cc", "sjv"]) {
+  for (const code of ["northcoast", "shastacascade", "sacramentovalley", "sierranevada",
+                      "bayarea", "centralcoast", "sanjoaquinvalley", "losangeles"]) {
     await page.check(`.picker input[data-code="${code}"]`);
     await page.waitForTimeout(35);
   }
-  const counties = await page.$$eval(".pick-row.lvl-1 input",
+  const inner = await page.$$eval(".pick-row.lvl-1 input",
     (n) => n.slice(0, 26).map((x) => x.dataset.code));
-  for (const code of counties) {
+  for (const code of inner) {
     await page.check(`.picker input[data-code="${code}"]`);
     await page.waitForTimeout(20);
   }
@@ -231,13 +239,13 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
   // taller picker can bring it into view without scrolling at all, and
   // scrollTop > 0 never proved the row was among what the scroll revealed.
   check("a pick made by search is brought into view",
-    await page.$eval('.pick-row:has(input[data-code="bbl"])', (r) => {
+    await page.$eval('.pick-row:has(input[data-code="bigbear"])', (r) => {
       const row = r.getBoundingClientRect();
       const box = r.closest(".picker").getBoundingClientRect();
       return row.top >= box.top - 1 && row.bottom <= box.bottom + 1;
     }));
   check("and ticks its ancestors so the row is reachable",
-    (await picks(page)).join(",") === "soc,sbd,bbl", (await picks(page)).join(","));
+    (await picks(page)).join(",") === "ie,bigbear", (await picks(page)).join(","));
   check("Clear appears once something is picked", await page.isVisible("#clear-picks"));
 
   await page.click("#clear-picks");
