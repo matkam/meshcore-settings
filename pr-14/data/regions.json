@@ -35,6 +35,13 @@
       "plural": "local areas"
     }
   ],
+  "tags": [
+    {
+      "code": "socal",
+      "name": "Southern California",
+      "blurb": "Ventura and the Mojave south — LA, Orange County, the Inland Empire, the deserts and San Diego. SoCal Mesh treats this as one community; the regions inside it are separate because they cannot hear each other."
+    }
+  ],
   "places": [
     {
       "code": "northcoast",
@@ -999,15 +1006,15 @@
       ]
     },
     {
-      "code": "sanjoaquinvalley",
-      "name": "San Joaquin Valley",
-      "blurb": "Stockton down to Bakersfield.",
-      "short": "SJ VALLEY",
+      "code": "centralvalley",
+      "name": "Central Valley",
+      "blurb": "Stockton down to Bakersfield — the stretch Central Valley Mesh covers.",
+      "short": "C VALLEY",
       "nudge": [10, 22],
       "aliases": ["Kern County"],
       "children": [
         {
-          "code": "sjvnorth",
+          "code": "cvnorth",
           "name": "North Valley",
           "blurb": "Stockton, Modesto and the northern valley floor.",
           "outline": ["San Joaquin", "Stanislaus"],
@@ -1056,7 +1063,7 @@
           ]
         },
         {
-          "code": "sjvmid",
+          "code": "cvmid",
           "name": "Mid Valley",
           "blurb": "Merced through Fresno.",
           "outline": ["Fresno", "Madera", "Merced"],
@@ -1121,7 +1128,7 @@
           ]
         },
         {
-          "code": "sjvsouth",
+          "code": "cvsouth",
           "name": "South Valley",
           "blurb": "Hanford down to Bakersfield.",
           "outline": ["Kings", "Tulare"],
@@ -1202,6 +1209,7 @@
       "short": "LA",
       "nudge": [-14, 14],
       "aliases": ["Los Angeles County"],
+      "tags": ["socal"],
       "children": [
         {
           "code": "dtla",
@@ -1316,6 +1324,7 @@
       "outline": ["Orange"],
       "nudge": [6, 12],
       "aliases": ["Orange County"],
+      "tags": ["socal"],
       "children": [
         {
           "code": "anaheim",
@@ -1358,6 +1367,7 @@
       "short": "IE",
       "nudge": [6, -8],
       "aliases": ["Riverside County"],
+      "tags": ["socal"],
       "children": [
         {
           "code": "ontario",
@@ -1433,6 +1443,7 @@
       "outline": ["Imperial"],
       "nudge": [10, 14],
       "aliases": ["Imperial County"],
+      "tags": ["socal"],
       "children": [
         {
           "code": "palmsprings",
@@ -1491,6 +1502,7 @@
       "short": "MOJAVE",
       "nudge": [0, -22],
       "aliases": ["San Bernardino County"],
+      "tags": ["socal"],
       "children": [
         {
           "code": "lancaster",
@@ -1557,6 +1569,7 @@
       "outline": ["San Diego"],
       "nudge": [0, 56],
       "aliases": ["San Diego County"],
+      "tags": ["socal"],
       "children": [
         {
           "code": "sdmetro",

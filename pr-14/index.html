@@ -302,6 +302,15 @@
         up what <code>sjv</code> meant.
       </li>
       <li>
+        <strong>Some scopes aren't levels.</strong> A <em>tag</em> is a region name carried
+        alongside the chain rather than inside it, for a scope that cuts across the tree.
+        <code>socal</code> reaches six regions that have no common parent and shouldn't be
+        given one — they sit in four basins that can't hear each other. It shows up as a
+        second chain joined onto the same line:
+        <code>region def west ca losangeles dtla|ca socal</code>. Only the places that opt
+        in carry it, so it costs a table entry on those nodes and nobody else's.
+      </li>
+      <li>
         <strong>Region names are one flat namespace.</strong> Two different places using the same
         code will merge on any repeater that carries both. The codes on this site are checked
         for uniqueness across all of California.
