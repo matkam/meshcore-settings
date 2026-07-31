@@ -199,8 +199,15 @@ pre:focus-visible {
    selected from. Scrolls rather than growing without limit once a few are open —
    expand all moves this list, not the page. */
 .picker {
-  max-height: 420px;
+  /* Taller than a picker alone would need, because it is also how the scheme is
+     read: 420px showed about fourteen rows, which is not many when a county has
+     eight areas under it. Scales with the window rather than being a fixed
+     number, with a floor so a short window still gets a usable list and a
+     ceiling so a tall one does not turn the step into a wall of tags. */
+  max-height: clamp(320px, 70vh, 720px);
   overflow-y: auto;
+  /* And draggable past that, for anyone reading the whole tree. */
+  resize: vertical;
   padding: 6px;
   background: var(--bg);
   border: 1px solid var(--line);
@@ -337,6 +344,14 @@ pre:focus-visible {
    max-content width, which puts the title on a line of its own the moment a name
    is long. Two explicit columns cannot do that. */
 @media (max-width: 560px) {
+  /* A phone row is two lines, so 70vh is most of the screen for eight regions
+     and pushes the map out of sight. Lower ceiling here, and no drag handle —
+     it is not a gesture touch offers. */
+  .picker {
+    max-height: clamp(300px, 55vh, 460px);
+    resize: none;
+  }
+
   .pick-main {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
