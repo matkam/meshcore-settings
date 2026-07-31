@@ -34,7 +34,7 @@ pass &= check("north county SLO commands",
    "set path.hash.mode 1",
    "set flood.advert.interval 24",
    "set loop.detect moderate",
-   "region def west ca centralcoast slocounty pasorobles",
+   "region def west ca centralcoast slo slonorth",
    "region save"].join("\n"));
 
 console.log("chain:", (await page.$$eval("#chain .tok", (n) => n.map((x) => x.textContent))).join(" > "));
@@ -92,7 +92,7 @@ console.log("deep-link search box:", JSON.stringify(await page.inputValue("#sear
 for (const [q, want] of [["Big Bear", "bigbear"], ["Humboldt", "eureka"], ["Truckee", "truckee"],
                          ["slo", "slocity"], ["Santa Cruz", "santacruz"], ["Bakersfield", "bakersfield"],
                          ["Yosemite", "mariposa"], ["Chula Vista", "chulavista"],
-                         ["Alameda County", "eastbay"], ["Paso Robles", "pasorobles"]]) {
+                         ["Alameda County", "eastbay"], ["Paso Robles", "slonorth"]]) {
   await page.fill("#search", "");
   await page.fill("#search", q);
   await page.waitForTimeout(60);
@@ -109,13 +109,13 @@ await page.waitForTimeout(60);
 console.log("no-match:", (await page.textContent("#results")).trim());
 
 // --- 8. copy button
-await page.goto(SITE + "#pasorobles", { waitUntil: "networkidle" });
+await page.goto(SITE + "#slonorth", { waitUntil: "networkidle" });
 await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
 await page.click("#copy");
 const clip = await page.evaluate(() => navigator.clipboard.readText());
 pass &= check("clipboard", clip.trim(),
   ["set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
-   "region def west ca centralcoast slocounty pasorobles", "region save"].join("\n"));
+   "region def west ca centralcoast slo slonorth", "region save"].join("\n"));
 
 // --- 9. screenshots
 await page.screenshot({ path: shot("shot-desktop.png"), fullPage: true });

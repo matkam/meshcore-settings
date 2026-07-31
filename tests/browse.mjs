@@ -189,22 +189,22 @@ await tick(page, "centralcoast");
 check("ticking a place still opens it", (await isOpen("centralcoast")) === "true");
 check("which is what makes the next level reachable", (await rowsAt(1)) === 7, await rowsAt(1));
 
-await tick(page, "slocounty", "pasorobles");
+await tick(page, "slo", "slonorth");
 check("the chain builds as before",
-  (await cmds()).includes("region def west ca centralcoast slocounty pasorobles"), await cmds());
+  (await cmds()).includes("region def west ca centralcoast slo slonorth"), await cmds());
 
 // The name sits inside a wrapper now, so the rule that marks a chosen row is
 // two levels down from the checkbox rather than beside it. Easy to break by
 // restructuring the row and never notice by eye.
 const weightOf = (code) => page.$eval(`.pick-row:has(input[data-code="${code}"]) .pick-name`,
   (e) => getComputedStyle(e).fontWeight);
-check("a ticked row reads as chosen", (await weightOf("pasorobles")) === "600", await weightOf("pasorobles"));
+check("a ticked row reads as chosen", (await weightOf("slonorth")) === "600", await weightOf("slonorth"));
 check("and an unticked one does not", (await weightOf("bigsur")) === "400", await weightOf("bigsur"));
 
-await untick(page, "pasorobles");
-check("unticking does not close anything", (await isOpen("slocounty")) === "true");
+await untick(page, "slonorth");
+check("unticking does not close anything", (await isOpen("slo")) === "true");
 check("but it does drop the pick",
-  !(await picks(page)).includes("pasorobles"), JSON.stringify(await picks(page)));
+  !(await picks(page)).includes("slonorth"), JSON.stringify(await picks(page)));
 
 /* ---------- browsing never disturbs a selection ---------- */
 
@@ -217,7 +217,7 @@ await page.waitForTimeout(300);
 check("and collapsing everything leaves them untouched too",
   (await cmds()) === before, await cmds());
 check("including what is ticked",
-  JSON.stringify(await selected()) === JSON.stringify(["centralcoast", "slocounty"]),
+  JSON.stringify(await selected()) === JSON.stringify(["centralcoast", "slo"]),
   JSON.stringify(await selected()));
 
 // Worth stating outright: only open rows are rendered, so a collapsed tick is
@@ -229,17 +229,17 @@ check("a ticked row inside a closed place leaves the markup, not the selection",
 await page.click("#expand-picks");
 await page.waitForTimeout(500);
 check("and comes back ticked when it is opened again",
-  JSON.stringify(await picks(page)) === JSON.stringify(["centralcoast", "slocounty"]),
+  JSON.stringify(await picks(page)) === JSON.stringify(["centralcoast", "slo"]),
   JSON.stringify(await picks(page)));
 
 /* ---------- a pick from elsewhere opens its way in ---------- */
 
-await page.goto(SITE + "#pasorobles", { waitUntil: "networkidle" });
+await page.goto(SITE + "#slonorth", { waitUntil: "networkidle" });
 check("a deep link opens the tree down to what it selected",
-  (await isOpen("centralcoast")) === "true" && (await isOpen("slocounty")) === "true",
-  `centralcoast=${await isOpen("centralcoast")} slocounty=${await isOpen("slocounty")}`);
+  (await isOpen("centralcoast")) === "true" && (await isOpen("slo")) === "true",
+  `centralcoast=${await isOpen("centralcoast")} slo=${await isOpen("slo")}`);
 check("so the selected row is actually on screen",
-  await page.$eval('.pick-row:has(input[data-code="pasorobles"])', (r) => r.checkVisibility()));
+  await page.$eval('.pick-row:has(input[data-code="slonorth"])', (r) => r.checkVisibility()));
 
 await page.fill("#search", "Bakersfield");
 await page.waitForSelector("#results li[role=option]");

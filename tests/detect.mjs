@@ -30,7 +30,7 @@ async function scenario({ lat, lon, ver }) {
     window.__ver = ver;
   }, { lat, lon, ver });
 
-  await page.goto(SITE + "#pasorobles", { waitUntil: "networkidle" });
+  await page.goto(SITE + "#slonorth", { waitUntil: "networkidle" });
   await page.click("#btn-usb");
   await page.waitForSelector("#push-session:not([hidden])", { timeout: 10000 });
 

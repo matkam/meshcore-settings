@@ -10,8 +10,8 @@ Everything lives in [`data/regions.yaml`](data/regions.yaml). Find the area
 yours belongs to and add an entry to its `children` list:
 
 ```yaml
-          - code: pasorobles
-            name: Paso Robles / Atascadero
+          - code: slonorth
+            name: North County
             county: San Luis Obispo
             lat: 35.627
             lon: -120.691
@@ -22,7 +22,7 @@ yours belongs to and add an entry to its `children` list:
   across the whole file. 30 is the firmware's ceiling (`RegionEntry.name` is
   `char[31]`), and length costs nothing on the air: a scoped packet carries a
   16-bit transport code derived from the name, never the name itself. So prefer
-  the word people say over an abbreviation they have to look up — `pasorobles`,
+  the word people say over an abbreviation they have to look up — `slonorth`,
   not `prb`. Established vernacular is the exception worth making: `sf`, `oc`,
   `ie`, `sfv` and `dtla` are what operators already type. Avoid two-letter codes
   that collide with a US state abbreviation, since the namespace spans states —

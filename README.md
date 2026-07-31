@@ -63,8 +63,8 @@ firmware it's converted to the nearest airtime factor, since `set af` only offer
 1/(1+af) steps (100% → `af 0`, 50% → `af 1`, 25% → `af 3`). Check your version on
 the node with `ver`.
 
-Every area has a shareable deep link — [`#pasorobles`](https://matkam.github.io/meshcore-settings/#pasorobles)
-opens the page with Paso Robles / Atascadero already selected, which is handy for
+Every area has a shareable deep link — [`#slonorth`](https://matkam.github.io/meshcore-settings/#slonorth)
+opens the page with North County already selected, which is handy for
 pasting into a group chat when you're helping someone bring a node up.
 
 ## The map
@@ -220,7 +220,7 @@ overflow starts a fresh command from the root — and on pre-1.16 firmware, wher
 there is no `region def`, it falls back to one `region put` per name with shared
 ancestry placed once.
 
-A link carries every pick: [`#pasorobles,slocity`](https://matkam.github.io/meshcore-settings/#pasorobles,slocity)
+A link carries every pick: [`#slonorth,slocity`](https://matkam.github.io/meshcore-settings/#slonorth,slocity)
 restores the whole set.
 
 ### Two limits worth knowing
@@ -250,8 +250,8 @@ A chain of names, matching how `region def` is walked — each token becomes a c
 of the one before it:
 
 ```
-west  →  ca  →  centralcoast  →  slocounty        →  pasorobles
-US West  California  Central Coast  SLO County        Paso Robles / Atascadero
+west  →  ca  →  centralcoast  →  slo         →  slonorth
+US West  California  Central Coast  SLO County   North County (Paso Robles, Atascadero)
 ```
 
 California is split into 13 regions covering all 58 counties, with 161 local areas
@@ -286,10 +286,10 @@ On firmware older than 1.16 the same chain is built with `region put <name> [par
 followed by `region allowf <name>` for each level — see
 [Firmware versions](#firmware-versions).
 
-A repeater carries every name in its chain, so scoping a message `pasorobles`
-keeps it around Paso Robles, `slocounty` covers the county, and `west` reaches the
+A repeater carries every name in its chain, so scoping a message `slonorth`
+keeps it in the north county, `slo` covers the county, and `west` reaches the
 whole western mesh. Matching is **per name, not per level** — a repeater that has
-`slocounty` but not `centralcoast` will not forward `centralcoast`-scoped traffic,
+`slo` but not `centralcoast` will not forward `centralcoast`-scoped traffic,
 which is why every node defines the whole chain even though it only sits in one
 spot.
 

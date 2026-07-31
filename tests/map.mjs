@@ -71,15 +71,15 @@ async function pointFor(code) {
 // --- hovering a dot
 {
   await mapInView();
-  const p = await pointFor("pasorobles");
+  const p = await pointFor("slonorth");
   await page.mouse.move(p.x, p.y);
   await page.waitForSelector(".map-tip:not([hidden])", { timeout: 3000 });
   const tip = await page.textContent(".map-tip");
-  check("hovering a dot names the area", /Paso Robles \/ Atascadero/.test(tip), tip);
+  check("hovering a dot names the area", /North County/.test(tip), tip);
   check("hover tooltip names the area and region",
     /SLO County/.test(tip) && /Central Coast/.test(tip), tip);
   check("hovered dot is marked",
-    await page.$eval('.map-dot[data-place="pasorobles"]', (d) => d.classList.contains("is-hover")));
+    await page.$eval('.map-dot[data-place="slonorth"]', (d) => d.classList.contains("is-hover")));
   check("cursor becomes a pointer over a target",
     await page.$eval(".map-svg", (s) => s.classList.contains("is-pointing")));
 }
@@ -87,17 +87,17 @@ async function pointFor(code) {
 // --- clicking a dot selects that area
 {
   await mapInView();
-  const p = await pointFor("pasorobles");
+  const p = await pointFor("slonorth");
   await page.mouse.click(p.x, p.y);
   await page.waitForSelector("#output-panel:not([hidden])", { timeout: 3000 });
-  check("clicking a dot selects the area", await isTicked(page, "pasorobles"),
+  check("clicking a dot selects the area", await isTicked(page, "slonorth"),
     JSON.stringify(await page.$$eval(".picker input:checked", (n) => n.map((x) => x.dataset.code))));
   check("clicking a dot generates the commands",
-    /region def west ca centralcoast slocounty pasorobles/.test(await page.textContent("#commands")));
+    /region def west ca centralcoast slo slonorth/.test(await page.textContent("#commands")));
   check("selected dot is marked on",
-    await page.$eval('.map-dot[data-place="pasorobles"]', (d) => d.classList.contains("is-on")));
+    await page.$eval('.map-dot[data-place="slonorth"]', (d) => d.classList.contains("is-on")));
   check("selected area's own outline is marked on",
-    await page.$eval('.map-county[data-place="slocounty"]', (c) => c.classList.contains("is-on")));
+    await page.$eval('.map-county[data-place="slo"]', (c) => c.classList.contains("is-on")));
   check("selected area's region is washed in",
     await page.$eval('.map-county[data-place="sbcounty"]', (c) => c.classList.contains("is-in-region")));
   check("a shape outside the region is not washed in",
@@ -111,7 +111,7 @@ async function pointFor(code) {
   check("selecting a region elsewhere washes it in on the map",
     await page.$eval('.map-county[data-place="eastbay"]', (c) => c.classList.contains("is-in-region")));
   check("the old selection is cleared",
-    await page.$eval('.map-dot[data-place="pasorobles"]', (d) => !d.classList.contains("is-on")));
+    await page.$eval('.map-dot[data-place="slonorth"]', (d) => !d.classList.contains("is-on")));
   check("that region's label lights up",
     await page.$eval('.map-label[data-place="bayarea"]', (t) => t.classList.contains("is-on")));
 }
@@ -124,7 +124,7 @@ async function pointFor(code) {
   await page.click("#results li");
   await page.waitForTimeout(120);
   check("search selection is reflected on the map",
-    await page.$eval('.map-dot[data-place="pasorobles"]', (d) => d.classList.contains("is-on")));
+    await page.$eval('.map-dot[data-place="slonorth"]', (d) => d.classList.contains("is-on")));
 }
 
 // --- clicking a region label
@@ -183,7 +183,7 @@ async function pointFor(code) {
     await page.$eval(".map-mark", (g) => getComputedStyle(g).display !== "none"));
   const near = await page.evaluate(() => {
     const m = document.querySelector(".map-mark-dot").getBoundingClientRect();
-    const d = document.querySelector('.map-dot[data-place="pasorobles"]').getBoundingClientRect();
+    const d = document.querySelector('.map-dot[data-place="slonorth"]').getBoundingClientRect();
     return Math.hypot(m.x - d.x, m.y - d.y);
   });
   check("marker lands on the matching area's dot", near < 6, near.toFixed(1) + " px away");

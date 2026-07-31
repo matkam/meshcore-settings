@@ -19,7 +19,7 @@ function check(name, ok, detail) {
     Object.defineProperty(navigator, "serial", { get: () => undefined, configurable: true });
     Object.defineProperty(navigator, "bluetooth", { get: () => undefined, configurable: true });
   });
-  await page.goto(SITE + "#pasorobles", { waitUntil: "networkidle" });
+  await page.goto(SITE + "#slonorth", { waitUntil: "networkidle" });
   check("push panel hidden without Web Serial/BLE", await page.isHidden("#push-panel"));
   check("no JS errors (unsupported browser path)", errs.length === 0, errs.join("; "));
   await page.close();
@@ -145,7 +145,7 @@ await page.addInitScript(() => {
   }});
 });
 
-await page.goto(SITE + "#pasorobles", { waitUntil: "networkidle" });
+await page.goto(SITE + "#slonorth", { waitUntil: "networkidle" });
 
 check("push panel visible with Web Serial", await page.isVisible("#push-panel"));
 check("BLE button hidden when unsupported", await page.isHidden("#btn-ble"));
@@ -190,14 +190,14 @@ check("location offered as choices, none marked chosen until clicked",
   (await page.$$eval("#detect-choices button", (bs) => bs.every((b) => b.getAttribute("aria-pressed") === "false"))));
 const locText = await page.textContent("#detect-loc");
 const locChoices = await page.$$eval("#detect-choices button", (bs) => bs.map((b) => b.textContent));
-check("nearest area is Paso Robles / Atascadero",
-  /^Paso Robles \/ Atascadero · [0-9]\.[0-9] km$/.test(locChoices[0] || ""), locChoices.join(" | "));
+check("nearest area is North County",
+  /^North County · [0-9]\.[0-9] km$/.test(locChoices[0] || ""), locChoices.join(" | "));
 console.log("  detect loc:", locText);
 console.log("  detect choices:", locChoices.join(" | "));
 console.log("  detect ver:", await page.textContent("#detect-ver"));
 await page.click("#detect-choices button");
 check("clicking suggestion selects the area",
-  await isTicked(page, "pasorobles"),
+  await isTicked(page, "slonorth"),
   JSON.stringify(await page.$$eval(".picker input:checked", (n) => n.map((x) => x.dataset.code))));
 
 // push, accepting the confirm
@@ -213,7 +213,7 @@ const sentCmds = sim.filter((l) => l.startsWith("cli:")).map((l) => l.slice(4)).
 check("sent exactly the generated commands + verification",
   JSON.stringify(sentCmds) === JSON.stringify([
     "set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
-    "region def west ca centralcoast slocounty pasorobles", "region save", "region get pasorobles"]),
+    "region def west ca centralcoast slo slonorth", "region save", "region get slonorth"]),
   JSON.stringify(sentCmds));
 
 const states = await page.$$eval("#push-progress li", (n) => n.map((x) => x.className));
@@ -225,7 +225,7 @@ await page.screenshot({ path: shot("push-success.png"), fullPage: false, clip: a
 // ---------- 3. failure mid-sequence stops and resumes ----------
 await page.evaluate(() => {
   window.__sim.log.length = 0;
-  window.__sim.replies["region def west ca centralcoast slocounty pasorobles"] = "Err - unknown jump: nope";
+  window.__sim.replies["region def west ca centralcoast slo slonorth"] = "Err - unknown jump: nope";
 });
 page.once("dialog", (d) => d.accept());
 await page.click("#btn-push");
@@ -236,7 +236,7 @@ const afterFail = await page.evaluate(() => window.__sim.log.filter((l) => l.sta
 check("stops at the failing command, sends nothing after",
   JSON.stringify(afterFail) === JSON.stringify([
     "set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
-    "region def west ca centralcoast slocounty pasorobles"]),
+    "region def west ca centralcoast slo slonorth"]),
   JSON.stringify(afterFail));
 
 const failStates = await page.$$eval("#push-progress li", (n) => n.map((x) => x.className));
@@ -251,7 +251,7 @@ await page.screenshot({ path: shot("push-fail.png"), clip: await page.locator("#
 // resume after fixing
 await page.evaluate(() => {
   window.__sim.log.length = 0;
-  delete window.__sim.replies["region def west ca centralcoast slocounty pasorobles"];
+  delete window.__sim.replies["region def west ca centralcoast slo slonorth"];
 });
 await page.click("#btn-push");   // no confirm on resume
 await page.waitForFunction(
@@ -260,7 +260,7 @@ await page.waitForFunction(
 const resumed = await page.evaluate(() => window.__sim.log.filter((l) => l.startsWith("cli:")).map((l) => l.slice(4)).filter((c) => c !== "ver"));
 check("resume restarts at the failed line, not from scratch",
   JSON.stringify(resumed) === JSON.stringify([
-    "region def west ca centralcoast slocounty pasorobles", "region save", "region get pasorobles"]),
+    "region def west ca centralcoast slo slonorth", "region save", "region get slonorth"]),
   JSON.stringify(resumed));
 
 // ---------- 4. changing settings resets progress ----------

@@ -14,7 +14,7 @@ function check(name, ok, detail) {
 const page = await browser.newPage({ viewport: { width: 1000, height: 1200 } });
 const errs = [];
 page.on("pageerror", (e) => errs.push(e.message));
-await page.goto(SITE + "#pasorobles", { waitUntil: "networkidle" });
+await page.goto(SITE + "#slonorth", { waitUntil: "networkidle" });
 await page.evaluate(() => { document.querySelector("details.advanced").open = true; });
 
 const cmds = async () => (await page.textContent("#commands")).trim();
@@ -148,11 +148,11 @@ check("textarea starts from the generated commands",
   (await page.inputValue("#commands-edit")).trim() === (await cmds()));
 check("the button becomes Done", (await page.textContent("#edit-cmds")) === "Done");
 
-await page.fill("#commands-edit", "set dutycycle 50\nregion def west ca centralcoast slocounty pasorobles\nregion save");
+await page.fill("#commands-edit", "set dutycycle 50\nregion def west ca centralcoast slo slonorth\nregion save");
 await page.waitForTimeout(120);
 check("edits become the command list",
   JSON.stringify(await page.evaluate(() => window.SettingsState.get().lines)) ===
-  JSON.stringify(["set dutycycle 50", "region def west ca centralcoast slocounty pasorobles", "region save"]),
+  JSON.stringify(["set dutycycle 50", "region def west ca centralcoast slo slonorth", "region save"]),
   JSON.stringify(await page.evaluate(() => window.SettingsState.get().lines)));
 check("the edit is flagged as such", await page.evaluate(() => window.SettingsState.get().edited) === true);
 check("a note says the two have diverged", await page.isVisible("#edit-note"));
@@ -254,10 +254,10 @@ await page.close();
   p2.on("pageerror", (e) => e2.push(e.message));
   await p2.addInitScript(simInit);
   await p2.addInitScript(() => { window.__pos = { lat: 35.63, lon: -120.69 }; window.__ver = "v1.16.0 (Build: x)"; });
-  await p2.goto(SITE + "#pasorobles", { waitUntil: "networkidle" });
+  await p2.goto(SITE + "#slonorth", { waitUntil: "networkidle" });
 
   await p2.click("#edit-cmds");
-  await p2.fill("#commands-edit", "set dutycycle 33\nregion def west ca centralcoast slocounty pasorobles\nregion save");
+  await p2.fill("#commands-edit", "set dutycycle 33\nregion def west ca centralcoast slo slonorth\nregion save");
   await p2.waitForTimeout(120);
 
   await p2.click("#btn-usb");
@@ -274,7 +274,7 @@ await page.close();
     .filter((l) => l.startsWith("cli:")).map((l) => l.slice(4)).filter((c) => c !== "ver"));
   check("the push sends the edited commands, not the generated ones",
     JSON.stringify(sent) === JSON.stringify([
-      "set dutycycle 33", "region def west ca centralcoast slocounty pasorobles", "region save", "region get pasorobles"]),
+      "set dutycycle 33", "region def west ca centralcoast slo slonorth", "region save", "region get slonorth"]),
     JSON.stringify(sent));
 
   // An emptied list must not be sendable.
