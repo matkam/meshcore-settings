@@ -1,14 +1,22 @@
-/* California MeshCore repeater settings generator. No dependencies. */
-(function () {
+/*
+ * California MeshCore repeater settings generator. No dependencies.
+ *
+ * The whole file runs inside RegionData.ready: the tree is a JSON file the page
+ * fetches, so there is nothing to configure until it arrives. That callback is
+ * also this module's scope — it does the job the usual wrapping IIFE would.
+ *
+ * Nothing below knows what a "county" is. Places nest as deep as the data says,
+ * and level names come from the data too, so a tree with four levels or two
+ * needs no change here.
+ */
+window.RegionData.ready(function (DATA) {
   "use strict";
 
-  var DATA = window.CA_REGIONS;
-  var ROOT = DATA.meta.root;
-  var ROOT_LABELS = DATA.meta.rootLabels || {};
-  var MAX_LINE = DATA.meta.maxLineLength || 160;
+  var ROOT = DATA.root;
+  var MAX_LINE = DATA.maxLineLength;
   // MAX_REGION_ENTRIES in the firmware's RegionMap.h. It is a build-time
   // #ifndef, so a custom build could differ, but 32 is what ships.
-  var MAX_REGIONS = 32;
+  var MAX_REGIONS = DATA.maxRegionNames;
 
   var $ = function (id) { return document.getElementById(id); };
 
@@ -91,27 +99,33 @@
 
   /* ---------- index ---------- */
 
-  // Flat, searchable list of everything selectable, at all three levels.
+  // Flat, searchable list of every place, however deep it sits.
   var index = [];
   var byCode = {};
 
-  DATA.regions.forEach(function (region) {
-    var rEntry = { level: "region", code: region.code, name: region.name,
-                   context: "California region", region: region, terms: [] };
-    index.push(rEntry);
-
-    region.counties.forEach(function (county) {
-      index.push({ level: "county", code: county.code, name: county.name,
-                   context: region.name, region: region, county: county, terms: [] });
-
-      (county.areas || []).forEach(function (area) {
-        index.push({ level: "area", code: area.code, name: area.name,
-                     context: county.name + " · " + region.name,
-                     region: region, county: county, area: area,
-                     terms: (area.cities || []).slice() });
-      });
+  DATA.nodes.forEach(function (node) {
+    index.push({
+      node: node,
+      code: node.code,
+      name: node.name,
+      depth: node.depth,
+      context: contextFor(node),
+      terms: (node.aliases || []).slice()
     });
   });
+
+  // Nearest ancestor first, which is the order that tells two same-named places
+  // apart. A top-level place has no ancestor inside the tree, so it borrows the
+  // last root token: "California region" rather than a blank.
+  function contextFor(node) {
+    if (node.trail.length) {
+      return node.trail.slice().reverse().map(function (code) {
+        return DATA.byCode[code].name;
+      }).join(" · ");
+    }
+    var top = ROOT.length ? ROOT[ROOT.length - 1].name + " " : "";
+    return top + DATA.levelName(node);
+  }
 
   index.forEach(function (e) {
     e.haystack = [e.name, e.code, e.context].concat(e.terms).join(" ").toLowerCase();
@@ -137,16 +151,17 @@
     },
     onChange: function (fn) { settingsListeners.push(fn); },
 
-    // Local areas closest to a position, nearest first, for "where is this
-    // repeater?". Centroids are approximate and areas can sit a few km apart, so
+    // Places closest to a position, nearest first, for "where is this
+    // repeater?". Only places that carry a point are candidates, at whatever
+    // level they sit. The points are approximate and can be a few km apart, so
     // callers offer a shortlist rather than a single answer. `spreadKm` drops a
     // runner-up that is further than that beyond the winner — past which it is no
     // longer a plausible alternative reading of the same position.
-    nearestAreas: function (lat, lon, count, spreadKm) {
+    nearestPlaces: function (lat, lon, count, spreadKm) {
       var hits = [];
       index.forEach(function (e) {
-        if (e.level !== "area") { return; }
-        hits.push({ entry: e, km: haversineKm(lat, lon, e.area.lat, e.area.lon) });
+        if (typeof e.node.lat !== "number" || typeof e.node.lon !== "number") { return; }
+        hits.push({ entry: e, km: haversineKm(lat, lon, e.node.lat, e.node.lon) });
       });
       hits.sort(function (a, b) { return a.km - b.km; });
       if (!hits.length) { return []; }
@@ -172,9 +187,11 @@
     firmwareTier: function () { return els.fw.value; },
 
     // Everything currently ticked, so the map can mark all of it rather than
-    // reaching into the picker's markup.
+    // reaching into the picker's markup. Codes only — the map looks the places
+    // themselves up in RegionData, which keeps this free of anything that
+    // would have to change when the tree gains a level.
     picked: function () {
-      return chosen().map(function (e) { return { code: e.code, level: e.level }; });
+      return chosen().map(function (e) { return { code: e.code, depth: e.depth }; });
     }
   };
 
@@ -184,10 +201,10 @@
    * Once someone types, it holds their text and becomes the source of truth for
    * copying and for the over-the-air push.
    *
-   * Changing the area or the options after that does NOT overwrite it. Throwing
-   * away something a person typed is never worth the tidiness — the generated
-   * version is one click away, and until then a note says plainly that the two
-   * have diverged.
+   * Changing the selection or the options after that does NOT overwrite it.
+   * Throwing away something a person typed is never worth the tidiness — the
+   * generated version is one click away, and until then a note says plainly
+   * that the two have diverged.
    */
 
   var edited = null;
@@ -293,9 +310,8 @@
     entries.forEach(function (e) {
       // The levels above have to be ticked too, or the rows underneath them are
       // never shown and the pick would be invisible.
-      picked[e.region.code] = true;
-      if (e.county) { picked[e.county.code] = true; }
-      if (e.area) { picked[e.area.code] = true; }
+      e.node.trail.forEach(function (code) { picked[code] = true; });
+      picked[e.code] = true;
     });
 
     renderPicker();
@@ -310,17 +326,16 @@
 
   /* ---------- the picker ----------
    *
-   * A tree of checkboxes rather than three lists. The tags form a hierarchy, so
-   * showing it as one makes the shape of what you are configuring visible, and
-   * it needs no modifier keys: tick what the repeater covers, untick what it
-   * does not. Ticking a region reveals its counties, ticking a county reveals
-   * its areas — so the list stays short and the cascade is the same one the
-   * chain itself follows.
+   * A tree of checkboxes rather than one list per level. The tags form a
+   * hierarchy, so showing it as one makes the shape of what you are configuring
+   * visible, and it needs no modifier keys: tick what the repeater covers,
+   * untick what it does not. Ticking a place reveals what is inside it — so the
+   * list stays short and the cascade is the same one the chain itself follows.
    *
    * You carry exactly what you tick, plus the ancestry each pick implies. There
-   * is no "deepest level wins" rule to learn: ticking a county and an area
-   * inside it is not a contradiction, because the area's chain already contains
-   * the county, and the redundant chain is dropped when the commands are built.
+   * is no "deepest level wins" rule to learn: ticking a place and something
+   * inside it is not a contradiction, because the inner chain already contains
+   * the outer, and the redundant chain is dropped when the commands are built.
    */
 
   var picked = {};   // code -> true
@@ -331,9 +346,11 @@
     return index.filter(function (e) { return isPicked(e.code); });
   }
 
-  function row(entry, level) {
+  function row(entry) {
     var label = document.createElement("label");
-    label.className = "pick-row lvl-" + level;
+    // Depth, not a level name: the styling is "how far in is this", which is a
+    // question any tree can answer.
+    label.className = "pick-row lvl-" + entry.depth;
 
     var box = document.createElement("input");
     box.type = "checkbox";
@@ -346,10 +363,7 @@
         delete picked[entry.code];
         // Whatever sat under it goes too, since it is no longer reachable.
         index.forEach(function (e) {
-          if (e.code === entry.code) { return; }
-          var under = (e.region && e.region.code === entry.code) ||
-                      (e.county && e.county.code === entry.code);
-          if (under) { delete picked[e.code]; }
+          if (e.node.trail.indexOf(entry.code) !== -1) { delete picked[e.code]; }
         });
       }
       renderPicker();
@@ -376,29 +390,25 @@
     // the list back to the top.
     var scroll = els.picker.scrollTop;
     els.picker.textContent = "";
-
-    DATA.regions.forEach(function (region) {
-      els.picker.appendChild(row(byCode[region.code], "region"));
-      if (!isPicked(region.code)) { return; }
-
-      var counties = document.createElement("div");
-      counties.className = "pick-children";
-      region.counties.forEach(function (county) {
-        counties.appendChild(row(byCode[county.code], "county"));
-        if (!isPicked(county.code) || !(county.areas || []).length) { return; }
-
-        var areas = document.createElement("div");
-        areas.className = "pick-children";
-        county.areas.forEach(function (area) {
-          areas.appendChild(row(byCode[area.code], "area"));
-        });
-        counties.appendChild(areas);
-      });
-      els.picker.appendChild(counties);
-    });
+    els.picker.appendChild(branch(DATA.places));
 
     els.picker.scrollTop = scroll;
     els.clearPicks.hidden = !chosen().length;
+  }
+
+  // One level of the tree, plus whatever sits under anything ticked. Recursive
+  // because the data is: nothing here decides how deep it goes.
+  function branch(places) {
+    var frag = document.createDocumentFragment();
+    places.forEach(function (place) {
+      frag.appendChild(row(byCode[place.code]));
+      if (!isPicked(place.code) || !place.children.length) { return; }
+      var kids = document.createElement("div");
+      kids.className = "pick-children";
+      kids.appendChild(branch(place.children));
+      frag.appendChild(kids);
+    });
+    return frag;
   }
 
   els.clearPicks.addEventListener("click", function () {
@@ -455,8 +465,7 @@
       var s = score(e, q);
       if (s < 0) { return; }
       // Prefer the most specific level when scores tie.
-      var depth = e.level === "area" ? 0 : e.level === "county" ? 1 : 2;
-      hits.push({ entry: e, sort: s * 10 + depth });
+      hits.push({ entry: e, sort: s * 100 + (DATA.depth - e.depth) });
     });
     hits.sort(function (a, b) {
       return a.sort - b.sort || a.entry.name.localeCompare(b.entry.name);
@@ -488,7 +497,8 @@
     if (!shown.length) {
       var none = document.createElement("li");
       none.className = "empty";
-      none.textContent = 'No match for "' + q.trim() + '". Try a county or nearby town.';
+      none.textContent = 'No match for "' + q.trim() + '". Try a ' +
+        DATA.levelNameAt(1) + ' or a nearby place name.';
       els.results.appendChild(none);
     }
 
@@ -584,13 +594,12 @@
   /* ---------- command generation ---------- */
 
   function chainOf(entry) {
-    var chain = ROOT.map(function (code) {
-      return { code: code, label: ROOT_LABELS[code] || code };
+    var chain = ROOT.map(function (r) {
+      return { code: r.code, label: r.name };
     });
-    chain.push({ code: entry.region.code, label: entry.region.name });
-    if (entry.county) { chain.push({ code: entry.county.code, label: entry.county.name }); }
-    if (entry.area) { chain.push({ code: entry.area.code, label: entry.area.name }); }
-    return chain;
+    return chain.concat(DATA.chain(entry.code).map(function (node) {
+      return { code: node.code, label: node.name };
+    }));
   }
 
   function dutyValue() {
@@ -637,7 +646,7 @@
     var all = chosen().map(chainOf);
     // A chain that is a prefix of another says nothing extra: `region def west
     // ca cc slo prb` already creates cc and slo on the way past. So ticking a
-    // county and an area inside it is not a contradiction to resolve, it is a
+    // place and something inside it is not a contradiction to resolve, it is a
     // duplicate to drop — which is why the picker needs no "deepest wins" rule.
     return all.filter(function (chain) {
       return !all.some(function (other) {
@@ -768,8 +777,8 @@
   // Carrying several tags is the thing people need told, and it belongs next to
   // where they picked them rather than in a panel further down.
   function renderPickNote() {
-    // Count what is actually carried, not what is ticked: ticking a county and
-    // an area inside it is one place, because the redundant chain is dropped.
+    // Count what is actually carried, not what is ticked: ticking a place and
+    // something inside it is one place, because the redundant chain is dropped.
     var picks = chainsFor();
     if (picks.length < 2) {
       els.pickNote.textContent = picks.length === 1
@@ -917,8 +926,8 @@
     // A node holds MAX_REGIONS names, full stop. Going over does not fail
     // cleanly: region put/def places names until the table is full and then
     // replies "Err - put failed", leaving the node half configured. Easy to
-    // reach now that several places can be picked — ten areas in ten different
-    // counties is exactly 32 names.
+    // reach now that several places can be picked — ten picks three levels
+    // deep, in ten separate branches, is already past it.
     var names = {};
     built.chains.forEach(function (chain) {
       chain.forEach(function (t) { names[t.code] = true; });
@@ -1015,22 +1024,6 @@
 
     if (built.caps.hashMode) {
       items.push(["set path.hash.mode " + els.hash.value, hashExplanation(els.hash.value)]);
-    }
-
-    if (built.role === "longhaul") {
-      items.push(["(no local tags)",
-        "This site is set up as a dedicated long-haul link, so the chain stops at " +
-        ROOT.join(" / ") + ". It relays state-wide and mesh-wide traffic between distant areas " +
-        "without carrying either end's local conversation. RF reach is not a scope boundary: a " +
-        "local message forwarded into non-matching territory dies one hop later, because the next " +
-        "repeater does not carry the tag."]);
-    } else if (built.role === "bridge" && built.chains.length > 1) {
-      var others = built.chains.slice(1).map(function (ch) { return ch[ch.length - 1].label; });
-      items.push(["region " + (built.caps.regionDef ? "def" : "put") + "  \u00d7" + built.chains.length,
-        "One chain per area this site carries: " + built.chain[built.chain.length - 1].label +
-        ", plus " + others.join(", ") + ". Local traffic for all of them crosses this repeater. " +
-        "The repeaters around each area still won't re-forward the others', so it travels one " +
-        "hop past you and stops — that one extra hop is the cost of bridging."]);
     }
 
     if (built.caps.floodAdvert && floodValue() !== null) {
@@ -1202,4 +1195,4 @@
       applyHash(entries);
     }
   });
-})();
+});

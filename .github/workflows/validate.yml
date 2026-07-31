@@ -13,4 +13,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+
+      # validate rebuilds data/regions.json from the YAML to check they agree,
+      # which needs the YAML parser. The site itself still has no dependencies.
+      - run: npm install --no-audit --no-fund
       - run: npm run validate

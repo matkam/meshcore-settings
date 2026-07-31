@@ -22,8 +22,8 @@ check("58 county paths", (await page.$$eval(".map-county", (e) => e.length)) ===
 check("162 area dots", (await page.$$eval(".map-dot", (e) => e.length)) === 162,
   await page.$$eval(".map-dot", (e) => e.length));
 check("8 region labels", (await page.$$eval(".map-label", (e) => e.length)) === 8);
-check("every county path is wired to a code",
-  (await page.$$eval(".map-county", (e) => e.filter((p) => p.dataset.county).length)) === 58);
+check("every county path is wired to a place",
+  (await page.$$eval(".map-county", (e) => e.filter((p) => p.dataset.place).length)) === 58);
 
 // --- the position marker is not drawn until asked for
 check("position marker hidden at rest",
@@ -51,7 +51,7 @@ await mapInView();
 // --- helper: screen point for an area code
 async function pointFor(code) {
   return await page.evaluate((code) => {
-    const dot = document.querySelector(`.map-dot[data-area="${code}"]`);
+    const dot = document.querySelector(`.map-dot[data-place="${code}"]`);
     const r = dot.getBoundingClientRect();
     return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
   }, code);
@@ -68,7 +68,7 @@ async function pointFor(code) {
   check("hover tooltip names county and region",
     /San Luis Obispo County/.test(tip) && /Central Coast/.test(tip), tip);
   check("hovered dot is marked",
-    await page.$eval('.map-dot[data-area="prb"]', (d) => d.classList.contains("is-hover")));
+    await page.$eval('.map-dot[data-place="prb"]', (d) => d.classList.contains("is-hover")));
   check("cursor becomes a pointer over a target",
     await page.$eval(".map-svg", (s) => s.classList.contains("is-pointing")));
 }
@@ -84,13 +84,13 @@ async function pointFor(code) {
   check("clicking a dot generates the commands",
     /region def west ca cc slo prb/.test(await page.textContent("#commands")));
   check("selected dot is marked on",
-    await page.$eval('.map-dot[data-area="prb"]', (d) => d.classList.contains("is-on")));
+    await page.$eval('.map-dot[data-place="prb"]', (d) => d.classList.contains("is-on")));
   check("selected area's county is marked on",
-    await page.$eval('.map-county[data-county="slo"]', (c) => c.classList.contains("is-on")));
+    await page.$eval('.map-county[data-place="slo"]', (c) => c.classList.contains("is-on")));
   check("selected area's region is washed in",
-    await page.$eval('.map-county[data-county="mry"]', (c) => c.classList.contains("is-in-region")));
+    await page.$eval('.map-county[data-place="mry"]', (c) => c.classList.contains("is-in-region")));
   check("a county outside the region is not washed in",
-    await page.$eval('.map-county[data-county="krn"]', (c) => !c.classList.contains("is-in-region")));
+    await page.$eval('.map-county[data-place="krn"]', (c) => !c.classList.contains("is-in-region")));
 }
 
 // --- a selection made elsewhere is reflected on the map
@@ -98,11 +98,11 @@ async function pointFor(code) {
   await clearPicks(page);
   await tick(page, "sfb");
   check("selecting a region elsewhere washes it in on the map",
-    await page.$eval('.map-county[data-county="ala"]', (c) => c.classList.contains("is-in-region")));
+    await page.$eval('.map-county[data-place="ala"]', (c) => c.classList.contains("is-in-region")));
   check("the old selection is cleared",
-    await page.$eval('.map-dot[data-area="prb"]', (d) => !d.classList.contains("is-on")));
+    await page.$eval('.map-dot[data-place="prb"]', (d) => !d.classList.contains("is-on")));
   check("that region's label lights up",
-    await page.$eval('.map-label[data-region="sfb"]', (t) => t.classList.contains("is-on")));
+    await page.$eval('.map-label[data-place="sfb"]', (t) => t.classList.contains("is-on")));
 }
 
 // --- searching also drives the map
@@ -113,13 +113,13 @@ async function pointFor(code) {
   await page.click("#results li");
   await page.waitForTimeout(120);
   check("search selection is reflected on the map",
-    await page.$eval('.map-dot[data-area="prb"]', (d) => d.classList.contains("is-on")));
+    await page.$eval('.map-dot[data-place="prb"]', (d) => d.classList.contains("is-on")));
 }
 
 // --- clicking a region label
 {
   await clickPoint(() => {
-    const r = document.querySelector('.map-label[data-region="sjv"]').getBoundingClientRect();
+    const r = document.querySelector('.map-label[data-place="sjv"]').getBoundingClientRect();
     return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
   }, "region label");
   const afterLabel = await page.$$eval(".picker input:checked", (n) => n.map((x) => x.dataset.code));
@@ -148,7 +148,7 @@ async function pointFor(code) {
           if (y < 0 || y > window.innerHeight) { continue; }
           if (document.elementFromPoint(x, y) !== path) { continue; }
           const nearest = Math.min(...dots.map(([dx, dy]) => Math.hypot(dx - x, dy - y)));
-          if (nearest > 30) { return { x, y, county: path.dataset.county }; }
+          if (nearest > 30) { return { x, y, county: path.dataset.place }; }
         }
       }
     }
@@ -161,7 +161,7 @@ async function pointFor(code) {
   check("clicking open county ground selects that county", county,
     JSON.stringify(await page.$$eval(".picker input:checked", (n) => n.map((x) => x.dataset.code))));
   check("county click leaves no area ticked",
-    (await page.$$eval(".pick-row.lvl-area input:checked", (n) => n.length)) === 0);
+    (await page.$$eval(".pick-row.lvl-2 input:checked", (n) => n.length)) === 0);
 }
 
 // --- the position marker
@@ -172,7 +172,7 @@ async function pointFor(code) {
     await page.$eval(".map-mark", (g) => getComputedStyle(g).display !== "none"));
   const near = await page.evaluate(() => {
     const m = document.querySelector(".map-mark-dot").getBoundingClientRect();
-    const d = document.querySelector('.map-dot[data-area="prb"]').getBoundingClientRect();
+    const d = document.querySelector('.map-dot[data-place="prb"]').getBoundingClientRect();
     return Math.hypot(m.x - d.x, m.y - d.y);
   });
   check("marker lands on the matching area's dot", near < 6, near.toFixed(1) + " px away");
@@ -241,14 +241,14 @@ async function pointFor(code) {
   const covered = await page.evaluate(() => {
     const dots = [...document.querySelectorAll(".map-dot")].map((d) => {
       const b = d.getBoundingClientRect();
-      return { c: d.dataset.area, x: b.x + b.width / 2, y: b.y + b.height / 2 };
+      return { c: d.dataset.place, x: b.x + b.width / 2, y: b.y + b.height / 2 };
     });
     const bad = [];
     for (const t of document.querySelectorAll(".map-label")) {
       const b = t.getBoundingClientRect();
       for (const d of dots) {
         if (d.x >= b.x && d.x <= b.right && d.y >= b.y && d.y <= b.bottom) {
-          bad.push(t.dataset.region + "/" + d.c);
+          bad.push(t.dataset.place + "/" + d.c);
         }
       }
     }
@@ -260,18 +260,18 @@ async function pointFor(code) {
 // Every dot answers when aimed at squarely.
 {
   await mapInView();
-  const codes = await page.$$eval(".map-dot", (ds) => ds.map((d) => d.dataset.area));
+  const codes = await page.$$eval(".map-dot", (ds) => ds.map((d) => d.dataset.place));
   const missed = [];
   for (const code of codes) {
     const pt = await page.evaluate((c) => {
-      const b = document.querySelector(`.map-dot[data-area="${c}"]`).getBoundingClientRect();
+      const b = document.querySelector(`.map-dot[data-place="${c}"]`).getBoundingClientRect();
       return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
     }, code);
     if (pt.y < 0 || pt.y > 1000) { continue; }
     await page.mouse.move(pt.x, pt.y);
     const hit = await page.evaluate(() => {
       const d = document.querySelector(".map-dot.is-hover");
-      return d ? d.dataset.area : null;
+      return d ? d.dataset.place : null;
     });
     if (hit !== code) { missed.push(`${code}->${hit}`); }
   }
@@ -324,7 +324,7 @@ async function pointFor(code) {
   await page.waitForTimeout(200);
   check("dragging pans the map", (await vbOf()) !== beforePan);
   check("a drag does not change the selection",
-    (await page.$$eval(".pick-row.lvl-area input:checked", (n) => n.length)) === 0,
+    (await page.$$eval(".pick-row.lvl-2 input:checked", (n) => n.length)) === 0,
     JSON.stringify(await page.$$eval(".picker input:checked", (n) => n.map((x) => x.dataset.code))));
 
   // Clicking still works while zoomed, and lands on the right thing.
@@ -332,7 +332,7 @@ async function pointFor(code) {
   const target = await page.evaluate(() => {
     const s = document.querySelector(".map-svg").getBoundingClientRect();
     const inside = [...document.querySelectorAll(".map-dot")]
-      .map((d) => ({ c: d.dataset.area, r: d.getBoundingClientRect() }))
+      .map((d) => ({ c: d.dataset.place, r: d.getBoundingClientRect() }))
       .filter((o) => o.r.x > s.x + 10 && o.r.right < s.right - 10 &&
                      o.r.y > Math.max(s.y, 0) + 10 && o.r.bottom < Math.min(s.bottom, 990) - 10);
     if (!inside.length) { return null; }
@@ -350,13 +350,13 @@ async function pointFor(code) {
   const coveredZoomed = await page.evaluate(() => {
     const dots = [...document.querySelectorAll(".map-dot")].map((d) => {
       const b = d.getBoundingClientRect();
-      return { c: d.dataset.area, x: b.x + b.width / 2, y: b.y + b.height / 2 };
+      return { c: d.dataset.place, x: b.x + b.width / 2, y: b.y + b.height / 2 };
     });
     const bad = [];
     for (const t of document.querySelectorAll(".map-label")) {
       const b = t.getBoundingClientRect();
       for (const d of dots) {
-        if (d.x >= b.x && d.x <= b.right && d.y >= b.y && d.y <= b.bottom) { bad.push(t.dataset.region + "/" + d.c); }
+        if (d.x >= b.x && d.x <= b.right && d.y >= b.y && d.y <= b.bottom) { bad.push(t.dataset.place + "/" + d.c); }
       }
     }
     return bad;

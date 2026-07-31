@@ -1,13 +1,18 @@
 /*
- * The map. Draws California's counties, drops a dot on every local area, and
- * makes both of them selectable.
+ * The map. Draws the boundary shapes places claim, drops a dot on every place
+ * that carries a point, and makes both of them selectable.
+ *
+ * Nothing here is per-level. A place is drawn as an outline if it names one, as
+ * a dot if it has a lat/lon, and as a label if it sits at the top of the tree —
+ * so today's counties-and-areas map falls out of the data rather than being
+ * coded in.
  *
  * Design notes worth keeping:
  *
- * - Counties are real boundaries (data/counties.js, from Census TIGER). Local
- *   areas are not — they are a community convention with no official shape, so
- *   they are drawn as points, not invented polygons. The map does not imply a
- *   precision the data does not have.
+ * - Outlines are real boundaries (data/outlines.json, from Census TIGER). The
+ *   places drawn as dots have no official shape — they are a community
+ *   convention — so they stay points rather than invented polygons. The map
+ *   does not imply a precision the data does not have.
  *
  * - There is no per-region colour scheme. Eight categorical fills on a map this
  *   size fail colour-blind separation, and more to the point they would compete
@@ -15,16 +20,15 @@
  *   identity comes from labels and from hovering instead.
  *
  * - This is a shortcut, not the only route. Everything here is also reachable
- *   through the search box and the three dropdowns, which are what keyboard and
+ *   through the search box and the picker, which are what keyboard and
  *   screen-reader users get. Nothing is map-only.
  */
-(function () {
+window.RegionData.ready(function (DATA) {
   "use strict";
 
-  var MAP = window.CA_COUNTY_MAP;
-  var DATA = window.CA_REGIONS;
+  var MAP = DATA.outlines;
   var host = document.getElementById("map-host");
-  if (!MAP || !DATA || !host) { return; }
+  if (!MAP || !host) { return; }
 
   var SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -42,45 +46,36 @@
   // or click the county it was over.
   var HIT_PX = 12;
 
-  // Region labels are placed automatically, but a few land badly: the Bay Area's
-  // areas cluster so tightly that its label needs pushing out over the water, and
-  // the coastal regions read better shifted off the dots they sit among. viewBox
-  // units, x then y.
-  var LABEL_NUDGE = {
-    sfb: [-52, 6],
-    cc: [-30, 22],
-    nor: [-22, 0],
-    sv: [16, 0],
-    sn: [10, -10],
-    sjv: [10, 26],
-    soc: [10, 30],
-    // The North Coast is a narrow strip, so its own centre is half in the sea.
-    nco: [40, -20]
-  };
+  /* ---------- lookups ----------
+   * What a place gets drawn as follows from what it carries, not from where it
+   * sits in the tree: an `outline` makes it a shape, a lat/lon makes it a dot.
+   * A place may have both, or neither.
+   */
 
-  /* ---------- lookups ---------- */
+  var byShape = {};   // shape name -> the place claiming it
+  var points = [];    // every place with a position, with that position projected
 
-  var countyByName = {};    // "Kern" -> { county, region }
-  var areas = [];           // every area, with its projected position
-  var regionOf = {};        // county code -> region code
-
-  DATA.regions.forEach(function (region) {
-    region.counties.forEach(function (county) {
-      countyByName[county.name.replace(/ County$/, "")] = { county: county, region: region };
-      regionOf[county.code] = region.code;
-      (county.areas || []).forEach(function (area) {
-        areas.push({ area: area, county: county, region: region });
-      });
-    });
+  DATA.nodes.forEach(function (node) {
+    if (node.outline) { byShape[node.outline] = node; }
+    if (typeof node.lat === "number" && typeof node.lon === "number") {
+      points.push({ node: node });
+    }
   });
+
+  // Ancestors, nearest first — "Del Norte County · North Coast".
+  function ancestry(node) {
+    return node.trail.slice().reverse().map(function (code) {
+      return DATA.byCode[code].name;
+    }).join(" · ");
+  }
 
   var p = MAP.projection;
   function project(lat, lon) {
     return { x: (lon - p.lon0) * p.cos0 * p.k, y: (p.lat1 - lat) * p.k };
   }
 
-  areas.forEach(function (a) {
-    var xy = project(a.area.lat, a.area.lon);
+  points.forEach(function (a) {
+    var xy = project(a.node.lat, a.node.lon);
     a.x = xy.x;
     a.y = xy.y;
   });
@@ -91,12 +86,14 @@
   var svg = document.createElementNS(SVG_NS, "svg");
   svg.setAttribute("viewBox", vb.x + " " + vb.y + " " + vb.width + " " + vb.height);
   svg.setAttribute("class", "map-svg");
-  // The selects below carry the same information for anyone not using a pointer,
-  // so the map describes itself as one image rather than 220 unlabelled shapes.
+  // The picker below carries the same information for anyone not using a
+  // pointer, so the map describes itself as one image rather than 220
+  // unlabelled shapes.
   svg.setAttribute("role", "img");
   svg.setAttribute("aria-label",
-    "Map of California's counties with a marker for each local area. " +
-    "The dropdowns below make the same choices.");
+    "Map of " + DATA.regions.name + "'s " + DATA.levelPluralAt(1) +
+    " with a marker for each " + DATA.levelNameAt(2) + ". " +
+    "The picker below makes the same choices.");
 
   var gCounties = document.createElementNS(SVG_NS, "g");
   gCounties.setAttribute("class", "map-counties");
@@ -110,40 +107,45 @@
   // which left an unplaced marker drawn at the origin.
   gMark.style.display = "none";
 
-  var countyEls = {};    // county code -> <path>
+  var outlineEls = {};   // place code -> <path>
 
-  MAP.counties.forEach(function (shape) {
-    var hit = countyByName[shape.name];
+  MAP.shapes.forEach(function (shape) {
+    var owner = byShape[shape.name];
     var path = document.createElementNS(SVG_NS, "path");
     path.setAttribute("d", shape.d);
     path.setAttribute("class", "map-county");
-    if (hit) {
-      path.dataset.county = hit.county.code;
-      path.dataset.region = hit.region.code;
-      countyEls[hit.county.code] = path;
+    if (owner) {
+      path.dataset.place = owner.code;
+      // Every ancestor, so "tint everything inside this place" is one selector
+      // with ~= rather than a walk back up the tree.
+      path.dataset.trail = owner.trail.join(" ");
+      outlineEls[owner.code] = path;
     }
     gCounties.appendChild(path);
   });
 
-  areas.forEach(function (a) {
+  points.forEach(function (a) {
     var dot = document.createElementNS(SVG_NS, "circle");
     dot.setAttribute("cx", a.x);
     dot.setAttribute("cy", a.y);
     dot.setAttribute("class", "map-dot");
-    dot.dataset.area = a.area.code;
+    dot.dataset.place = a.node.code;
     a.el = dot;
     gDots.appendChild(dot);
   });
 
-  // Region labels sit at the centre of the region's own area dots rather than a
-  // polygon centroid: it puts the word where the nodes are, which for a region
-  // like the Sierra means the populated western slope, not an empty summit.
-  DATA.regions.forEach(function (region) {
-    var mine = areas.filter(function (a) { return a.region.code === region.code; });
+  // Top-level places get a label, sitting at the centre of the dots beneath them
+  // rather than at a polygon centroid: it puts the word where the nodes are,
+  // which for a region like the Sierra means the populated western slope rather
+  // than an empty summit.
+  DATA.places.forEach(function (place) {
+    var mine = points.filter(function (a) { return a.node.trail.indexOf(place.code) !== -1; });
     if (!mine.length) { return; }
     var cx = mine.reduce(function (s, a) { return s + a.x; }, 0) / mine.length;
     var cy = mine.reduce(function (s, a) { return s + a.y; }, 0) / mine.length;
-    var nudge = LABEL_NUDGE[region.code] || [0, 0];
+    // Automatic placement gets most of them right; `nudge` in the data file is
+    // for the ones it can't, like a coastal strip whose own centre is at sea.
+    var nudge = place.nudge || [0, 0];
 
     var text = document.createElementNS(SVG_NS, "text");
     text.dataset.baseX = cx + nudge[0];
@@ -151,8 +153,8 @@
     text.setAttribute("x", text.dataset.baseX);
     text.setAttribute("y", text.dataset.baseY);
     text.setAttribute("class", "map-label");
-    text.dataset.region = region.code;
-    text.textContent = region.code.toUpperCase();
+    text.dataset.place = place.code;
+    text.textContent = place.code.toUpperCase();
     gLabels.appendChild(text);
   });
 
@@ -276,9 +278,9 @@
       return false;
     }
     var pad = LABEL_PAD_PX * unitsPerPx;
-    for (var i = 0; i < areas.length; i++) {
-      if (areas[i].x >= box.x - pad && areas[i].x <= box.x + box.width + pad &&
-          areas[i].y >= box.y - pad && areas[i].y <= box.y + box.height + pad) {
+    for (var i = 0; i < points.length; i++) {
+      if (points[i].x >= box.x - pad && points[i].x <= box.x + box.width + pad &&
+          points[i].y >= box.y - pad && points[i].y <= box.y + box.height + pad) {
         return false;
       }
     }
@@ -454,17 +456,17 @@
 
   /* ---------- hover ---------- */
 
-  var hovered = null;   // { kind: "area"|"county", code, label }
+  var hovered = null;   // { code, els, label, sub }
 
   function nearestDot(x, y) {
     var limit = HIT_PX * unitsPerPx;
     var best = null;
     var bestD = limit * limit;
-    for (var i = 0; i < areas.length; i++) {
-      var dx = areas[i].x - x;
-      var dy = areas[i].y - y;
+    for (var i = 0; i < points.length; i++) {
+      var dx = points[i].x - x;
+      var dy = points[i].y - y;
       var d = dx * dx + dy * dy;
-      if (d <= bestD) { bestD = d; best = areas[i]; }
+      if (d <= bestD) { bestD = d; best = points[i]; }
     }
     return best;
   }
@@ -491,31 +493,31 @@
     // otherwise a label sitting among dots (SJV does) could never be reached.
     var label = hitLabel(evt);
     if (label) {
-      var region = regionByCode(label.dataset.region);
-      setHover({ kind: "region", code: label.dataset.region, els: [label],
-                 label: region.name, sub: "Click for a region-wide scope" }, evt);
+      var place = DATA.byCode[label.dataset.place];
+      setHover({ code: place.code, els: [label], label: place.name,
+                 sub: "Click for a " + DATA.levelName(place) + "-wide scope" }, evt);
       return;
     }
 
-    // Then a dot, which beats the county under it: the smaller target is the one
-    // the pointer was aiming for, and it only has to be the closest.
+    // Then a dot, which beats the outline under it: the smaller target is the
+    // one the pointer was aiming for, and it only has to be the closest.
     var dot = nearestDot(at.x, at.y);
     if (dot) {
-      // The dot's county lights up too. Selecting an area selects its county as
-      // part of the chain, so this previews what a click actually does — and it
-      // means the county under the pointer responds everywhere, rather than only
-      // in the gaps between dots.
-      setHover({ kind: "area", code: dot.area.code,
-                 els: [dot.el, countyEls[dot.county.code]],
-                 label: dot.area.name, sub: dot.county.name + " · " + dot.region.name }, evt);
+      // The outline it sits inside lights up too. Selecting a place selects its
+      // ancestors as part of the chain, so this previews what a click actually
+      // does — and it means the outline under the pointer responds everywhere,
+      // rather than only in the gaps between dots.
+      setHover({ code: dot.node.code, els: [dot.el, enclosingOutline(dot.node)],
+                 label: dot.node.name, sub: ancestry(dot.node) }, evt);
       return;
     }
 
     var path = evt.target.closest ? evt.target.closest(".map-county") : null;
-    if (path && path.dataset.county) {
-      var entry = byCountyCode(path.dataset.county);
-      setHover({ kind: "county", code: path.dataset.county, els: [path],
-                 label: entry.county.name, sub: entry.region.name + " · click for a county-wide scope" }, evt);
+    if (path && path.dataset.place) {
+      var owner = DATA.byCode[path.dataset.place];
+      setHover({ code: owner.code, els: [path], label: owner.name,
+                 sub: ancestry(owner) + " · click for a " +
+                      DATA.levelName(owner) + "-wide scope" }, evt);
       return;
     }
 
@@ -524,18 +526,14 @@
 
   svg.addEventListener("pointerleave", clearHover);
 
-  function regionByCode(code) {
-    return DATA.regions.filter(function (r) { return r.code === code; })[0];
-  }
-
-  function byCountyCode(code) {
-    var found = null;
-    DATA.regions.forEach(function (region) {
-      region.counties.forEach(function (county) {
-        if (county.code === code) { found = { county: county, region: region }; }
-      });
-    });
-    return found;
+  // The nearest drawn shape a place sits inside, which is what should light up
+  // when its dot is hovered. Not necessarily its parent: a level can pass
+  // through without claiming a shape of its own.
+  function enclosingOutline(node) {
+    for (var i = node.trail.length - 1; i >= 0; i--) {
+      if (outlineEls[node.trail[i]]) { return outlineEls[node.trail[i]]; }
+    }
+    return outlineEls[node.code] || null;
   }
 
   function setHover(next, evt) {
@@ -583,8 +581,8 @@
   }
 
   function dotEl(code) {
-    for (var i = 0; i < areas.length; i++) {
-      if (areas[i].area.code === code) { return areas[i].el; }
+    for (var i = 0; i < points.length; i++) {
+      if (points[i].node.code === code) { return points[i].el; }
     }
     return null;
   }
@@ -598,14 +596,14 @@
     if (dragged > 4) { return; }
 
     var label = hitLabel(evt);
-    if (label) { window.SettingsState.select(label.dataset.region); return; }
+    if (label) { window.SettingsState.select(label.dataset.place); return; }
 
     var at = svgPoint(evt);
     var dot = nearestDot(at.x, at.y);
-    if (dot) { window.SettingsState.select(dot.area.code); return; }
+    if (dot) { window.SettingsState.select(dot.node.code); return; }
 
     var path = evt.target.closest ? evt.target.closest(".map-county") : null;
-    if (path && path.dataset.county) { window.SettingsState.select(path.dataset.county); }
+    if (path && path.dataset.place) { window.SettingsState.select(path.dataset.place); }
   });
 
   function hitLabel(evt) {
@@ -613,38 +611,31 @@
   }
 
   /* ---------- reflecting the current selection ----------
-   * Read straight off the dropdowns app.js already keeps in sync, so the map
-   * follows a selection made by search, by dropdown, or by a connected repeater
-   * without app.js needing to know the map exists.
+   * Read straight off the picks app.js already keeps in sync, so the map
+   * follows a selection made by search, by the picker, or by a connected
+   * repeater without app.js needing to know the map exists.
    */
 
-
-  // Several things can be ticked at once, so everything chosen is marked, not
-  // just the first — otherwise a site bridging two areas would show one dot.
-  function pickedAt(level) {
-    return window.SettingsState.picked()
-      .filter(function (p) { return p.level === level; })
-      .map(function (p) { return p.code; });
-  }
-
+  // Every pick is marked with whatever it has to be marked with, rather than
+  // one rule per level — and everything ticked is marked, not just the first,
+  // or a site bridging two places would show one dot.
   function refresh() {
     clearMarks("is-on");
     clearMarks("is-in-region");
 
-    pickedAt("region").forEach(function (region) {
-      var inRegion = gCounties.querySelectorAll('[data-region="' + region + '"]');
-      for (var i = 0; i < inRegion.length; i++) { inRegion[i].classList.add("is-in-region"); }
-      var label = gLabels.querySelector('[data-region="' + region + '"]');
+    window.SettingsState.picked().forEach(function (pick) {
+      if (outlineEls[pick.code]) { outlineEls[pick.code].classList.add("is-on"); }
+
+      var dot = dotEl(pick.code);
+      if (dot) { dot.classList.add("is-on"); }
+
+      var label = gLabels.querySelector('[data-place="' + pick.code + '"]');
       if (label) { label.classList.add("is-on"); }
-    });
 
-    pickedAt("county").forEach(function (county) {
-      if (countyEls[county]) { countyEls[county].classList.add("is-on"); }
-    });
-
-    pickedAt("area").forEach(function (area) {
-      var el = dotEl(area);
-      if (el) { el.classList.add("is-on"); }
+      // Tint every shape inside it, so picking something with no outline of its
+      // own — a region, today — still shows its extent.
+      var inside = gCounties.querySelectorAll('[data-trail~="' + pick.code + '"]');
+      for (var i = 0; i < inside.length; i++) { inside[i].classList.add("is-in-region"); }
     });
   }
 
@@ -675,4 +666,4 @@
       return true;
     }
   };
-})();
+});

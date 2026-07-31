@@ -1,42 +1,60 @@
 #!/usr/bin/env node
 /*
- * Validates data/regions.js.
+ * Validates data/regions.json — the built tree, which is what actually ships.
+ * (`npm run validate` runs build-regions.mjs --check first, so a JSON that has
+ * drifted from the YAML is caught before any of this.)
  *
  * MeshCore region names live in one flat namespace on a node, so a duplicate
- * code anywhere in the tree is a real bug -- it would silently merge two
- * unrelated places on any repeater that carries both. This also enforces the
- * 160-character serial line limit on the generated `region def` command.
+ * code anywhere in the tree is a real bug — it would silently merge two
+ * unrelated places on any repeater that carries both.
+ *
+ * Nothing here knows what a "county" is. The tree nests as deep as it likes;
+ * every check below is a property of a place, not of a level.
  *
  * Usage: node scripts/validate.mjs
  */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import vm from "node:vm";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const source = readFileSync(join(root, "data/regions.js"), "utf8");
+const read = (rel) => JSON.parse(readFileSync(join(root, rel), "utf8"));
 
-const sandbox = { window: {} };
-vm.createContext(sandbox);
-vm.runInContext(source, sandbox, { filename: "data/regions.js" });
-
-const data = sandbox.window.CA_REGIONS;
 const errors = [];
 const warnings = [];
-
 const fail = (msg) => errors.push(msg);
 const warn = (msg) => warnings.push(msg);
 
-if (!data || !Array.isArray(data.regions)) {
-  fail("window.CA_REGIONS.regions is missing or not an array");
+let data;
+let map;
+try {
+  data = read("data/regions.json");
+  map = read("data/outlines.json");
+} catch (e) {
+  fail(`${e.message} — run npm run build:regions`);
   report();
 }
 
-const rootTokens = data.meta?.root ?? [];
-const maxLine = data.meta?.maxLineLength ?? 160;
+if (!Array.isArray(data.places)) {
+  fail("regions.json has no places array");
+  report();
+}
 
-if (!rootTokens.length) fail("meta.root must contain at least one token");
+const rootTokens = data.root ?? [];
+const limits = data.limits ?? {};
+const maxLine = limits.maxLineLength ?? 160;
+const maxNames = limits.maxRegionNames ?? 32;
+const maxDepth = limits.maxDepth ?? 8;
+const levels = data.levels ?? [];
+
+if (!rootTokens.length) { fail("root must contain at least one token"); }
+
+// Boundary shapes, by the name a place claims them with.
+const shapes = new Map();
+for (const shape of map.shapes ?? []) { shapes.set(shape.name, parsePath(shape.d)); }
+if (!shapes.size) { fail("data/outlines.json has no shapes — run npm run build:outlines"); }
+
+/* ---------- codes ---------- */
 
 // code -> human-readable path, for duplicate reporting
 const seen = new Map();
@@ -54,153 +72,163 @@ function claim(code, path) {
   seen.set(code, path);
 }
 
-rootTokens.forEach((code) => claim(code, "meta.root"));
+rootTokens.forEach((r) => claim(r.code, "root"));
 
-let regionCount = 0;
-let countyCount = 0;
-let areaCount = 0;
+/* ---------- walk ---------- */
+
+const places = [];      // every place, with its ancestry
+const points = [];      // every place carrying a position
+
+(function walk(list, trail) {
+  for (const node of list ?? []) {
+    const label = `${trail.map((t) => t.name).concat(node.name ?? node.code).join(" > ")}`;
+    if (!node.name) { fail(`${label}: missing name`); }
+    claim(node.code, label);
+
+    const entry = { node, trail, depth: trail.length, label };
+    places.push(entry);
+
+    const chain = rootTokens.concat(trail, [node]);
+    if (chain.length > maxDepth) {
+      fail(`${label}: chain is ${chain.length} deep, the firmware allows ${maxDepth}`);
+    }
+    const line = `region def ${chain.map((t) => t.code).join(" ")}`;
+    if (line.length > maxLine) {
+      fail(`${label}: "${line}" is ${line.length} chars, over the ${maxLine} limit`);
+    }
+
+    const kids = node.children ?? [];
+    const hasPoint = typeof node.lat === "number" || typeof node.lon === "number";
+    if (hasPoint) {
+      if (typeof node.lat !== "number" || typeof node.lon !== "number") {
+        fail(`${label}: has one of lat/lon but not the other`);
+      } else {
+        points.push(entry);
+      }
+    }
+
+    // A place with nothing under it, no position and no shape cannot be found
+    // on the map or by "where is this repeater?" — only by name.
+    if (!kids.length && !hasPoint && !node.outline) {
+      warn(`${label}: no children, no position and no outline, so only search can reach it`);
+    }
+    if (!kids.length && !(node.aliases ?? []).length) {
+      warn(`${label}: no aliases listed, it will be hard to find by search`);
+    }
+    if (node.outline && !shapes.has(node.outline)) {
+      fail(`${label}: outline "${node.outline}" is not in data/outlines.json`);
+    }
+
+    walk(kids, trail.concat([node]));
+  }
+})(data.places, []);
+
+const deepest = places.reduce((d, p) => Math.max(d, p.depth), 0) + 1;
+if (deepest > levels.length) {
+  warn(`the tree runs ${deepest} levels deep but only ${levels.length} are named in ` +
+       `levels — the rest will be called "place" in the interface`);
+}
+
+// One chain per place is the worst case a single pick can produce, but a
+// bridging site picks several. This is the ceiling for one, which is the only
+// thing checkable without knowing what somebody will tick.
+const longest = places.reduce((d, p) => Math.max(d, p.depth), 0) + 1 + rootTokens.length;
+if (longest > maxNames) {
+  fail(`a single chain needs ${longest} region names, over the ${maxNames} a node holds`);
+}
+
+/* ---------- positions ----------
+ *
+ * Coordinates drive the "detect my location" suggestion, so a wrong one
+ * silently mis-places a repeater. Three checks, weakest first: is it on the
+ * map at all, is it unique, and is it inside the shape it is filed under.
+ */
+
+const { lon0, lat1, k, cos0 } = map.projection;
+const project = (lat, lon) => [(lon - lon0) * cos0 * k, (lat1 - lat) * k];
+// The projection is scaled so one viewBox unit is one degree of latitude / k.
+const KM_PER_UNIT = 111.32 / k;
+const vb = map.viewBox;
 
 const coords = new Map();
-const points = [];
 
-for (const region of data.regions) {
-  regionCount += 1;
-  const rPath = `region ${region.name ?? region.code}`;
-  if (!region.name) fail(`${rPath}: missing name`);
-  claim(region.code, rPath);
-
-  if (!Array.isArray(region.counties) || region.counties.length === 0) {
-    fail(`${rPath}: has no counties`);
+for (const p of points) {
+  const { lat, lon } = p.node;
+  const [x, y] = project(lat, lon);
+  if (x < vb.x || x > vb.x + vb.width || y < vb.y || y > vb.y + vb.height) {
+    fail(`${p.label}: ${lat}, ${lon} is outside the mapped area`);
     continue;
   }
 
-  for (const county of region.counties) {
-    countyCount += 1;
-    const cPath = `${rPath} > ${county.name ?? county.code}`;
-    if (!county.name) fail(`${cPath}: missing name`);
-    claim(county.code, cPath);
-
-    const areas = Array.isArray(county.areas) ? county.areas : [];
-    if (areas.length === 0) warn(`${cPath}: no local areas defined (county-level only)`);
-
-    for (const area of areas) {
-      areaCount += 1;
-      const aPath = `${cPath} > ${area.name ?? area.code}`;
-      if (!area.name) fail(`${aPath}: missing name`);
-      claim(area.code, aPath);
-      if (!Array.isArray(area.cities) || area.cities.length === 0) {
-        warn(`${aPath}: no cities listed, it will be hard to find by search`);
-      }
-
-      // Coordinates drive the "detect my location" suggestion, so a wrong one
-      // silently mis-places a repeater. Bounds are California's extent plus a
-      // small margin.
-      if (typeof area.lat !== "number" || typeof area.lon !== "number") {
-        fail(`${aPath}: missing lat/lon`);
-      } else {
-        if (area.lat < 32.3 || area.lat > 42.2) {
-          fail(`${aPath}: lat ${area.lat} is outside California`);
-        }
-        if (area.lon < -124.6 || area.lon > -114.0) {
-          fail(`${aPath}: lon ${area.lon} is outside California`);
-        }
-        const key = area.lat.toFixed(3) + "," + area.lon.toFixed(3);
-        if (coords.has(key)) {
-          fail(`${aPath}: identical coordinates to ${coords.get(key)}`);
-        } else {
-          coords.set(key, aPath);
-        }
-        points.push({ path: aPath, lat: area.lat, lon: area.lon, county: county.name });
-      }
-
-      const chain = [...rootTokens, region.code, county.code, area.code];
-      const line = `region def ${chain.join(" ")}`;
-      if (line.length > maxLine) {
-        fail(`${aPath}: "${line}" is ${line.length} chars, over the ${maxLine} limit`);
-      }
-      if (chain.length > 8) {
-        fail(`${aPath}: chain is ${chain.length} deep, MeshCore allows max 8 levels`);
-      }
-    }
+  const key = lat.toFixed(3) + "," + lon.toFixed(3);
+  if (coords.has(key)) {
+    fail(`${p.label}: identical coordinates to ${coords.get(key)}`);
+  } else {
+    coords.set(key, p.label);
   }
 }
 
-// Areas closer together than this are hard to tell apart from an advertised
-// position, so nearest-centroid matching between them is close to a coin flip.
+// Places closer together than this are hard to tell apart from an advertised
+// position, so nearest-point matching between them is close to a coin flip.
 const CLOSE_KM = 4;
 for (let i = 0; i < points.length; i++) {
   for (let j = i + 1; j < points.length; j++) {
-    const d = haversineKm(points[i], points[j]);
+    const d = haversineKm(points[i].node, points[j].node);
     if (d < CLOSE_KM) {
-      warn(`${points[i].path} and ${points[j].path} are ${d.toFixed(1)} km apart — ` +
+      warn(`${points[i].label} and ${points[j].label} are ${d.toFixed(1)} km apart — ` +
            `location detection will offer both and let the operator choose`);
     }
   }
 }
 
-/* ---------- centroids against the county outlines ----------
+/* ---------- positions against the outlines ----------
  *
- * data/counties.js carries the real county boundaries the map draws, which
- * makes "is this coordinate actually in the county it is filed under?" a
- * question the machine can answer. It catches a transposed digit or a
- * copy-pasted neighbour, which the bounding-box check above cannot.
+ * data/outlines.json carries the real boundaries the map draws, which makes
+ * "is this coordinate actually inside the shape it sits under?" a question the
+ * machine can answer. It catches a transposed digit or a copy-pasted
+ * neighbour, which the bounds check above cannot.
+ *
+ * The shape checked is the nearest ancestor that claims one — not the parent,
+ * because a level may pass through without having a boundary of its own.
  */
 
-const countyMapSource = readFileSync(join(root, "data/counties.js"), "utf8");
-vm.runInContext(countyMapSource, sandbox, { filename: "data/counties.js" });
-const countyMap = sandbox.window.CA_COUNTY_MAP;
+// build-outlines.mjs simplifies the rings with a tolerance of about 600 m, so
+// near a convoluted shoreline the drawn line genuinely cannot say which side a
+// point is on. Inside that band, "outside" means nothing.
+const SIMPLIFY_SLACK_KM = 0.8;
+// Past the slack it is worth a look, and this far past it is a mistake rather
+// than a border-hugging point.
+const OUTSIDE_FAIL_KM = 5;
 
-if (!countyMap || !Array.isArray(countyMap.counties)) {
-  fail("window.CA_COUNTY_MAP.counties is missing or not an array — run scripts/build-counties.mjs");
-} else {
-  const { lon0, lat1, k, cos0 } = countyMap.projection;
-  const project = (lat, lon) => [(lon - lon0) * cos0 * k, (lat1 - lat) * k];
-  // The projection is scaled so one viewBox unit is one degree of latitude / k.
-  const KM_PER_UNIT = 111.32 / k;
+for (const p of points) {
+  const owner = [p.node, ...p.trail].reverse().find((n) => n.outline);
+  if (!owner) { continue; }
+  const rings = shapes.get(owner.outline);
+  if (!rings) { continue; }
 
-  // "Los Angeles" in the shapes, "Los Angeles County" in the region tree.
-  const shapes = new Map();
-  for (const c of countyMap.counties) { shapes.set(c.name, parsePath(c.d)); }
+  const xy = project(p.node.lat, p.node.lon);
+  if (inside(xy, rings)) { continue; }
 
-  const treeCounties = new Set(points.map((p) => p.county));
-  for (const name of treeCounties) {
-    if (!shapes.has(name.replace(/ County$/, ""))) {
-      fail(`county "${name}" has no outline in data/counties.js`);
-    }
+  const offBy = distanceToRings(xy, rings) * KM_PER_UNIT;
+  if (offBy <= SIMPLIFY_SLACK_KM) { continue; }
+
+  // Naming the shape it actually landed in turns "wrong" into "fix it to this".
+  let actual = null;
+  for (const [name, other] of shapes) {
+    if (inside(xy, other)) { actual = name; break; }
   }
+  const landedIn = actual ? `, which is in ${actual}` : ", which is outside every outline";
 
-  // build-counties.mjs simplifies the rings with a tolerance of about 600 m, so
-  // near a convoluted shoreline the drawn line genuinely cannot say which side a
-  // point is on. Inside that band, "outside" means nothing.
-  const SIMPLIFY_SLACK_KM = 0.8;
-  // Past the slack it is worth a look, and this far past it is a mistake rather
-  // than a border-hugging centroid.
-  const OUTSIDE_FAIL_KM = 5;
-
-  for (const p of points) {
-    const own = shapes.get(p.county.replace(/ County$/, ""));
-    if (!own) { continue; }
-    const xy = project(p.lat, p.lon);
-    if (inside(xy, own)) { continue; }
-
-    const offBy = distanceToRings(xy, own) * KM_PER_UNIT;
-    if (offBy <= SIMPLIFY_SLACK_KM) { continue; }
-
-    // Naming the county it actually landed in turns "wrong" into "fix it to this".
-    let actual = null;
-    for (const [name, rings] of shapes) {
-      if (inside(xy, rings)) { actual = name; break; }
-    }
-    const landedIn = actual ? `, which is in ${actual} County` : ", which is offshore or out of state";
-
-    if (offBy > OUTSIDE_FAIL_KM) {
-      fail(`${p.path}: ${p.lat}, ${p.lon} is ${offBy.toFixed(1)} km outside ${p.county}${landedIn}`);
-    } else {
-      warn(`${p.path}: ${p.lat}, ${p.lon} sits ${offBy.toFixed(1)} km outside ${p.county} — ` +
-           `close enough to be the simplified outline, but worth a look`);
-    }
+  const where = `${p.node.lat}, ${p.node.lon}`;
+  if (offBy > OUTSIDE_FAIL_KM) {
+    fail(`${p.label}: ${where} is ${offBy.toFixed(1)} km outside ${owner.outline}${landedIn}`);
+  } else {
+    warn(`${p.label}: ${where} sits ${offBy.toFixed(1)} km outside ${owner.outline} — ` +
+         `close enough to be the simplified outline, but worth a look`);
   }
 }
+
+/* ---------- geometry ---------- */
 
 // "M x,y L x,y ... Z M ..." back into rings of points.
 function parsePath(d) {
@@ -262,11 +290,16 @@ function report() {
     console.error(`\n${errors.length} error(s)`);
     process.exit(1);
   }
-  console.log(
-    `ok: ${regionCount} regions, ${countyCount} counties, ${areaCount} local areas, ` +
-      `${seen.size} unique codes`
-  );
+  const byDepth = [];
+  for (const p of places) { byDepth[p.depth] = (byDepth[p.depth] ?? 0) + 1; }
+  const shape = byDepth
+    .map((n, d) => `${n} ${n === 1 ? levelName(d) : levelPlural(d)}`)
+    .join(", ");
+  console.log(`ok: ${shape}, ${seen.size} unique codes`);
   process.exit(0);
 }
+
+function levelName(depth) { return levels[depth]?.name ?? "place"; }
+function levelPlural(depth) { return levels[depth]?.plural ?? "places"; }
 
 report();

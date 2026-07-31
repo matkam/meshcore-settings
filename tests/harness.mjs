@@ -62,7 +62,7 @@ export function isTicked(page, code) {
 // has to say so. Unticking a region takes everything under it, so clearing the
 // top level is enough.
 export async function clearPicks(page) {
-  const regions = await page.$$eval(".pick-row.lvl-region input:checked",
+  const regions = await page.$$eval(".pick-row.lvl-0 input:checked",
     (n) => n.map((x) => x.dataset.code));
   for (const code of regions) {
     await page.uncheck(`.picker input[data-code="${code}"]`);
