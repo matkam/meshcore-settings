@@ -727,31 +727,31 @@ places:
             lat: 36.678
             lon: -121.655
             aliases: ["Salinas", "Gonzales", "Soledad", "Greenfield", "Castroville"]
-      - code: slocounty
+      - code: slo
         name: SLO County
         blurb: San Luis Obispo County.
         outline: ["San Luis Obispo"]
         aliases: ["San Luis Obispo County"]
         children:
-          - code: pasorobles
-            name: Paso Robles / Atascadero
+          - code: slonorth
+            name: North County
             county: San Luis Obispo
             lat: 35.627
             lon: -120.691
-            aliases: ["Paso Robles", "Atascadero", "Templeton", "San Miguel", "Shandon", "Creston", "Santa Margarita"]
+            aliases: ["Paso Robles", "Atascadero", "Templeton", "Santa Margarita", "San Miguel", "Shandon", "Creston"]
           - code: slocity
             name: San Luis Obispo
             county: San Luis Obispo
             lat: 35.283
             lon: -120.66
-            aliases: ["San Luis Obispo", "Los Osos", "Avila Beach", "Edna Valley"]
-          - code: morrobay
-            name: Morro Bay / Cambria
+            aliases: ["San Luis Obispo", "Avila Beach", "Edna Valley"]
+          - code: esterobay
+            name: Estero Bay
             county: San Luis Obispo
             lat: 35.366
             lon: -120.85
-            aliases: ["Morro Bay", "Cayucos", "Cambria", "San Simeon", "Harmony"]
-          - code: arroyogrande
+            aliases: ["Morro Bay", "Cayucos", "Los Osos", "Baywood", "Cambria", "San Simeon", "Harmony"]
+          - code: fivecities
             name: Five Cities
             county: San Luis Obispo
             lat: 35.119

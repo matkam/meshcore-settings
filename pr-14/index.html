@@ -255,18 +255,18 @@
     <h2 id="how-heading">How the region tree works</h2>
     <p>
       <code>region def</code> walks a chain: each token becomes a child of the one before it.
-      So <code>region def west ca centralcoast slocounty pasorobles</code> builds this,
+      So <code>region def west ca centralcoast slo slonorth</code> builds this,
       top to bottom:
     </p>
 <pre class="tree">*
-└─ west                    Western US
-   └─ ca                   California
-      └─ centralcoast      Central Coast
-         └─ slocounty      SLO County
-            └─ pasorobles  Paso Robles / Atascadero</pre>
+└─ west                 Western US
+   └─ ca                California
+      └─ centralcoast   Central Coast
+         └─ slo         SLO County
+            └─ slonorth Paso Robles, Atascadero and the North County</pre>
     <p>
-      Your repeater now carries all five names. Traffic scoped <code>pasorobles</code> stays
-      around Paso Robles. Traffic scoped <code>slocounty</code> covers the whole county.
+      Your repeater now carries all five names. Traffic scoped <code>slonorth</code> stays
+      in the north county. Traffic scoped <code>slo</code> covers the whole county.
       Traffic scoped <code>west</code> reaches every repeater in the western US that follows
       this convention.
     </p>
@@ -279,7 +279,7 @@
     </p>
     <p>
       Region matching is <strong>per name, not per level</strong> — a repeater that only has
-      <code>slocounty</code> and not <code>centralcoast</code> will not forward
+      <code>slo</code> and not <code>centralcoast</code> will not forward
       <code>centralcoast</code>-scoped traffic. That is why every node defines the whole
       chain from <code>west</code> down, even though it only physically sits in one spot.
     </p>
