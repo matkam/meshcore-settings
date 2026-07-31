@@ -130,8 +130,12 @@
     <div class="field">
       <span class="picker-head">
         <span class="pseudo-label" id="picker-label">Tick everywhere this repeater covers</span>
-        <button type="button" id="clear-picks" class="link-btn" hidden>Clear</button>
+        <span class="picker-tools">
+          <button type="button" id="expand-picks" class="link-btn">Expand all</button>
+          <button type="button" id="clear-picks" class="link-btn" hidden>Clear</button>
+        </span>
       </span>
+      <p class="pick-scope" id="pick-scope"></p>
       <div class="picker" id="picker" role="group" aria-labelledby="picker-label"></div>
       <p class="hint" id="pick-note"></p>
     </div>

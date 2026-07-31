@@ -32,8 +32,26 @@ export function shot(name) {
 
 /* ---------- the picker ----------
  * A tree of checkboxes, so tests tick codes rather than driving three selects.
- * Ticking a parent is what reveals its children, so `pick` walks down.
+ * Opening a place and ticking it are separate gestures: `expand` does the first,
+ * and `tick` does both, since ticking still opens what it ticks.
  */
+
+// Open a place without selecting it.
+export async function expand(page, ...codes) {
+  for (const code of codes) {
+    await page.click(`.pick-toggle[data-code="${code}"]`);
+    await page.waitForTimeout(110);
+  }
+}
+
+// Flatten the tree. Clearing the picks deliberately leaves it open where it was,
+// so a test wanting a known-flat starting point asks for one.
+export async function collapseAll(page) {
+  const label = await page.textContent("#expand-picks");
+  if (label === "Expand all") { await page.click("#expand-picks"); }
+  await page.click("#expand-picks");
+  await page.waitForTimeout(150);
+}
 
 export async function tick(page, ...codes) {
   for (const code of codes) {
