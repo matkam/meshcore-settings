@@ -11,7 +11,7 @@ set dutycycle 100
 set path.hash.mode 1
 set flood.advert.interval 24
 set loop.detect moderate
-region def west ca cc slo prb
+region def west ca centralcoast slo slonorth
 region save
 ```
 
@@ -20,6 +20,28 @@ Every one of those is adjustable under **Options** — which also has a free-tex
 is editable if you want to send something else entirely.
 
 **Live site:** https://matkam.github.io/meshcore-settings/
+
+## Contents
+
+**Using it** —
+[Firmware versions](#firmware-versions) ·
+[The map](#the-map) ·
+[The other settings](#the-other-settings) ·
+[Carrying more than one place](#carrying-more-than-one-place) ·
+[Editing the commands](#editing-the-commands) ·
+[Browsing, and looking a code up](#browsing-and-looking-a-code-up) ·
+[Pushing settings over the air](#pushing-settings-over-the-air)
+
+**The data** —
+[The region scheme](#the-region-scheme) ·
+[Using the region data elsewhere](#using-the-region-data-elsewhere) ·
+[Adding or fixing an area](#adding-or-fixing-an-area)
+
+**Working on it** —
+[Layout](#layout) ·
+[Running it locally](#running-it-locally) ·
+[Tests](#tests) ·
+[Deployment and PR previews](#deployment-and-pr-previews)
 
 ## Firmware versions
 
@@ -49,12 +71,12 @@ region put west
 region allowf west
 region put ca west
 region allowf ca
-region put cc ca
-region allowf cc
-region put slo cc
+region put centralcoast ca
+region allowf centralcoast
+region put slo centralcoast
 region allowf slo
-region put prb slo
-region allowf prb
+region put slonorth slo
+region allowf slonorth
 region save
 ```
 
@@ -168,13 +190,12 @@ the hashes it stamps on its own adverts:
 
 The firmware default is `off`, so sending `moderate` is a deliberate change.
 
-## Carrying more than one tag
+## Carrying more than one place
 
 The picker is a **tree of checkboxes**: tick a region and the places inside it
-appear beneath it, and so on down. The tags are a
-hierarchy, so showing one keeps the list short and makes the shape of what
-you're configuring visible. Each row shows the code that will actually go on the
-air.
+appear beneath it, and so on down. Region names are a hierarchy, so showing them
+as one keeps the list short and makes the shape of what you're configuring
+visible. Each row shows the code that will actually go on the air.
 
 **You carry exactly what you tick**, plus the ancestry each pick implies. Tick
 several and the repeater carries them all — which is what a high site bridging
@@ -207,11 +228,11 @@ by design — it just cuts off the devices that reach the mesh through you.
 
 `region def` walks a cursor, and the `name|jump` form creates `name` under the
 cursor then moves the cursor to `jump`. So several picks share their ancestry
-instead of repeating it:
+instead of repeating it — North County, San Luis Obispo and Oakland is one line,
+not three:
 
 ```
-region def west ca cc slo prb|slo slc
-region def west ca sfb ala oak|ca cc slo prb
+region def west ca centralcoast slo slonorth|slo slocity|ca bayarea eastbay oakland
 ```
 
 Each jump goes to the deepest name the next branch shares with where the cursor
@@ -250,8 +271,8 @@ A chain of names, matching how `region def` is walked — each token becomes a c
 of the one before it:
 
 ```
-west  →  ca  →  centralcoast  →  slo         →  slonorth
-US West  California  Central Coast  SLO County   North County (Paso Robles, Atascadero)
+west     →  ca          →  centralcoast   →  slo         →  slonorth
+US West     California     Central Coast     SLO County     North County (Paso Robles, Atascadero)
 ```
 
 California is split into 13 regions covering all 58 counties, with 161 local areas
@@ -348,10 +369,11 @@ PR if your area is missing or named wrong.
 Region names never appear in packets — a scoped packet carries two 16-bit
 transport codes derived from the region's key, so a code's length has no effect on
 airtime. The firmware's ceiling is 30 characters (`RegionEntry.name` is
-`char[31]`), and the longest chain this file generates is 60 of the 160 characters
-a serial line allows, so codes are words rather than abbreviations: `centralvalley`
-beats `cv` when nobody has to look it up. Established vernacular is the exception
-worth making — `sf`, `oc`, `ie`, `sfv` and `dtla` are what operators already type.
+`char[31]`), and the longest chain this file generates is under 60 of the 160
+characters a serial line allows, so codes are words rather than abbreviations:
+`centralvalley` beats `cv` when nobody has to look it up. Established vernacular
+is the exception worth making — `sf`, `oc`, `ie`, `sfv` and `dtla` are what
+operators already type.
 Two-letter codes that collide with a US state abbreviation are avoided, which is
 why Los Angeles is not `la`.
 
@@ -368,18 +390,13 @@ useful for "what is Mendocino County's code?" or "what did the group settle on
 for the Coachella Valley?". *Expand all* opens the lot; the box scrolls rather
 than the page growing.
 
-The box grows with the window up to about 720px — roughly nineteen rows, against
-the fourteen a fixed 420px used to give — and stops there so step 1 doesn't
-become a wall of tags. It's only ever as tall as it has content for, so at rest
-it's still eight rows. Drag its bottom edge for more — the cap steps aside as
-soon as you grab the handle, since `resize` writes a height that `max-height`
-would otherwise clamp, which stopped the drag dead at exactly the point you'd
-reach for it. Phones cap lower, since a
-row is two lines there and 70% of the screen would push the map out of sight.
-
-It used not to work that way: ticking was the only way to see inside something,
-so looking a code up meant selecting two places you didn't want and then
-unselecting them.
+The box grows with the window up to about 720px — roughly nineteen rows — and
+stops there so step 1 doesn't become a wall of names. It's only ever as tall as
+it has content for, so at rest it's still eight rows. Drag its bottom edge for
+more: the cap steps aside the moment you grab the handle, since `resize` writes a
+height that `max-height` would otherwise clamp, which would stop the drag dead at
+exactly the point you'd reach for it. Phones cap lower, since a row is two lines
+there and 70% of the screen would push the map out of sight.
 
 Every row carries its code first, then its name, then a description — a region's
 blurb, or for a local area the towns it covers, which is the same alias list that
