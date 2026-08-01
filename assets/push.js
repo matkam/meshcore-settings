@@ -17,6 +17,15 @@ import Constants from "./vendor/meshcore.js/src/constants.js";
 
 const $ = (id) => document.getElementById(id);
 
+// An element, a class, some text — textContent throughout, since repeater names
+// and replies are whatever the device sent.
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) { node.className = className; }
+  if (text != null) { node.textContent = text; }
+  return node;
+}
+
 const els = {
   panel: $("push-panel"),
   connect: $("push-connect"),
@@ -54,6 +63,8 @@ const els = {
 const DETECT_NEAR_KM = 25;   // beyond this the match is too loose to suggest
 const DETECT_CHOICES = 3;    // how many candidates to offer
 
+function showDetect() { els.detectBox.hidden = false; }
+
 // Everything in the box describes one repeater, so it is cleared as a unit
 // whenever the repeater we are looking at changes.
 function resetDetect() {
@@ -75,7 +86,7 @@ function detectLocation(contact) {
   if (!contact.advLat && !contact.advLon) {
     els.detectLoc.textContent =
       "This repeater doesn't advertise a position, so the area below is up to you.";
-    show();
+    showDetect();
     return;
   }
 
@@ -89,7 +100,7 @@ function detectLocation(contact) {
     els.detectLoc.textContent =
       "Repeater reports " + where + ", but the closest area on this site is " +
       near[0].entry.name + ", " + Math.round(near[0].km) + " km away. Too far to guess — pick one below.";
-    show();
+    showDetect();
     return;
   }
 
@@ -99,10 +110,8 @@ function detectLocation(contact) {
     : "Repeater reports " + where + " — only one area is close to that:";
 
   near.forEach((hit) => {
-    const btn = document.createElement("button");
+    const btn = el("button", "action small", hit.entry.name + " · " + fmtKm(hit.km));
     btn.type = "button";
-    btn.className = "action small";
-    btn.textContent = hit.entry.name + " · " + fmtKm(hit.km);
     btn.title = hit.entry.context;
     btn.setAttribute("aria-pressed", "false");
     btn.onclick = () => {
@@ -118,7 +127,7 @@ function detectLocation(contact) {
     els.detectChoices.append(btn);
   });
   els.detectChoices.hidden = false;
-  show();
+  showDetect();
 }
 
 // Sub-10 km is where the choice is actually hard, so keep a decimal there. A
@@ -139,7 +148,7 @@ function firmwareTier(major, minor) {
 
 async function detectFirmware(contact) {
   els.detectVer.textContent = "Asking the repeater its firmware version…";
-  show();
+  showDetect();
 
   let reply;
   try {
@@ -164,8 +173,6 @@ async function detectFirmware(contact) {
   els.detectVer.textContent =
     "Repeater reports " + reply.trim() + " — firmware set to " + labels[tier] + ".";
 }
-
-function show() { els.detectBox.hidden = false; }
 
 // Truthiness rather than `in` — some browsers expose the property as undefined.
 const hasSerial = typeof navigator !== "undefined" && !!navigator.serial;
@@ -355,9 +362,7 @@ function fillRepeaters() {
   els.repeater.textContent = "";
 
   if (!list.length) {
-    const o = document.createElement("option");
-    o.textContent = "No repeaters in this node's contacts";
-    els.repeater.appendChild(o);
+    els.repeater.appendChild(el("option", null, "No repeaters in this node's contacts"));
     els.repeater.disabled = true;
     els.btnLogin.disabled = true;
     els.repeaterHint.textContent =
@@ -369,9 +374,9 @@ function fillRepeaters() {
   els.repeater.disabled = false;
   list.sort((a, b) => a.advName.localeCompare(b.advName));
   for (const c of list) {
-    const o = document.createElement("option");
+    const o = el("option", null,
+      c.advName + (c.type === Constants.AdvType.Room ? "  (room server)" : ""));
     o.value = toHex(c.publicKey);
-    o.textContent = c.advName + (c.type === Constants.AdvType.Room ? "  (room server)" : "");
     els.repeater.appendChild(o);
   }
 
@@ -422,10 +427,10 @@ async function login() {
     // Now that we're authenticated, ask the repeater what it's running.
     await detectFirmware(contact);
   } catch (e) {
-    // login() rejects with "timeout" or bare undefined depending on the failure.
-    const why = !e ? "no response — wrong password, or the repeater is out of reach"
-      : /timeout/i.test(describe(e)) ? "no response — wrong password, or the repeater is out of reach"
-      : describe(e);
+    // login() rejects with "timeout" or bare undefined depending on the failure,
+    // and both mean the same thing from here.
+    const silent = "no response — wrong password, or the repeater is out of reach";
+    const why = !e || /timeout/i.test(describe(e)) ? silent : describe(e);
     setStatus("Login failed: " + why, "over");
   } finally {
     setBusy(false);
@@ -501,19 +506,11 @@ function renderProgress(lines, states) {
   els.progress.textContent = "";
 
   lines.forEach((line, i) => {
-    const li = document.createElement("li");
-    li.className = "prog " + (states[i] ? states[i].kind : "todo");
-
-    const cmd = document.createElement("code");
-    cmd.className = "prog-cmd";
-    cmd.textContent = line;
-    li.appendChild(cmd);
-
-    if (states[i] && states[i].reply) {
-      const reply = document.createElement("pre");
-      reply.className = "prog-reply";
-      reply.textContent = states[i].reply;
-      li.appendChild(reply);
+    const state = states[i];
+    const li = el("li", "prog " + (state ? state.kind : "todo"));
+    li.appendChild(el("code", "prog-cmd", line));
+    if (state && state.reply) {
+      li.appendChild(el("pre", "prog-reply", state.reply));
     }
     els.progress.appendChild(li);
   });
@@ -545,6 +542,16 @@ async function push() {
   setBusy(true);
   renderProgress(lines, states);
 
+  // Stopping looks the same whichever way a line fails: mark it, remember where
+  // to pick up again, and leave everything after it unsent.
+  const stopAt = (n, reply, why) => {
+    states[n] = { kind: "fail", reply: reply };
+    renderProgress(lines, states);
+    resumeFrom = n;
+    setStatus(why, "over");
+    setBusy(false);
+  };
+
   for (let n = resumeFrom; n < lines.length; n++) {
     states[n] = { kind: "active" };
     renderProgress(lines, states);
@@ -554,25 +561,17 @@ async function push() {
     try {
       reply = await runCli(contact.publicKey, lines[n]);
     } catch (e) {
-      states[n] = { kind: "fail", reply: describe(e) };
-      renderProgress(lines, states);
-      resumeFrom = n;
-      setStatus(
+      stopAt(n, describe(e),
         "Command " + (n + 1) + " did not complete, so commands after it were not sent. " +
         "The repeater may or may not have applied it — press Send settings to retry " +
-        "from this line.", "over");
-      setBusy(false);
+        "from this line.");
       return;
     }
 
     if (/^Err\b/i.test(reply.trim())) {
-      states[n] = { kind: "fail", reply: reply };
-      renderProgress(lines, states);
-      resumeFrom = n;
-      setStatus(
+      stopAt(n, reply,
         "The repeater rejected command " + (n + 1) + ". Nothing after it was sent — " +
-        "fix the problem and press Send settings to resume from here.", "over");
-      setBusy(false);
+        "fix the problem and press Send settings to resume from here.");
       return;
     }
 

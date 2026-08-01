@@ -337,12 +337,11 @@ pre:focus-visible {
 .pick-row input:checked ~ .pick-title .pick-name { font-weight: 600; color: var(--accent); }
 .pick-row input:checked ~ .pick-title .pick-code { color: var(--accent); }
 
-/* Narrow screens have no room to clip a description into: it drops to its own
-   line instead, where density matters less because you are scrolling anyway. */
 /* Narrow screens have no width to clip a description into, so it takes its own
-   line. Grid rather than flex-wrap: wrapping picks lines by an item's
-   max-content width, which puts the title on a line of its own the moment a name
-   is long. Two explicit columns cannot do that. */
+   line, where density matters less because you are scrolling anyway. Grid rather
+   than flex-wrap: wrapping picks lines by an item's max-content width, which
+   puts the title on a line of its own the moment a name is long. Two explicit
+   columns cannot do that. */
 @media (max-width: 560px) {
   /* A phone row is two lines, so 70vh is most of the screen for eight regions
      and pushes the map out of sight. Lower ceiling here, and no drag handle —
@@ -937,6 +936,8 @@ pre.tree {
   height: auto;
   /* Anything selectable sets its own cursor; the rest of the ocean is not. */
   cursor: default;
+  /* At full extent, a touch drag belongs to the page, not the map. */
+  touch-action: pan-y;
 }
 
 .map-svg.is-pointing { cursor: pointer; }
@@ -944,9 +945,6 @@ pre.tree {
 /* Only once there is somewhere to pan to. */
 .map-svg.is-zoomed { cursor: grab; touch-action: none; }
 .map-svg.is-dragging { cursor: grabbing; }
-
-/* At full extent, a touch drag belongs to the page, not the map. */
-.map-svg { touch-action: pan-y; }
 
 .map-county {
   fill: var(--panel);
