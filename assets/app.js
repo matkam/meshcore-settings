@@ -818,10 +818,10 @@ window.RegionData.ready(function (DATA) {
   function chainsFor() {
     var all = chosen().map(chainOf);
     // A chain that is a prefix of another says nothing extra: `region def west
-    // ca centralcoast slo slonorth` already creates centralcoast and slo on the
-    // way past. So ticking a place and something inside it is not a contradiction
-    // to resolve, it is a duplicate to drop — which is why the picker needs no
-    // "deepest wins" rule.
+    // california centralcoast slo slonorth` already creates centralcoast and slo
+    // on the way past. So ticking a place and something inside it is not a
+    // contradiction to resolve, it is a duplicate to drop — which is why the
+    // picker needs no "deepest wins" rule.
     return all.filter(function (chain) {
       return !all.some(function (other) {
         return other.length > chain.length && chain.every(function (t, i) {
@@ -851,11 +851,11 @@ window.RegionData.ready(function (DATA) {
    * cursor to `jump`, which lets one line define several branches instead of
    * repeating the shared ancestry in a second command.
    *
-   *   region def west ca centralcoast slo slonorth|ca bayarea eastbay oakland
+   *   region def west california centralcoast slo slonorth|california bayarea eastbay oakland
    *
-   * builds the North County chain, hops the cursor back up to `ca`, and carries
-   * on into Oakland's. The 160-character serial limit still applies, so a line
-   * that would overflow starts a new command from the root instead.
+   * builds the North County chain, hops the cursor back up to `california`, and
+   * carries on into Oakland's. The 160-character serial limit still applies, so
+   * a line that would overflow starts a new command from the root instead.
    */
   function defLines(chains) {
     var lines = [];
@@ -947,10 +947,10 @@ window.RegionData.ready(function (DATA) {
       // A tag is one extra name, not a chain, so it is placed with `region put`
       // even here where `region def` is available. Three reasons: `def` walking
       // a chain overstates what a tag is, a second `def` would re-assert west
-      // and ca that the line above just placed — each re-put resetting their
-      // flags — and this way the tag looks the same on every firmware, where
-      // only the chain form differs. `put` flood-allows as it creates on 1.15+,
-      // so no allowf is needed at this tier.
+      // and california that the line above just placed — each re-put resetting
+      // their flags — and this way the tag looks the same on every firmware,
+      // where only the chain form differs. `put` flood-allows as it creates on
+      // 1.15+, so no allowf is needed at this tier.
       tagChains.forEach(function (ch) {
         regionLines.push("region put " + ch[ch.length - 1].code + " " + ch[ch.length - 2].code);
       });

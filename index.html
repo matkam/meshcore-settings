@@ -254,12 +254,12 @@
     <h2 id="how-heading">How the region tree works</h2>
     <p>
       <code>region def</code> walks a chain: each token becomes a child of the one before it.
-      So <code>region def west ca centralcoast slo slonorth</code> builds this,
+      So <code>region def west california centralcoast slo slonorth</code> builds this,
       top to bottom:
     </p>
 <pre class="tree">*
 └─ west                 Western US
-   └─ ca                California
+   └─ california        California
       └─ centralcoast   Central Coast
          └─ slo         SLO County
             └─ slonorth Paso Robles, Atascadero and the North County</pre>
@@ -305,7 +305,7 @@
         alongside the chain rather than inside it, for a scope that cuts across the tree.
         <code>socal</code> reaches six regions that have no common parent and shouldn't be
         given one — they sit in four basins that can't hear each other. It is placed with
-        <code>region put socal ca</code> rather than riding the chain, which is the same
+        <code>region put socal california</code> rather than riding the chain, which is the same
         line on every firmware version. Only the places that opt in carry it, so it costs
         a table entry on those nodes and nobody else's.
       </li>
