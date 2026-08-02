@@ -148,11 +148,11 @@ check("textarea starts from the generated commands",
   (await page.inputValue("#commands-edit")).trim() === (await cmds()));
 check("the button becomes Done", (await page.textContent("#edit-cmds")) === "Done");
 
-await page.fill("#commands-edit", "set dutycycle 50\nregion def west ca centralcoast slo slonorth\nregion save");
+await page.fill("#commands-edit", "set dutycycle 50\nregion def west california centralcoast slo slonorth\nregion save");
 await page.waitForTimeout(120);
 check("edits become the command list",
   JSON.stringify(await page.evaluate(() => window.SettingsState.get().lines)) ===
-  JSON.stringify(["set dutycycle 50", "region def west ca centralcoast slo slonorth", "region save"]),
+  JSON.stringify(["set dutycycle 50", "region def west california centralcoast slo slonorth", "region save"]),
   JSON.stringify(await page.evaluate(() => window.SettingsState.get().lines)));
 check("the edit is flagged as such", await page.evaluate(() => window.SettingsState.get().edited) === true);
 check("a note says the two have diverged", await page.isVisible("#edit-note"));
@@ -174,7 +174,7 @@ check("changing the area does not overwrite an edit",
   (await page.inputValue("#commands-edit")).includes("set dutycycle 50"),
   await page.inputValue("#commands-edit"));
 check("the generated view still follows the selection",
-  (await cmds()).includes("region def west ca bayarea eastbay oakland"), await cmds());
+  (await cmds()).includes("region def west california bayarea eastbay oakland"), await cmds());
 await page.selectOption("#opt-fw", "110");
 await page.waitForTimeout(150);
 check("changing firmware does not overwrite an edit either",
@@ -257,7 +257,7 @@ await page.close();
   await p2.goto(SITE + "#slonorth", { waitUntil: "networkidle" });
 
   await p2.click("#edit-cmds");
-  await p2.fill("#commands-edit", "set dutycycle 33\nregion def west ca centralcoast slo slonorth\nregion save");
+  await p2.fill("#commands-edit", "set dutycycle 33\nregion def west california centralcoast slo slonorth\nregion save");
   await p2.waitForTimeout(120);
 
   await p2.click("#btn-usb");
@@ -274,7 +274,7 @@ await page.close();
     .filter((l) => l.startsWith("cli:")).map((l) => l.slice(4)).filter((c) => c !== "ver"));
   check("the push sends the edited commands, not the generated ones",
     JSON.stringify(sent) === JSON.stringify([
-      "set dutycycle 33", "region def west ca centralcoast slo slonorth", "region save", "region get slonorth"]),
+      "set dutycycle 33", "region def west california centralcoast slo slonorth", "region save", "region get slonorth"]),
     JSON.stringify(sent));
 
   // An emptied list must not be sendable.

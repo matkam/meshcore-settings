@@ -111,7 +111,7 @@ limits:
 root:
   - code: west
     name: Western US
-  - code: ca
+  - code: california
     name: California
 
 # Indexed by depth below the root. Anything deeper than this list is described

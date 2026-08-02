@@ -213,7 +213,7 @@ const sentCmds = sim.filter((l) => l.startsWith("cli:")).map((l) => l.slice(4)).
 check("sent exactly the generated commands + verification",
   JSON.stringify(sentCmds) === JSON.stringify([
     "set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
-    "region def west ca centralcoast slo slonorth", "region save", "region get slonorth"]),
+    "region def west california centralcoast slo slonorth", "region save", "region get slonorth"]),
   JSON.stringify(sentCmds));
 
 const states = await page.$$eval("#push-progress li", (n) => n.map((x) => x.className));
@@ -225,7 +225,7 @@ await page.screenshot({ path: shot("push-success.png"), fullPage: false, clip: a
 // ---------- 3. failure mid-sequence stops and resumes ----------
 await page.evaluate(() => {
   window.__sim.log.length = 0;
-  window.__sim.replies["region def west ca centralcoast slo slonorth"] = "Err - unknown jump: nope";
+  window.__sim.replies["region def west california centralcoast slo slonorth"] = "Err - unknown jump: nope";
 });
 page.once("dialog", (d) => d.accept());
 await page.click("#btn-push");
@@ -236,7 +236,7 @@ const afterFail = await page.evaluate(() => window.__sim.log.filter((l) => l.sta
 check("stops at the failing command, sends nothing after",
   JSON.stringify(afterFail) === JSON.stringify([
     "set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
-    "region def west ca centralcoast slo slonorth"]),
+    "region def west california centralcoast slo slonorth"]),
   JSON.stringify(afterFail));
 
 const failStates = await page.$$eval("#push-progress li", (n) => n.map((x) => x.className));
@@ -251,7 +251,7 @@ await page.screenshot({ path: shot("push-fail.png"), clip: await page.locator("#
 // resume after fixing
 await page.evaluate(() => {
   window.__sim.log.length = 0;
-  delete window.__sim.replies["region def west ca centralcoast slo slonorth"];
+  delete window.__sim.replies["region def west california centralcoast slo slonorth"];
 });
 await page.click("#btn-push");   // no confirm on resume
 await page.waitForFunction(
@@ -260,7 +260,7 @@ await page.waitForFunction(
 const resumed = await page.evaluate(() => window.__sim.log.filter((l) => l.startsWith("cli:")).map((l) => l.slice(4)).filter((c) => c !== "ver"));
 check("resume restarts at the failed line, not from scratch",
   JSON.stringify(resumed) === JSON.stringify([
-    "region def west ca centralcoast slo slonorth", "region save", "region get slonorth"]),
+    "region def west california centralcoast slo slonorth", "region save", "region get slonorth"]),
   JSON.stringify(resumed));
 
 // ---------- 4. changing settings resets progress ----------

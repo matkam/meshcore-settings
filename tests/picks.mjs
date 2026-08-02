@@ -30,22 +30,22 @@ async function only(...codes) {
 
 await only("centralcoast");
 check("a region alone gives a region chain",
-  (await defs())[0] === "region def west ca centralcoast", await cmds());
+  (await defs())[0] === "region def west california centralcoast", await cmds());
 check("nothing is generated before anything is picked", true);
 
 await tick(page, "slo");
 check("adding an area deepens the chain",
-  (await defs())[0] === "region def west ca centralcoast slo", await cmds());
+  (await defs())[0] === "region def west california centralcoast slo", await cmds());
 
 await tick(page, "slonorth");
 check("adding a local area deepens it again",
-  (await defs())[0] === "region def west ca centralcoast slo slonorth", await cmds());
+  (await defs())[0] === "region def west california centralcoast slo slonorth", await cmds());
 
 /* ---------- several at the deepest level ---------- */
 
 await tick(page, "slocity");
 check("two local areas share their ancestry on one line",
-  (await defs())[0] === "region def west ca centralcoast slo slonorth|slo slocity", await cmds());
+  (await defs())[0] === "region def west california centralcoast slo slonorth|slo slocity", await cmds());
 check("one def line, not two", (await defs()).length === 1, JSON.stringify(await defs()));
 
 const verifyText = await page.textContent("#verify-block");
@@ -65,7 +65,7 @@ check("local areas from every ticked area are shown",
 {
   const line = (await defs())[0];
   check("a cross-region pick jumps back to the shared root",
-    /\|ca /.test(line) && line.includes("slonorth") && line.includes("oakland"), line);
+    /\|california /.test(line) && line.includes("slonorth") && line.includes("oakland"), line);
   check("still one line", (await defs()).length === 1, JSON.stringify(await defs()));
 }
 
@@ -81,7 +81,7 @@ await untick(page, "slo", "eastbay");
 // Order follows the option order, which is the order they appear in the data
 // file — bayarea before centralcoast — not the order they were clicked.
 check("unticking the areas falls back to the regions",
-  (await defs())[0] === "region def west ca bayarea|ca centralcoast", (await defs())[0]);
+  (await defs())[0] === "region def west california bayarea|california centralcoast", (await defs())[0]);
 
 await clearPicks(page);
 check("clearing everything hides the output", await page.isHidden("#output-panel"));
@@ -124,7 +124,7 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
   check("no def lines on 1.10", !(await cmds()).includes("region def"));
   check("shared ancestry is placed once",
     puts.filter((l) => l === "region put west").length === 1 &&
-    puts.filter((l) => l === "region put ca west").length === 1, JSON.stringify(puts));
+    puts.filter((l) => l === "region put california west").length === 1, JSON.stringify(puts));
   check("each pick's own ancestry is placed",
     puts.includes("region put slonorth slo") && puts.includes("region put oakland eastbay"), JSON.stringify(puts));
   check("every placed region is flood-allowed",
@@ -138,7 +138,7 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
 {
   await page.goto(SITE + "#slonorth", { waitUntil: "networkidle" });
   check("a single deep link still works",
-    (await defs())[0] === "region def west ca centralcoast slo slonorth", await cmds());
+    (await defs())[0] === "region def west california centralcoast slo slonorth", await cmds());
   await tick(page, "slocity");
   check("picking several writes them all to the hash",
     /^#(slonorth,slocity|centralcoast,slo,slonorth,slocity)$/

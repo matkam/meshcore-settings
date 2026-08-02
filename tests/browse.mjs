@@ -191,7 +191,7 @@ check("which is what makes the next level reachable", (await rowsAt(1)) === 7, a
 
 await tick(page, "slo", "slonorth");
 check("the chain builds as before",
-  (await cmds()).includes("region def west ca centralcoast slo slonorth"), await cmds());
+  (await cmds()).includes("region def west california centralcoast slo slonorth"), await cmds());
 
 // The name sits inside a wrapper now, so the rule that marks a chosen row is
 // two levels down from the checkbox rather than beside it. Easy to break by
@@ -252,7 +252,7 @@ check("and so does a search result",
 
 check("the scope line says where chains start and how much there is",
   (await page.textContent("#pick-scope")) ===
-    "west › ca prefixes every chain · 13 regions, 84 areas and 94 local areas to choose from.",
+    "west › california prefixes every chain · 13 regions, 84 areas and 94 local areas to choose from.",
   await page.textContent("#pick-scope"));
 
 /* ---------- keyboard ---------- */

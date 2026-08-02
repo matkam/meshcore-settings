@@ -93,7 +93,7 @@ async function pointFor(code) {
   check("clicking a dot selects the area", await isTicked(page, "slonorth"),
     JSON.stringify(await page.$$eval(".picker input:checked", (n) => n.map((x) => x.dataset.code))));
   check("clicking a dot generates the commands",
-    /region def west ca centralcoast slo slonorth/.test(await page.textContent("#commands")));
+    /region def west california centralcoast slo slonorth/.test(await page.textContent("#commands")));
   check("selected dot is marked on",
     await page.$eval('.map-dot[data-place="slonorth"]', (d) => d.classList.contains("is-on")));
   check("selected area's own outline is marked on",
