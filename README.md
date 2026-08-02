@@ -11,7 +11,7 @@ set dutycycle 100
 set path.hash.mode 1
 set flood.advert.interval 24
 set loop.detect moderate
-region def west ca centralcoast slo slonorth
+region def west california centralcoast slo slonorth
 region save
 ```
 
@@ -69,9 +69,9 @@ Same tree, different syntax. On 1.10–1.13 that same North County example becom
 set af 0
 region put west
 region allowf west
-region put ca west
-region allowf ca
-region put centralcoast ca
+region put california west
+region allowf california
+region put centralcoast california
 region allowf centralcoast
 region put slo centralcoast
 region allowf slo
@@ -232,7 +232,7 @@ instead of repeating it — North County, San Luis Obispo and Oakland is one lin
 not three:
 
 ```
-region def west ca centralcoast slo slonorth|slo slocity|ca bayarea eastbay oakland
+region def west california centralcoast slo slonorth|slo slocity|california bayarea eastbay oakland
 ```
 
 Each jump goes to the deepest name the next branch shares with where the cursor
@@ -271,7 +271,7 @@ A chain of names, matching how `region def` is walked — each token becomes a c
 of the one before it:
 
 ```
-west     →  ca          →  centralcoast   →  slo         →  slonorth
+west     →  california  →  centralcoast   →  slo         →  slonorth
 US West     California     Central Coast     SLO County     North County (Paso Robles, Atascadero)
 ```
 
@@ -327,13 +327,13 @@ root as its own short chain, and a place opts into it rather than inheriting one
 by position. Everything beneath an opted-in place carries it too.
 
 ```
-region def west ca losangeles dtla
-region put socal ca
+region def west california losangeles dtla
+region put socal california
 ```
 
 `region put`, not a second `region def`, even on firmware that has `def`. A tag is
 one extra name rather than a chain, so `put` says what it is; a `def` would
-re-assert `west` and `ca` that the line above just placed, resetting their flags
+re-assert `west` and `california` that the line above just placed, resetting their flags
 on the way past; and this way the tag looks identical on every firmware version,
 where only the chain form differs. It flood-allows as it creates on 1.15+, so no
 `allowf` is needed there.
@@ -362,7 +362,7 @@ and would have pushed 44 southern places from a four-token chain to five.
 
 MeshCore does not ship a national region list, and there is no body that assigns
 these. What actually matters is that the repeaters around you use the same names.
-The codes here follow the widely used `west` / `ca` top-level tags and stay
+The codes here follow the widely used `west` / `california` top-level tags and stay
 lowercase, but **check with your local mesh group before deploying**, and open a
 PR if your area is missing or named wrong.
 
