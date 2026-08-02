@@ -275,7 +275,7 @@ west     →  california  →  centralcoast   →  slo         →  slonorth
 US West     California     Central Coast     SLO County     North County (Paso Robles, Atascadero)
 ```
 
-California is split into 13 regions covering all 58 counties, with 161 local areas
+California is split into 13 regions covering all 58 counties, with 162 local areas
 under them, and you can generate settings at any level: pick a region for a
 region-wide chain, an area for an area-wide one, or a local area for the full
 chain.
@@ -292,7 +292,7 @@ validator its point-in-boundary check and makes the county name searchable.
 reach something meaningful, so the North Coast lists its towns directly under the
 region. A metro where the county already *is* the mesh needs two, so Los Angeles,
 Orange County and San Diego hold their local areas with nothing in between. Both
-are correct and `region def` does not care — 67 of the 161 places sit on a
+are correct and `region def` does not care — 67 of the 162 places sit on a
 four-token chain rather than five, which is a region-table entry back on every
 node in those branches.
 

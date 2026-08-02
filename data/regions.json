@@ -2,7 +2,7 @@
   "format": 2,
   "name": "California",
   "description": "MeshCore repeater region scopes for California, as a tree of nested places.",
-  "updated": "2026-07-31",
+  "updated": "2026-08-02",
   "license": "MIT",
   "source": "https://github.com/matkam/meshcore-settings",
   "limits": {
@@ -903,7 +903,7 @@
               "county": "San Luis Obispo",
               "lat": 35.366,
               "lon": -120.85,
-              "aliases": ["Morro Bay", "Cayucos", "Los Osos", "Baywood", "Cambria", "San Simeon", "Harmony"]
+              "aliases": ["Morro Bay", "Cayucos", "Los Osos", "Baywood", "Cambria", "San Simeon", "Harmony", "North Coast"]
             },
             {
               "code": "fivecities",
@@ -911,7 +911,15 @@
               "county": "San Luis Obispo",
               "lat": 35.119,
               "lon": -120.591,
-              "aliases": ["Arroyo Grande", "Pismo Beach", "Grover Beach", "Oceano", "Nipomo"]
+              "aliases": ["Arroyo Grande", "Pismo Beach", "Grover Beach", "Oceano", "Halcyon"]
+            },
+            {
+              "code": "slosouth",
+              "name": "South County",
+              "county": "San Luis Obispo",
+              "lat": 35.043,
+              "lon": -120.476,
+              "aliases": ["Nipomo", "Los Berros", "Huasna", "Callender", "Nipomo Mesa"]
             }
           ]
         },
