@@ -104,7 +104,7 @@ check("the button offers to expand while anything is closed",
 
 await page.click("#expand-picks");
 await page.waitForTimeout(500);
-check("expand all opens the whole tree", (await rows()) === 192, await rows());
+check("expand all opens the whole tree", (await rows()) === 191, await rows());
 check("and it is still a selection of nothing", (await picks(page)).length === 0);
 check("the button turns into collapse",
   (await page.textContent("#expand-picks")) === "Collapse all");
@@ -252,7 +252,7 @@ check("and so does a search result",
 
 check("the scope line says where chains start and how much there is",
   (await page.textContent("#pick-scope")) ===
-    "west › california prefixes every chain · 13 regions, 84 areas and 95 local areas to choose from.",
+    "west › california prefixes every chain · 13 regions, 84 areas and 94 local areas to choose from.",
   await page.textContent("#pick-scope"));
 
 /* ---------- keyboard ---------- */

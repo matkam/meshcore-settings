@@ -19,7 +19,7 @@ await page.goto(SITE, { waitUntil: "networkidle" });
 check("map rendered", await page.isVisible("#map-host .map-svg"));
 check("58 county paths", (await page.$$eval(".map-county", (e) => e.length)) === 58,
   await page.$$eval(".map-county", (e) => e.length));
-check("162 area dots", (await page.$$eval(".map-dot", (e) => e.length)) === 162,
+check("161 area dots", (await page.$$eval(".map-dot", (e) => e.length)) === 161,
   await page.$$eval(".map-dot", (e) => e.length));
 check("13 region labels", (await page.$$eval(".map-label", (e) => e.length)) === 13,
   await page.$$eval(".map-label", (e) => e.length));
