@@ -906,20 +906,13 @@
               "aliases": ["Morro Bay", "Cayucos", "Los Osos", "Baywood", "Cambria", "San Simeon", "Harmony", "North Coast"]
             },
             {
-              "code": "fivecities",
-              "name": "Five Cities",
-              "county": "San Luis Obispo",
-              "lat": 35.119,
-              "lon": -120.591,
-              "aliases": ["Arroyo Grande", "Pismo Beach", "Grover Beach", "Oceano", "Halcyon"]
-            },
-            {
               "code": "slosouth",
               "name": "South County",
+              "blurb": "The Five Cities and Nipomo, from Pismo Beach down to the county line.",
               "county": "San Luis Obispo",
-              "lat": 35.043,
-              "lon": -120.476,
-              "aliases": ["Nipomo", "Los Berros", "Huasna", "Callender", "Nipomo Mesa"]
+              "lat": 35.112,
+              "lon": -120.578,
+              "aliases": ["Five Cities", "Arroyo Grande", "Pismo Beach", "Grover Beach", "Oceano", "Halcyon", "Nipomo", "Nipomo Mesa", "Los Berros", "Huasna", "Callender"]
             }
           ]
         },
