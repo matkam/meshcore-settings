@@ -90,7 +90,7 @@ description: MeshCore repeater region scopes for California, as a tree of nested
 # Quoted on purpose: unquoted, YAML resolves this to a timestamp and a parser
 # hands back a date object, where regions.json always has a string. Keep the
 # quotes so both files mean the same thing to whoever reads them.
-updated: "2026-07-31"
+updated: "2026-08-02"
 license: MIT
 source: https://github.com/matkam/meshcore-settings
 
@@ -768,13 +768,19 @@ places:
             county: San Luis Obispo
             lat: 35.366
             lon: -120.85
-            aliases: ["Morro Bay", "Cayucos", "Los Osos", "Baywood", "Cambria", "San Simeon", "Harmony"]
+            aliases: ["Morro Bay", "Cayucos", "Los Osos", "Baywood", "Cambria", "San Simeon", "Harmony", "North Coast"]
           - code: fivecities
             name: Five Cities
             county: San Luis Obispo
             lat: 35.119
             lon: -120.591
-            aliases: ["Arroyo Grande", "Pismo Beach", "Grover Beach", "Oceano", "Nipomo"]
+            aliases: ["Arroyo Grande", "Pismo Beach", "Grover Beach", "Oceano", "Halcyon"]
+          - code: slosouth
+            name: South County
+            county: San Luis Obispo
+            lat: 35.043
+            lon: -120.476
+            aliases: ["Nipomo", "Los Berros", "Huasna", "Callender", "Nipomo Mesa"]
       - code: santabarbara
         name: Santa Barbara County
         blurb: Santa Barbara County.
