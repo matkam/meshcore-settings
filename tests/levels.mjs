@@ -21,11 +21,16 @@ const SITE = process.env.SITE || "http://127.0.0.1:8765/";
  *     da  District A
  *       ta  Town A                  (outline "Alameda", dot)
  *         na  North End             (dot)
- *   zb  Zone B                      (label, kind: sector)
+ *   zb  Zone B                      (label, kind: sector, tags: [tg])
  *     db  District B                (outline "Kern", dot, kind: borough)
  *
  * Deepest chain is west > tl > za > da > ta > na — six names, two more than
  * California ever produces.
+ *
+ * Zone B carries a tag its child does not name. Every tag in the California
+ * data sits on a place with nothing under it, so inheritance — the rule that
+ * everything beneath an opted-in place carries it — has nowhere real left to
+ * be exercised. It lives here instead.
  */
 const TREE = {
   format: 1,
@@ -34,6 +39,7 @@ const TREE = {
   updated: "2026-07-31",
   limits: { maxLineLength: 160, maxRegionNames: 32, maxDepth: 8 },
   root: [{ code: "west", name: "Western US" }, { code: "tl", name: "Testland" }],
+  tags: [{ code: "tg", name: "Test Tag", blurb: "A scope that cuts across the tree." }],
   levels: [
     { name: "zone", plural: "zones" },
     { name: "district", plural: "districts" },
@@ -62,6 +68,7 @@ const TREE = {
       code: "zb",
       name: "Zone B",
       kind: "sector",
+      tags: ["tg"],
       children: [{
         code: "db",
         name: "District B",
@@ -118,6 +125,8 @@ check("six names, which is deeper than California ever goes",
 
 const chain = await page.$$eval("#chain .tok", (n) => n.map((x) => x.textContent));
 check("the chain display shows all six", chain.join(" ") === "west tl za da ta na", chain.join(" "));
+check("and a branch that opted into no tag carries no extra name",
+  !(await cmds()).includes("region put tg"), await cmds());
 
 /* ---------- a shallower branch is not padded out ---------- */
 
@@ -126,6 +135,12 @@ await collapseAll(page);
 await tick(page, "zb", "db");
 check("a two-level branch stops where it stops",
   (await cmds()).includes("region def west tl zb db"), await cmds());
+
+// db does not name the tag; zb above it does. Picking db has to carry it
+// anyway, or "everything beneath an opted-in place carries it" is only true
+// of the place that named it.
+check("a tag on an ancestor is inherited by what sits under it",
+  (await cmds()).includes("region put tg tl"), await cmds());
 check("and shows no empty level under it", (await rows(2)) === 0, await rows(2));
 check("so the shallow branch has nothing to open",
   (await page.$$('.pick-toggle[data-code="db"]')).length === 0);
