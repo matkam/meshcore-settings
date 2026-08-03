@@ -106,7 +106,7 @@ await page.screenshot({ path: shot("fw-old.png"), clip: { x: 0, y: 180, width: 1
  * every tier — the only difference further down is that 1.14 and older need an
  * explicit allowf, the same as every other name.
  */
-await page.goto(SITE + "#dtla", { waitUntil: "networkidle" });
+await page.goto(SITE + "#ontario", { waitUntil: "networkidle" });
 await page.selectOption("#opt-fw", "110");
 check("a tag is placed as its own name on 1.10", await cmds(), [
   "set af 0", "set flood.advert.interval 24",

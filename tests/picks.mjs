@@ -203,7 +203,7 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
     await page.textContent("#line-note"));
 
   for (const code of ["northcoast", "shastacascade", "sacramentovalley", "sierranevada",
-                      "bayarea", "centralcoast", "centralvalley", "losangeles"]) {
+                      "bayarea", "centralcoast", "centralvalley", "socal"]) {
     await page.check(`.picker input[data-code="${code}"]`);
     await page.waitForTimeout(35);
   }
@@ -244,7 +244,7 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
       return row.top >= box.top - 1 && row.bottom <= box.bottom + 1;
     }));
   check("and ticks its ancestors so the row is reachable",
-    (await picks(page)).join(",") === "ie,bigbear", (await picks(page)).join(","));
+    (await picks(page)).join(",") === "socal,sanbernardino,bigbear", (await picks(page)).join(","));
   check("Clear appears once something is picked", await page.isVisible("#clear-picks"));
 
   await page.click("#clear-picks");
