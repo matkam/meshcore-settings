@@ -73,10 +73,15 @@
 # Why the tree looks like this
 #
 # The levels follow communities and RF propagation rather than administrative
-# lines. County boundaries are ignored where they cut through a mesh: Lake
-# Tahoe is one place across three counties, the Mojave gathers the high desert
-# out of four, and Ventura County is split at the Conejo grade because its
-# east half talks to Los Angeles and its west half talks up the coast.
+# lines. A region is a mesh that can hear itself, so a county line is ignored
+# where it cuts through one — Lake Tahoe is one place across three counties.
+# Where the two agree the county stands: SoCal runs its own frequency and is
+# linked from Santa Barbara to San Diego, and inside it the counties are what
+# the local groups organise around, so there they are the level. Same rule,
+# different answer.
+#
+# What a county cannot draw becomes a tag instead. The high desert reaches
+# across three counties and two regions; `ie` spans three. See `tags` above.
 #
 # Depth follows how big the local community is. Sparse country needs three
 # levels to reach something meaningful; a metro where the county already is
@@ -128,7 +133,7 @@ levels:
 tags:
   - code: ie
     name: Inland Empire
-    blurb: San Bernardino and Riverside valley floor and mountains, not the deserts.
+    blurb: The San Bernardino and Riverside valley floor and mountains, plus the Pomona Valley — not the deserts.
   # OPEN: `highdesert` or `mojave`? Both are said out here, and the places that
   # carry this are split — Antelope Valley says high desert, Barstow and Needles
   # say Mojave. Worth settling with the desert operators before anyone deploys.

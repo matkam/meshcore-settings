@@ -82,7 +82,7 @@ from them.
 ## Adding a level
 
 The tree is not fixed at regions > areas > local areas, and it is deliberately
-ragged: the North Coast lists its towns straight under the region because there
+ragged: North California lists its towns straight under the region because there
 is nothing in between worth naming, while the Bay Area has North Bay, East Bay,
 Peninsula and South Bay in between. A place may have `children`, and those
 children may have children, up to MeshCore's eight-level chain limit (the two
@@ -103,13 +103,13 @@ top of `data/regions.yaml`, then opt places into it:
 
 ```yaml
 tags:
-  - code: socal
-    name: Southern California
+  - code: highdesert
+    name: High Desert
     blurb: One line on what it reaches.
 
 places:
-  - code: losangeles
-    tags: [socal]
+  - code: victorville
+    tags: [highdesert]
 ```
 
 Everything beneath an opted-in place carries it, so tag the highest place that
@@ -121,6 +121,10 @@ a node holds. That is cheaper than a level, which would cost the same entry *and
 lengthen every chain beneath it — but it is not free, and a tag nobody scopes
 traffic to is dead weight on real hardware. Ask your mesh group whether they'd
 actually use the scope before adding one.
+
+**A tag on a single place is not worth having.** Its own code already reaches
+exactly those nodes, so the tag is a second name for the same set — cost with no
+scope. Wait until the community it names covers several places.
 
 ## Renaming a code
 

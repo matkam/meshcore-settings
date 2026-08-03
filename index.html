@@ -271,10 +271,10 @@
     </p>
     <p>
       Not every chain is five names. Depth follows how big the local mesh community is:
-      the North Coast lists its towns straight under the region because there is nothing
-      in between worth naming, and Los Angeles holds its local areas directly because the
-      county already <em>is</em> the mesh. Both are four names, and <code>region def</code>
-      does not care.
+      North California lists its towns straight under the region because there is nothing
+      in between worth naming, while SoCal has its counties in between because that is
+      what the groups down there organise around. Four names or five, and
+      <code>region def</code> does not care.
     </p>
     <p>
       Region matching is <strong>per name, not per level</strong> — a repeater that only has
@@ -303,11 +303,12 @@
       <li>
         <strong>Some scopes aren't levels.</strong> A <em>tag</em> is a region name carried
         alongside the chain rather than inside it, for a scope that cuts across the tree.
-        <code>socal</code> reaches six regions that have no common parent and shouldn't be
-        given one — they sit in four basins that can't hear each other. It is placed with
-        <code>region put socal california</code> rather than riding the chain, which is the same
-        line on every firmware version. Only the places that opt in carry it, so it costs
-        a table entry on those nodes and nobody else's.
+        <code>highdesert</code> reaches places filed under three different counties and two
+        different regions, so no parent could hold it without also holding somewhere that
+        can't hear it. It is placed with <code>region put highdesert california</code> rather
+        than riding the chain, which is the same line on every firmware version. Only the
+        places that opt in carry it, so it costs a table entry on those nodes and nobody
+        else's.
       </li>
       <li>
         <strong>Region names are one flat namespace.</strong> Two different places using the same

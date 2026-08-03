@@ -114,10 +114,12 @@ Two deliberate limits on what it claims:
 
 - **County lines are real; area boundaries are not drawn.** The county outlines
   are Census TIGER boundaries, and a place claims every one it wholly contains —
-  the North Bay claims Marin, Sonoma, Napa and Solano. Where a place cuts across a
-  county line nobody claims that shape, so Lake Tahoe, the Mojave and Los Angeles
-  draw as dots on plain background. That is deliberate: tinting three whole
-  counties for the Tahoe basin would claim an extent the mesh doesn't have.
+  the North Bay claims Marin, Sonoma, Napa and Solano. A place that cuts across a
+  county line claims nothing, so Lake Tahoe draws as three dots rather than a
+  shape: tinting Placer, El Dorado and Nevada for the Tahoe basin would claim an
+  extent the mesh doesn't have. Where nobody claims a shape at all it stays as
+  plain background — no county is in that state today, but the map handles it and
+  a future split will put one back.
 - **There is no colour per region.** Categorical fills on a map this size
   fail colour-blind separation, and they would compete with the one thing colour
   should mean here: what *you* have selected. Region identity comes from labels
@@ -275,26 +277,33 @@ west     →  california  →  centralcoast   →  slo         →  slonorth
 US West     California     Central Coast     SLO County     North County (Paso Robles, Atascadero)
 ```
 
-California is split into 13 regions covering all 58 counties, with 161 local areas
-under them, and you can generate settings at any level: pick a region for a
-region-wide chain, an area for an area-wide one, or a local area for the full
-chain.
+California is split into 7 regions covering all 58 counties, holding 58 areas and
+124 local areas between them — 161 places at the bottom of the tree, counting the
+areas that have nothing under them. You can generate settings at any level: pick
+a region for a region-wide chain, an area for an area-wide one, or a local area
+for the full chain.
 
 **The levels follow communities and RF propagation, not administrative lines.**
-County boundaries are ignored wherever they cut through a mesh — Lake Tahoe is one
-place across three counties, the Mojave gathers the high desert out of four, and
-Ventura County is split at the Conejo grade because its east half talks to Los
-Angeles and its west half talks up the coast. Counties survive as a `county` field
-on each local area, which never appears in a generated chain: it gives the
-validator its point-in-boundary check and makes the county name searchable.
+A region is a mesh that can actually hear itself, so where a county line cuts
+through one it is ignored: Lake Tahoe is one place across three counties, and
+the Central Valley runs Stockton to Bakersfield because that is the stretch one
+group covers. Where the two happen to agree, the county stands — Southern
+California runs its own frequency and is linked from Santa Barbara through to
+San Diego, and inside it the counties are what the local groups organise around,
+so they are the level. That is the same rule reaching a different answer, not an
+exception to it.
+
+Counties also survive as a `county` field on each local area, which never appears
+in a generated chain: it gives the validator its point-in-boundary check and
+makes the county name searchable.
 
 **Depth varies by branch, deliberately.** Sparse country needs three levels to
-reach something meaningful, so the North Coast lists its towns directly under the
-region. A metro where the county already *is* the mesh needs two, so Los Angeles,
-Orange County and San Diego hold their local areas with nothing in between. Both
-are correct and `region def` does not care — 67 of the 161 places sit on a
-four-token chain rather than five, which is a region-table entry back on every
-node in those branches.
+reach something meaningful, so North California lists its towns directly under
+the region. Somewhere the county *is* the mesh needs four, so Los Angeles and
+San Diego sit as areas under SoCal with their local areas beneath. Both are
+correct and `region def` does not care — 37 of the 161 places you can pick sit
+on a four-token chain rather than five, which is a region-table entry back on
+every node in those branches.
 
 None of that is coded in. The tree in `data/regions.yaml` nests as deep as you
 like — a place has `children`, and those children may have children — up to
@@ -316,19 +325,21 @@ spot.
 
 ### Tags: a scope that cuts across the tree
 
-Some scopes don't fit the hierarchy. `socal` reaches Los Angeles, Orange County,
-the Inland Empire, the deserts and San Diego — six regions with no common parent,
-and giving them one would be wrong: they sit in four RF-separate basins, so a
-single region implying they hear each other is exactly what this scheme is trying
-to avoid.
+Some scopes don't fit the hierarchy. The Inland Empire is nine local areas spread
+across three counties, and the deserts reach further still — the high desert
+alone takes in the Antelope Valley under Los Angeles, the Victor Valley and
+Morongo Basin under San Bernardino, and Tehachapi and Ridgecrest that sit in Kern
+and belong to the Central Valley's tree. There is no parent that holds those and
+nothing else, and inventing one would put Bakersfield and Barstow under a name
+that says they hear each other.
 
 A **tag** is the answer. It is a region name that is not a level: it hangs off the
 root as its own short chain, and a place opts into it rather than inheriting one
 by position. Everything beneath an opted-in place carries it too.
 
 ```
-region def west california losangeles dtla
-region put socal california
+region def west california socal sanbernardino victorville
+region put highdesert california
 ```
 
 `region put`, not a second `region def`, even on firmware that has `def`. A tag is
@@ -338,25 +349,28 @@ on the way past; and this way the tag looks identical on every firmware version,
 where only the chain form differs. It flood-allows as it creates on 1.15+, so no
 `allowf` is needed there.
 
-The node ends up holding five names and matches traffic scoped to any of them.
+The node ends up holding six names and matches traffic scoped to any of them.
 
 Tags are declared once at the top of `data/regions.yaml` and referenced by the
 places that carry them:
 
 ```yaml
 tags:
-  - code: socal
-    name: Southern California
+  - code: highdesert
+    name: High Desert
 
 places:
-  - code: losangeles
-    tags: [socal]
+  - code: victorville
+    tags: [highdesert]
 ```
 
 The cost is one region-table entry on the nodes that carry it, and **only** those
-nodes — which is the point. Making `socal` a level instead would have cost every
-node beneath it a table entry whether or not its operator wanted the wider scope,
-and would have pushed 44 southern places from a four-token chain to five.
+nodes — which is the point. Making the high desert a level instead would have
+cost every node beneath it a table entry whether or not its operator wanted the
+wider scope, and it would have had to break the county apart to get there.
+
+Three tags exist: `ie` on nine places, `highdesert` on seven and `lowdesert` on
+six. Each one is a community that a level could not have drawn.
 
 ### These codes are a convention, not a standard
 
