@@ -37,9 +37,24 @@
   ],
   "tags": [
     {
-      "code": "socal",
-      "name": "Southern California",
-      "blurb": "Ventura and the Mojave south — LA, Orange County, the Inland Empire, the deserts and San Diego. SoCal Mesh treats this as one community; the regions inside it are separate because they cannot hear each other."
+      "code": "ie",
+      "name": "Inland Empire",
+      "blurb": "San Bernardino and Riverside valley floor and mountains — not the high or low deserts."
+    },
+    {
+      "code": "mojave",
+      "name": "Mojave / High Desert",
+      "blurb": "Antelope Valley through Victor Valley out to Needles and the Morongo Basin."
+    },
+    {
+      "code": "lowdesert",
+      "name": "Low Desert",
+      "blurb": "Coachella, Palo Verde and the Imperial Valley."
+    },
+    {
+      "code": "applevalley",
+      "name": "Apple Valley",
+      "blurb": "Apple Valley and the surrounding Victor Valley."
     }
   ],
   "places": [
@@ -819,11 +834,11 @@
     {
       "code": "centralcoast",
       "name": "Central Coast",
-      "blurb": "Santa Cruz down through Ventura.",
+      "blurb": "Santa Cruz down through San Luis Obispo.",
       "short": "C COAST",
       "outline": ["Monterey", "San Benito"],
       "nudge": [-34, 22],
-      "aliases": ["Monterey County", "San Benito County", "Ventura County"],
+      "aliases": ["Monterey County", "San Benito County", "San Luis Obispo County"],
       "children": [
         {
           "code": "montereybay",
@@ -913,70 +928,6 @@
               "lat": 35.112,
               "lon": -120.578,
               "aliases": ["Five Cities", "Arroyo Grande", "Pismo Beach", "Grover Beach", "Oceano", "Halcyon", "Nipomo", "Nipomo Mesa", "Los Berros", "Huasna", "Callender"]
-            }
-          ]
-        },
-        {
-          "code": "santabarbara",
-          "name": "Santa Barbara County",
-          "blurb": "Santa Barbara County.",
-          "outline": ["Santa Barbara"],
-          "aliases": ["Santa Barbara County"],
-          "children": [
-            {
-              "code": "southcoast",
-              "name": "South Coast",
-              "county": "Santa Barbara",
-              "lat": 34.421,
-              "lon": -119.698,
-              "aliases": ["Santa Barbara", "Goleta", "Carpinteria", "Montecito", "Isla Vista"]
-            },
-            {
-              "code": "solvang",
-              "name": "Santa Ynez Valley",
-              "county": "Santa Barbara",
-              "lat": 34.596,
-              "lon": -120.138,
-              "aliases": ["Solvang", "Buellton", "Santa Ynez", "Los Olivos", "Ballard"]
-            },
-            {
-              "code": "lompoc",
-              "name": "Lompoc",
-              "county": "Santa Barbara",
-              "lat": 34.639,
-              "lon": -120.458,
-              "aliases": ["Lompoc", "Vandenberg", "Mission Hills"]
-            },
-            {
-              "code": "santamaria",
-              "name": "Santa Maria Valley",
-              "county": "Santa Barbara",
-              "lat": 34.953,
-              "lon": -120.436,
-              "aliases": ["Santa Maria", "Orcutt", "Guadalupe", "Los Alamos"]
-            }
-          ]
-        },
-        {
-          "code": "ventura",
-          "name": "Ventura",
-          "blurb": "The coastal half of Ventura County — Simi and Conejo are under Los Angeles.",
-          "children": [
-            {
-              "code": "oxnard",
-              "name": "Oxnard Plain",
-              "county": "Ventura",
-              "lat": 34.198,
-              "lon": -119.177,
-              "aliases": ["Oxnard", "Ventura", "Camarillo", "Port Hueneme"]
-            },
-            {
-              "code": "ojai",
-              "name": "Ojai Valley",
-              "county": "Ventura",
-              "lat": 34.448,
-              "lon": -119.243,
-              "aliases": ["Ojai", "Oak View", "Meiners Oaks", "Santa Paula", "Fillmore"]
             }
           ]
         },
@@ -1198,427 +1149,519 @@
               "lat": 35.628,
               "lon": -118.474,
               "aliases": ["Lake Isabella", "Kernville", "Wofford Heights", "Bodfish"]
+            },
+            {
+              "code": "tehachapi",
+              "name": "Tehachapi / Mojave",
+              "county": "Kern",
+              "lat": 35.132,
+              "lon": -118.449,
+              "aliases": ["Tehachapi", "Mojave", "California City", "Frazier Park", "Lebec"],
+              "tags": ["mojave"]
+            },
+            {
+              "code": "ridgecrest",
+              "name": "Indian Wells Valley",
+              "county": "Kern",
+              "lat": 35.622,
+              "lon": -117.671,
+              "aliases": ["Ridgecrest", "Inyokern", "China Lake", "Trona"],
+              "tags": ["mojave"]
             }
           ]
         }
       ]
     },
     {
-      "code": "losangeles",
-      "name": "Los Angeles",
-      "blurb": "The basin and the valleys, out to Conejo and Simi.",
-      "short": "LA",
-      "nudge": [-14, 14],
-      "aliases": ["Los Angeles County"],
-      "tags": ["socal"],
+      "code": "socal",
+      "name": "Southern California",
+      "blurb": "The eight southern counties — Santa Barbara through San Diego, including the Inland Empire and deserts.",
+      "short": "SOCAL",
+      "aliases": ["SoCal", "Southern California"],
       "children": [
         {
-          "code": "dtla",
-          "name": "Central LA",
-          "county": "Los Angeles",
-          "lat": 34.048,
-          "lon": -118.253,
-          "aliases": ["Downtown", "Hollywood", "Koreatown", "Echo Park", "Silver Lake", "Boyle Heights"]
+          "code": "santabarbara",
+          "name": "Santa Barbara County",
+          "blurb": "Santa Barbara County.",
+          "outline": ["Santa Barbara"],
+          "aliases": ["Santa Barbara County"],
+          "children": [
+            {
+              "code": "southcoast",
+              "name": "South Coast",
+              "county": "Santa Barbara",
+              "lat": 34.421,
+              "lon": -119.698,
+              "aliases": ["Santa Barbara", "Goleta", "Carpinteria", "Montecito", "Isla Vista"]
+            },
+            {
+              "code": "solvang",
+              "name": "Santa Ynez Valley",
+              "county": "Santa Barbara",
+              "lat": 34.596,
+              "lon": -120.138,
+              "aliases": ["Solvang", "Buellton", "Santa Ynez", "Los Olivos", "Ballard"]
+            },
+            {
+              "code": "lompoc",
+              "name": "Lompoc",
+              "county": "Santa Barbara",
+              "lat": 34.639,
+              "lon": -120.458,
+              "aliases": ["Lompoc", "Vandenberg", "Mission Hills"]
+            },
+            {
+              "code": "santamaria",
+              "name": "Santa Maria Valley",
+              "county": "Santa Barbara",
+              "lat": 34.953,
+              "lon": -120.436,
+              "aliases": ["Santa Maria", "Orcutt", "Guadalupe", "Los Alamos"]
+            }
+          ]
         },
         {
-          "code": "westla",
-          "name": "Westside",
-          "county": "Los Angeles",
-          "lat": 34.019,
-          "lon": -118.47,
-          "aliases": ["Santa Monica", "Venice", "Culver City", "Westwood", "Brentwood", "Marina del Rey"]
+          "code": "ventura",
+          "name": "Ventura County",
+          "blurb": "Ventura County, including Conejo and Simi.",
+          "outline": ["Ventura"],
+          "aliases": ["Ventura County"],
+          "children": [
+            {
+              "code": "oxnard",
+              "name": "Oxnard Plain",
+              "county": "Ventura",
+              "lat": 34.198,
+              "lon": -119.177,
+              "aliases": ["Oxnard", "Ventura", "Camarillo", "Port Hueneme"]
+            },
+            {
+              "code": "ojai",
+              "name": "Ojai Valley",
+              "county": "Ventura",
+              "lat": 34.448,
+              "lon": -119.243,
+              "aliases": ["Ojai", "Oak View", "Meiners Oaks", "Santa Paula", "Fillmore"]
+            },
+            {
+              "code": "thousandoaks",
+              "name": "Conejo Valley",
+              "county": "Ventura",
+              "lat": 34.17,
+              "lon": -118.838,
+              "aliases": ["Thousand Oaks", "Newbury Park", "Westlake Village", "Agoura"]
+            },
+            {
+              "code": "simivalley",
+              "name": "Simi Valley",
+              "county": "Ventura",
+              "lat": 34.269,
+              "lon": -118.781,
+              "aliases": ["Simi Valley", "Moorpark"]
+            }
+          ]
         },
         {
-          "code": "sfv",
-          "name": "San Fernando Valley",
-          "county": "Los Angeles",
-          "lat": 34.187,
-          "lon": -118.451,
-          "aliases": ["Van Nuys", "Burbank", "Glendale", "Sherman Oaks", "Northridge", "Woodland Hills"]
+          "code": "losangeles",
+          "name": "Los Angeles County",
+          "blurb": "Los Angeles County, including the Antelope Valley and Catalina.",
+          "short": "LA",
+          "outline": ["Los Angeles"],
+          "nudge": [-14, 14],
+          "aliases": ["Los Angeles County", "LA County"],
+          "children": [
+            {
+              "code": "dtla",
+              "name": "Central LA",
+              "county": "Los Angeles",
+              "lat": 34.048,
+              "lon": -118.253,
+              "aliases": ["Downtown", "Hollywood", "Koreatown", "Echo Park", "Silver Lake", "Boyle Heights"]
+            },
+            {
+              "code": "westla",
+              "name": "Westside",
+              "county": "Los Angeles",
+              "lat": 34.019,
+              "lon": -118.47,
+              "aliases": ["Santa Monica", "Venice", "Culver City", "Westwood", "Brentwood", "Marina del Rey"]
+            },
+            {
+              "code": "sfv",
+              "name": "San Fernando Valley",
+              "county": "Los Angeles",
+              "lat": 34.187,
+              "lon": -118.451,
+              "aliases": ["Van Nuys", "Burbank", "Glendale", "Sherman Oaks", "Northridge", "Woodland Hills"]
+            },
+            {
+              "code": "sgv",
+              "name": "San Gabriel Valley",
+              "county": "Los Angeles",
+              "lat": 34.148,
+              "lon": -118.144,
+              "aliases": ["Pasadena", "Alhambra", "El Monte", "West Covina", "Arcadia", "Monrovia"]
+            },
+            {
+              "code": "pomona",
+              "name": "Pomona Valley",
+              "county": "Los Angeles",
+              "lat": 34.055,
+              "lon": -117.752,
+              "aliases": ["Pomona", "Claremont", "La Verne", "San Dimas", "Diamond Bar"],
+              "tags": ["ie"]
+            },
+            {
+              "code": "torrance",
+              "name": "LA South Bay",
+              "county": "Los Angeles",
+              "lat": 33.836,
+              "lon": -118.341,
+              "aliases": ["Torrance", "Redondo Beach", "Hermosa Beach", "Manhattan Beach", "El Segundo", "San Pedro"]
+            },
+            {
+              "code": "longbeach",
+              "name": "Long Beach",
+              "county": "Los Angeles",
+              "lat": 33.77,
+              "lon": -118.194,
+              "aliases": ["Long Beach", "Signal Hill", "Lakewood", "Cerritos"]
+            },
+            {
+              "code": "downey",
+              "name": "Southeast LA",
+              "county": "Los Angeles",
+              "lat": 33.94,
+              "lon": -118.133,
+              "aliases": ["Downey", "Whittier", "Norwalk", "Compton", "Bellflower", "Paramount"]
+            },
+            {
+              "code": "malibu",
+              "name": "Santa Monica Mountains",
+              "county": "Los Angeles",
+              "lat": 34.026,
+              "lon": -118.78,
+              "aliases": ["Malibu", "Topanga", "Calabasas", "Agoura Hills"]
+            },
+            {
+              "code": "santaclarita",
+              "name": "Santa Clarita Valley",
+              "county": "Los Angeles",
+              "lat": 34.391,
+              "lon": -118.542,
+              "aliases": ["Santa Clarita", "Valencia", "Newhall", "Castaic", "Stevenson Ranch"]
+            },
+            {
+              "code": "catalina",
+              "name": "Catalina Island",
+              "county": "Los Angeles",
+              "lat": 33.343,
+              "lon": -118.328,
+              "aliases": ["Avalon", "Two Harbors", "Santa Catalina"]
+            },
+            {
+              "code": "lancaster",
+              "name": "Antelope Valley",
+              "county": "Los Angeles",
+              "lat": 34.687,
+              "lon": -118.154,
+              "aliases": ["Lancaster", "Palmdale", "Quartz Hill", "Acton", "Rosamond"],
+              "tags": ["mojave"]
+            }
+          ]
         },
         {
-          "code": "sgv",
-          "name": "San Gabriel Valley",
-          "county": "Los Angeles",
-          "lat": 34.148,
-          "lon": -118.144,
-          "aliases": ["Pasadena", "Alhambra", "El Monte", "West Covina", "Arcadia", "Monrovia"]
-        },
-        {
-          "code": "pomona",
-          "name": "Pomona Valley",
-          "county": "Los Angeles",
-          "lat": 34.055,
-          "lon": -117.752,
-          "aliases": ["Pomona", "Claremont", "La Verne", "San Dimas", "Diamond Bar"]
-        },
-        {
-          "code": "torrance",
-          "name": "LA South Bay",
-          "county": "Los Angeles",
-          "lat": 33.836,
-          "lon": -118.341,
-          "aliases": ["Torrance", "Redondo Beach", "Hermosa Beach", "Manhattan Beach", "El Segundo", "San Pedro"]
-        },
-        {
-          "code": "longbeach",
-          "name": "Long Beach",
-          "county": "Los Angeles",
-          "lat": 33.77,
-          "lon": -118.194,
-          "aliases": ["Long Beach", "Signal Hill", "Lakewood", "Cerritos"]
-        },
-        {
-          "code": "downey",
-          "name": "Southeast LA",
-          "county": "Los Angeles",
-          "lat": 33.94,
-          "lon": -118.133,
-          "aliases": ["Downey", "Whittier", "Norwalk", "Compton", "Bellflower", "Paramount"]
-        },
-        {
-          "code": "malibu",
-          "name": "Santa Monica Mountains",
-          "county": "Los Angeles",
-          "lat": 34.026,
-          "lon": -118.78,
-          "aliases": ["Malibu", "Topanga", "Calabasas", "Agoura Hills"]
-        },
-        {
-          "code": "santaclarita",
-          "name": "Santa Clarita Valley",
-          "county": "Los Angeles",
-          "lat": 34.391,
-          "lon": -118.542,
-          "aliases": ["Santa Clarita", "Valencia", "Newhall", "Castaic", "Stevenson Ranch"]
-        },
-        {
-          "code": "catalina",
-          "name": "Catalina Island",
-          "county": "Los Angeles",
-          "lat": 33.343,
-          "lon": -118.328,
-          "aliases": ["Avalon", "Two Harbors", "Santa Catalina"]
-        },
-        {
-          "code": "thousandoaks",
-          "name": "Conejo Valley",
-          "county": "Ventura",
-          "lat": 34.17,
-          "lon": -118.838,
-          "aliases": ["Thousand Oaks", "Newbury Park", "Westlake Village", "Agoura"]
-        },
-        {
-          "code": "simivalley",
-          "name": "Simi Valley",
-          "county": "Ventura",
-          "lat": 34.269,
-          "lon": -118.781,
-          "aliases": ["Simi Valley", "Moorpark"]
-        }
-      ]
-    },
-    {
-      "code": "oc",
-      "name": "Orange County",
-      "blurb": "Anaheim down to San Clemente.",
-      "outline": ["Orange"],
-      "nudge": [6, 12],
-      "aliases": ["Orange County"],
-      "tags": ["socal"],
-      "children": [
-        {
-          "code": "anaheim",
-          "name": "North OC",
-          "county": "Orange",
-          "lat": 33.836,
-          "lon": -117.914,
-          "aliases": ["Anaheim", "Fullerton", "Buena Park", "Orange", "Brea", "Yorba Linda"]
-        },
-        {
-          "code": "santaana",
-          "name": "Central OC",
-          "county": "Orange",
-          "lat": 33.746,
-          "lon": -117.868,
-          "aliases": ["Santa Ana", "Irvine", "Tustin", "Costa Mesa", "Garden Grove", "Westminster"]
-        },
-        {
-          "code": "hb",
-          "name": "Coastal OC",
-          "county": "Orange",
-          "lat": 33.66,
-          "lon": -117.999,
-          "aliases": ["Huntington Beach", "Newport Beach", "Seal Beach", "Laguna Beach", "Fountain Valley"]
-        },
-        {
-          "code": "missionviejo",
-          "name": "South OC",
-          "county": "Orange",
-          "lat": 33.6,
-          "lon": -117.672,
-          "aliases": ["Mission Viejo", "Lake Forest", "San Clemente", "Dana Point", "Laguna Niguel", "Rancho Santa Margarita"]
-        }
-      ]
-    },
-    {
-      "code": "ie",
-      "name": "Inland Empire",
-      "blurb": "San Bernardino and Riverside's valley floor and mountains.",
-      "short": "IE",
-      "nudge": [6, -8],
-      "aliases": ["Riverside County"],
-      "tags": ["socal"],
-      "children": [
-        {
-          "code": "ontario",
-          "name": "West End",
-          "county": "San Bernardino",
-          "lat": 34.064,
-          "lon": -117.649,
-          "aliases": ["Ontario", "Rancho Cucamonga", "Chino", "Upland", "Fontana", "Montclair"]
+          "code": "oc",
+          "name": "Orange County",
+          "blurb": "Anaheim down to San Clemente.",
+          "outline": ["Orange"],
+          "nudge": [6, 12],
+          "aliases": ["Orange County"],
+          "children": [
+            {
+              "code": "anaheim",
+              "name": "North OC",
+              "county": "Orange",
+              "lat": 33.836,
+              "lon": -117.914,
+              "aliases": ["Anaheim", "Fullerton", "Buena Park", "Orange", "Brea", "Yorba Linda"]
+            },
+            {
+              "code": "santaana",
+              "name": "Central OC",
+              "county": "Orange",
+              "lat": 33.746,
+              "lon": -117.868,
+              "aliases": ["Santa Ana", "Irvine", "Tustin", "Costa Mesa", "Garden Grove", "Westminster"]
+            },
+            {
+              "code": "hb",
+              "name": "Coastal OC",
+              "county": "Orange",
+              "lat": 33.66,
+              "lon": -117.999,
+              "aliases": ["Huntington Beach", "Newport Beach", "Seal Beach", "Laguna Beach", "Fountain Valley"]
+            },
+            {
+              "code": "missionviejo",
+              "name": "South OC",
+              "county": "Orange",
+              "lat": 33.6,
+              "lon": -117.672,
+              "aliases": ["Mission Viejo", "Lake Forest", "San Clemente", "Dana Point", "Laguna Niguel", "Rancho Santa Margarita"]
+            }
+          ]
         },
         {
           "code": "sanbernardino",
-          "name": "San Bernardino Valley",
-          "county": "San Bernardino",
-          "lat": 34.108,
-          "lon": -117.29,
-          "aliases": ["San Bernardino", "Redlands", "Rialto", "Colton", "Highland", "Yucaipa", "Loma Linda"]
-        },
-        {
-          "code": "bigbear",
-          "name": "San Bernardino Mountains",
-          "county": "San Bernardino",
-          "lat": 34.244,
-          "lon": -116.911,
-          "aliases": ["Big Bear Lake", "Lake Arrowhead", "Running Springs", "Crestline", "Wrightwood"]
+          "name": "San Bernardino County",
+          "blurb": "The valley floor, mountains and high desert.",
+          "short": "SB CO",
+          "outline": ["San Bernardino"],
+          "nudge": [6, -8],
+          "aliases": ["San Bernardino County"],
+          "children": [
+            {
+              "code": "ontario",
+              "name": "West End",
+              "county": "San Bernardino",
+              "lat": 34.064,
+              "lon": -117.649,
+              "aliases": ["Ontario", "Rancho Cucamonga", "Chino", "Upland", "Fontana", "Montclair"],
+              "tags": ["ie"]
+            },
+            {
+              "code": "sbvalley",
+              "name": "San Bernardino Valley",
+              "county": "San Bernardino",
+              "lat": 34.108,
+              "lon": -117.29,
+              "aliases": ["San Bernardino", "Redlands", "Rialto", "Colton", "Highland", "Yucaipa", "Loma Linda"],
+              "tags": ["ie"]
+            },
+            {
+              "code": "bigbear",
+              "name": "San Bernardino Mountains",
+              "county": "San Bernardino",
+              "lat": 34.244,
+              "lon": -116.911,
+              "aliases": ["Big Bear Lake", "Lake Arrowhead", "Running Springs", "Crestline", "Wrightwood"],
+              "tags": ["ie"]
+            },
+            {
+              "code": "victorville",
+              "name": "Victor Valley",
+              "county": "San Bernardino",
+              "lat": 34.536,
+              "lon": -117.291,
+              "aliases": ["Victorville", "Apple Valley", "Hesperia", "Adelanto", "Phelan"],
+              "tags": ["mojave", "applevalley"]
+            },
+            {
+              "code": "barstow",
+              "name": "Barstow",
+              "county": "San Bernardino",
+              "lat": 34.896,
+              "lon": -117.017,
+              "aliases": ["Barstow", "Newberry Springs", "Yermo", "Baker"],
+              "tags": ["mojave"]
+            },
+            {
+              "code": "needles",
+              "name": "Needles",
+              "county": "San Bernardino",
+              "lat": 34.848,
+              "lon": -114.614,
+              "aliases": ["Needles", "Havasu Lake", "Big River"],
+              "tags": ["mojave"]
+            },
+            {
+              "code": "yuccavalley",
+              "name": "Morongo Basin",
+              "county": "San Bernardino",
+              "lat": 34.114,
+              "lon": -116.432,
+              "aliases": ["Yucca Valley", "Joshua Tree", "Twentynine Palms", "Landers", "Pioneertown"],
+              "tags": ["mojave"]
+            }
+          ]
         },
         {
           "code": "riverside",
-          "name": "Riverside / Corona",
-          "county": "Riverside",
-          "lat": 33.953,
-          "lon": -117.396,
-          "aliases": ["Riverside", "Corona", "Norco", "Jurupa Valley", "Eastvale"]
+          "name": "Riverside County",
+          "blurb": "The valley floor, mountains and Coachella Valley.",
+          "short": "RIV CO",
+          "outline": ["Riverside"],
+          "nudge": [10, 14],
+          "aliases": ["Riverside County"],
+          "children": [
+            {
+              "code": "rivcorona",
+              "name": "Riverside / Corona",
+              "county": "Riverside",
+              "lat": 33.953,
+              "lon": -117.396,
+              "aliases": ["Riverside", "Corona", "Norco", "Jurupa Valley", "Eastvale"],
+              "tags": ["ie"]
+            },
+            {
+              "code": "morenovalley",
+              "name": "Moreno Valley / Perris",
+              "county": "Riverside",
+              "lat": 33.937,
+              "lon": -117.23,
+              "aliases": ["Moreno Valley", "Perris", "Menifee", "Lake Elsinore", "Wildomar"],
+              "tags": ["ie"]
+            },
+            {
+              "code": "temecula",
+              "name": "Temecula Valley",
+              "county": "Riverside",
+              "lat": 33.494,
+              "lon": -117.148,
+              "aliases": ["Temecula", "Murrieta", "Winchester", "Anza"],
+              "tags": ["ie"]
+            },
+            {
+              "code": "hemet",
+              "name": "San Jacinto Valley",
+              "county": "Riverside",
+              "lat": 33.748,
+              "lon": -116.972,
+              "aliases": ["Hemet", "San Jacinto", "Beaumont", "Banning", "Cabazon"],
+              "tags": ["ie"]
+            },
+            {
+              "code": "idyllwild",
+              "name": "Idyllwild",
+              "county": "Riverside",
+              "lat": 33.74,
+              "lon": -116.719,
+              "aliases": ["Idyllwild", "Pine Cove", "Mountain Center"],
+              "tags": ["ie"]
+            },
+            {
+              "code": "palmsprings",
+              "name": "Coachella Valley",
+              "county": "Riverside",
+              "lat": 33.83,
+              "lon": -116.545,
+              "aliases": ["Palm Springs", "Palm Desert", "Indio", "La Quinta", "Cathedral City", "Coachella"],
+              "tags": ["lowdesert"]
+            },
+            {
+              "code": "blythe",
+              "name": "Palo Verde Valley",
+              "county": "Riverside",
+              "lat": 33.61,
+              "lon": -114.596,
+              "aliases": ["Blythe", "Ripley", "Desert Center"],
+              "tags": ["lowdesert"]
+            }
+          ]
         },
         {
-          "code": "morenovalley",
-          "name": "Moreno Valley / Perris",
-          "county": "Riverside",
-          "lat": 33.937,
-          "lon": -117.23,
-          "aliases": ["Moreno Valley", "Perris", "Menifee", "Lake Elsinore", "Wildomar"]
+          "code": "imperial",
+          "name": "Imperial County",
+          "blurb": "The Imperial Valley.",
+          "outline": ["Imperial"],
+          "aliases": ["Imperial County"],
+          "children": [
+            {
+              "code": "elcentro",
+              "name": "El Centro",
+              "county": "Imperial",
+              "lat": 32.792,
+              "lon": -115.563,
+              "aliases": ["El Centro", "Imperial", "Holtville", "Seeley"],
+              "tags": ["lowdesert"]
+            },
+            {
+              "code": "brawley",
+              "name": "Brawley",
+              "county": "Imperial",
+              "lat": 32.979,
+              "lon": -115.53,
+              "aliases": ["Brawley", "Westmorland", "Calipatria", "Niland", "Salton Sea"],
+              "tags": ["lowdesert"]
+            },
+            {
+              "code": "calexico",
+              "name": "Calexico",
+              "county": "Imperial",
+              "lat": 32.679,
+              "lon": -115.499,
+              "aliases": ["Calexico", "Heber"],
+              "tags": ["lowdesert"]
+            },
+            {
+              "code": "winterhaven",
+              "name": "Winterhaven",
+              "county": "Imperial",
+              "lat": 32.739,
+              "lon": -114.622,
+              "aliases": ["Winterhaven", "Bard", "Felicity", "Ogilby"],
+              "tags": ["lowdesert"]
+            }
+          ]
         },
         {
-          "code": "temecula",
-          "name": "Temecula Valley",
-          "county": "Riverside",
-          "lat": 33.494,
-          "lon": -117.148,
-          "aliases": ["Temecula", "Murrieta", "Winchester", "Anza"]
-        },
-        {
-          "code": "hemet",
-          "name": "San Jacinto Valley",
-          "county": "Riverside",
-          "lat": 33.748,
-          "lon": -116.972,
-          "aliases": ["Hemet", "San Jacinto", "Beaumont", "Banning", "Cabazon"]
-        },
-        {
-          "code": "idyllwild",
-          "name": "Idyllwild",
-          "county": "Riverside",
-          "lat": 33.74,
-          "lon": -116.719,
-          "aliases": ["Idyllwild", "Pine Cove", "Mountain Center"]
-        }
-      ]
-    },
-    {
-      "code": "lowdesert",
-      "name": "Low Desert",
-      "blurb": "Coachella, Palo Verde and the Imperial Valley.",
-      "short": "LOW DESERT",
-      "outline": ["Imperial"],
-      "nudge": [10, 14],
-      "aliases": ["Imperial County"],
-      "tags": ["socal"],
-      "children": [
-        {
-          "code": "palmsprings",
-          "name": "Coachella Valley",
-          "county": "Riverside",
-          "lat": 33.83,
-          "lon": -116.545,
-          "aliases": ["Palm Springs", "Palm Desert", "Indio", "La Quinta", "Cathedral City", "Coachella"]
-        },
-        {
-          "code": "blythe",
-          "name": "Palo Verde Valley",
-          "county": "Riverside",
-          "lat": 33.61,
-          "lon": -114.596,
-          "aliases": ["Blythe", "Ripley", "Desert Center"]
-        },
-        {
-          "code": "elcentro",
-          "name": "El Centro",
-          "county": "Imperial",
-          "lat": 32.792,
-          "lon": -115.563,
-          "aliases": ["El Centro", "Imperial", "Holtville", "Seeley"]
-        },
-        {
-          "code": "brawley",
-          "name": "Brawley",
-          "county": "Imperial",
-          "lat": 32.979,
-          "lon": -115.53,
-          "aliases": ["Brawley", "Westmorland", "Calipatria", "Niland", "Salton Sea"]
-        },
-        {
-          "code": "calexico",
-          "name": "Calexico",
-          "county": "Imperial",
-          "lat": 32.679,
-          "lon": -115.499,
-          "aliases": ["Calexico", "Heber"]
-        },
-        {
-          "code": "winterhaven",
-          "name": "Winterhaven",
-          "county": "Imperial",
-          "lat": 32.739,
-          "lon": -114.622,
-          "aliases": ["Winterhaven", "Bard", "Felicity", "Ogilby"]
-        }
-      ]
-    },
-    {
-      "code": "mojave",
-      "name": "Mojave / High Desert",
-      "blurb": "The high desert, from the Antelope Valley out to Needles.",
-      "short": "MOJAVE",
-      "nudge": [0, -22],
-      "aliases": ["San Bernardino County"],
-      "tags": ["socal"],
-      "children": [
-        {
-          "code": "lancaster",
-          "name": "Antelope Valley",
-          "county": "Los Angeles",
-          "lat": 34.687,
-          "lon": -118.154,
-          "aliases": ["Lancaster", "Palmdale", "Quartz Hill", "Acton", "Rosamond"]
-        },
-        {
-          "code": "tehachapi",
-          "name": "Tehachapi / Mojave",
-          "county": "Kern",
-          "lat": 35.132,
-          "lon": -118.449,
-          "aliases": ["Tehachapi", "Mojave", "California City", "Frazier Park", "Lebec"]
-        },
-        {
-          "code": "ridgecrest",
-          "name": "Indian Wells Valley",
-          "county": "Kern",
-          "lat": 35.622,
-          "lon": -117.671,
-          "aliases": ["Ridgecrest", "Inyokern", "China Lake", "Trona"]
-        },
-        {
-          "code": "victorville",
-          "name": "Victor Valley",
-          "county": "San Bernardino",
-          "lat": 34.536,
-          "lon": -117.291,
-          "aliases": ["Victorville", "Apple Valley", "Hesperia", "Adelanto", "Phelan"]
-        },
-        {
-          "code": "barstow",
-          "name": "Barstow",
-          "county": "San Bernardino",
-          "lat": 34.896,
-          "lon": -117.017,
-          "aliases": ["Barstow", "Newberry Springs", "Yermo", "Baker"]
-        },
-        {
-          "code": "needles",
-          "name": "Needles",
-          "county": "San Bernardino",
-          "lat": 34.848,
-          "lon": -114.614,
-          "aliases": ["Needles", "Havasu Lake", "Big River"]
-        },
-        {
-          "code": "yuccavalley",
-          "name": "Morongo Basin",
-          "county": "San Bernardino",
-          "lat": 34.114,
-          "lon": -116.432,
-          "aliases": ["Yucca Valley", "Joshua Tree", "Twentynine Palms", "Landers", "Pioneertown"]
-        }
-      ]
-    },
-    {
-      "code": "sandiego",
-      "name": "San Diego",
-      "blurb": "San Diego County.",
-      "outline": ["San Diego"],
-      "nudge": [0, 56],
-      "aliases": ["San Diego County"],
-      "tags": ["socal"],
-      "children": [
-        {
-          "code": "sdmetro",
-          "name": "Metro San Diego",
-          "county": "San Diego",
-          "lat": 32.716,
-          "lon": -117.161,
-          "aliases": ["San Diego", "La Jolla", "Pacific Beach", "Point Loma", "Mission Valley", "North Park"]
-        },
-        {
-          "code": "oceanside",
-          "name": "North County Coastal",
-          "county": "San Diego",
-          "lat": 33.166,
-          "lon": -117.323,
-          "aliases": ["Oceanside", "Carlsbad", "Encinitas", "Del Mar", "Solana Beach", "Vista"]
-        },
-        {
-          "code": "escondido",
-          "name": "North County Inland",
-          "county": "San Diego",
-          "lat": 33.119,
-          "lon": -117.086,
-          "aliases": ["Escondido", "San Marcos", "Poway", "Rancho Bernardo", "Fallbrook", "Valley Center"]
-        },
-        {
-          "code": "elcajon",
-          "name": "East County",
-          "county": "San Diego",
-          "lat": 32.795,
-          "lon": -116.962,
-          "aliases": ["El Cajon", "Santee", "La Mesa", "Lakeside", "Alpine", "Spring Valley"]
-        },
-        {
-          "code": "chulavista",
-          "name": "South County",
-          "county": "San Diego",
-          "lat": 32.64,
-          "lon": -117.084,
-          "aliases": ["Chula Vista", "National City", "Imperial Beach", "Bonita", "San Ysidro"]
-        },
-        {
-          "code": "ramona",
-          "name": "Backcountry",
-          "county": "San Diego",
-          "lat": 33.042,
-          "lon": -116.868,
-          "aliases": ["Ramona", "Julian", "Borrego Springs", "Descanso", "Campo", "Warner Springs"]
+          "code": "sandiego",
+          "name": "San Diego County",
+          "blurb": "San Diego County.",
+          "outline": ["San Diego"],
+          "nudge": [0, 56],
+          "aliases": ["San Diego County"],
+          "children": [
+            {
+              "code": "sdmetro",
+              "name": "Metro San Diego",
+              "county": "San Diego",
+              "lat": 32.716,
+              "lon": -117.161,
+              "aliases": ["San Diego", "La Jolla", "Pacific Beach", "Point Loma", "Mission Valley", "North Park"]
+            },
+            {
+              "code": "oceanside",
+              "name": "North County Coastal",
+              "county": "San Diego",
+              "lat": 33.166,
+              "lon": -117.323,
+              "aliases": ["Oceanside", "Carlsbad", "Encinitas", "Del Mar", "Solana Beach", "Vista"]
+            },
+            {
+              "code": "escondido",
+              "name": "North County Inland",
+              "county": "San Diego",
+              "lat": 33.119,
+              "lon": -117.086,
+              "aliases": ["Escondido", "San Marcos", "Poway", "Rancho Bernardo", "Fallbrook", "Valley Center"]
+            },
+            {
+              "code": "elcajon",
+              "name": "East County",
+              "county": "San Diego",
+              "lat": 32.795,
+              "lon": -116.962,
+              "aliases": ["El Cajon", "Santee", "La Mesa", "Lakeside", "Alpine", "Spring Valley"]
+            },
+            {
+              "code": "chulavista",
+              "name": "South County",
+              "county": "San Diego",
+              "lat": 32.64,
+              "lon": -117.084,
+              "aliases": ["Chula Vista", "National City", "Imperial Beach", "Bonita", "San Ysidro"]
+            },
+            {
+              "code": "ramona",
+              "name": "Backcountry",
+              "county": "San Diego",
+              "lat": 33.042,
+              "lon": -116.868,
+              "aliases": ["Ramona", "Julian", "Borrego Springs", "Descanso", "Campo", "Warner Springs"]
+            }
+          ]
         }
       ]
     }

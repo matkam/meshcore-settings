@@ -99,7 +99,7 @@ async function pointFor(code) {
   check("selected area's own outline is marked on",
     await page.$eval('.map-county[data-place="slo"]', (c) => c.classList.contains("is-on")));
   check("selected area's region is washed in",
-    await page.$eval('.map-county[data-place="santabarbara"]', (c) => c.classList.contains("is-in-region")));
+    await page.$eval('.map-county[data-place="montereybay"]', (c) => c.classList.contains("is-in-region")));
   check("a shape outside the region is not washed in",
     await page.$eval('.map-county[data-place="eastbay"]', (c) => !c.classList.contains("is-in-region")));
 }

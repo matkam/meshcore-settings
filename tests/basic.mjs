@@ -82,18 +82,16 @@ await page.selectOption("#opt-hash", "1");
 
 // --- 5. deep link
 await page.goto(SITE + "#palmsprings", { waitUntil: "networkidle" });
-// The Low Desert carries the `socal` tag. It is one extra name rather than a
-// chain, so it is placed with `region put` even on 1.16 — the same line every
-// firmware tier emits for it.
-pass &= check("deep link #palmsprings, with the socal tag",
+// SoCal is a real place; palmsprings also carries the lowdesert tag alongside the chain.
+pass &= check("deep link #palmsprings under socal, with the lowdesert tag",
   (await page.textContent("#commands")).trim(),
   ["set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
    "region def west california lowdesert palmsprings", "region put socal california", "region save"].join("\n"));
 console.log("deep-link search box:", JSON.stringify(await page.inputValue("#search")));
 
-// --- 5b. a tag is opt-in: places outside it carry nothing extra
+// --- 5b. places outside tagged areas carry nothing extra
 await page.goto(SITE + "#eureka", { waitUntil: "networkidle" });
-pass &= check("a place outside the tag carries no extra name",
+pass &= check("a place with no tag carries no extra name",
   (await page.textContent("#commands")).trim(),
   ["set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
    "region def west california northcoast eureka", "region save"].join("\n"));
