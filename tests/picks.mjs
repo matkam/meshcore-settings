@@ -58,7 +58,13 @@ check("carrying several is explained where they are picked",
 /* ---------- across an area, and across a region ---------- */
 
 await only("centralcoast", "bayarea", "slo", "eastbay", "slonorth", "oakland");
-check("areas from every ticked region are shown", (await rows(1)) > 10,
+// Both ticked regions are open, so level 1 is the Central Coast's five areas
+// and the Bay Area's five together. Naming one from each side is the actual
+// claim — a bare count passes just as well when one region opens twice.
+check("areas from every ticked region are shown",
+  (await rows(1)) === 10 &&
+  (await page.$$eval('.pick-row.lvl-1 input[data-code="montereybay"]', (n) => n.length)) === 1 &&
+  (await page.$$eval('.pick-row.lvl-1 input[data-code="northbay"]', (n) => n.length)) === 1,
   String(await rows(1)));
 check("local areas from every ticked area are shown",
   (await page.$$eval('.picker input[data-code="oakland"]', (n) => n.length)) === 1);
@@ -202,8 +208,8 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
     /5 of 32 region names/.test(await page.textContent("#line-note")),
     await page.textContent("#line-note"));
 
-  for (const code of ["northcoast", "shastacascade", "sacramentovalley", "sierranevada",
-                      "bayarea", "centralcoast", "centralvalley", "socal"]) {
+  for (const code of ["norcal", "sacramentofoothills", "sierranevada", "bayarea",
+                      "centralcoast", "centralvalley", "socal"]) {
     await page.check(`.picker input[data-code="${code}"]`);
     await page.waitForTimeout(35);
   }

@@ -40,9 +40,9 @@ const cmds = async () => (await page.textContent("#commands")).trim();
 
 /* ---------- browsing, with nothing selected ---------- */
 
-check("only the top level is listed at rest", (await rows()) === 13, await rows());
+check("only the top level is listed at rest", (await rows()) === 7, await rows());
 check("every top-level place can be opened",
-  (await page.$$eval(".pick-toggle:not(.is-leaf)", (n) => n.length)) === 13);
+  (await page.$$eval(".pick-toggle:not(.is-leaf)", (n) => n.length)) === 7);
 
 await expand(page, "bayarea");
 check("opening a region reveals its areas", (await rowsAt(1)) === 5, await rowsAt(1));
@@ -104,7 +104,7 @@ check("the button offers to expand while anything is closed",
 
 await page.click("#expand-picks");
 await page.waitForTimeout(500);
-check("expand all opens the whole tree", (await rows()) === 191, await rows());
+check("expand all opens the whole tree", (await rows()) === 189, await rows());
 check("and it is still a selection of nothing", (await picks(page)).length === 0);
 check("the button turns into collapse",
   (await page.textContent("#expand-picks")) === "Collapse all");
@@ -113,9 +113,9 @@ check("the list scrolls rather than the page growing without limit",
 
 await page.click("#expand-picks");
 await page.waitForTimeout(300);
-check("collapse all flattens it again", (await rows()) === 13, await rows());
+check("collapse all flattens it again", (await rows()) === 7, await rows());
 
-await expand(page, "sacramentovalley");
+await expand(page, "sacramentofoothills");
 check("opening one by hand puts the button back to expand",
   (await page.textContent("#expand-picks")) === "Expand all");
 
@@ -187,7 +187,7 @@ check("opening one by hand puts the button back to expand",
 await collapseAll(page);
 await tick(page, "centralcoast");
 check("ticking a place still opens it", (await isOpen("centralcoast")) === "true");
-check("which is what makes the next level reachable", (await rowsAt(1)) === 7, await rowsAt(1));
+check("which is what makes the next level reachable", (await rowsAt(1)) === 5, await rowsAt(1));
 
 await tick(page, "slo", "slonorth");
 check("the chain builds as before",
@@ -252,21 +252,21 @@ check("and so does a search result",
 
 check("the scope line says where chains start and how much there is",
   (await page.textContent("#pick-scope")) ===
-    "west › california prefixes every chain · 13 regions, 84 areas and 94 local areas to choose from.",
+    "west › california prefixes every chain · 7 regions, 58 areas and 124 local areas to choose from.",
   await page.textContent("#pick-scope"));
 
 /* ---------- keyboard ---------- */
 
 await page.goto(SITE, { waitUntil: "networkidle" });
-await page.focus('.pick-toggle[data-code="northcoast"]');
+await page.focus('.pick-toggle[data-code="norcal"]');
 await page.keyboard.press("Enter");
 await page.waitForTimeout(150);
-check("the disclosure works from the keyboard", (await isOpen("northcoast")) === "true");
+check("the disclosure works from the keyboard", (await isOpen("norcal")) === "true");
 check("without selecting anything", (await picks(page)).length === 0);
 
 await page.keyboard.press("Tab");
 check("and tab moves on to that row's checkbox",
-  await page.evaluate(() => document.activeElement.dataset.code) === "northcoast",
+  await page.evaluate(() => document.activeElement.dataset.code) === "norcal",
   await page.evaluate(() => document.activeElement.tagName + "/" +
     (document.activeElement.dataset.code || "")));
 

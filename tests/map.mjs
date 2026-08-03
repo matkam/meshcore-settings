@@ -21,20 +21,25 @@ check("58 county paths", (await page.$$eval(".map-county", (e) => e.length)) ===
   await page.$$eval(".map-county", (e) => e.length));
 check("161 area dots", (await page.$$eval(".map-dot", (e) => e.length)) === 161,
   await page.$$eval(".map-dot", (e) => e.length));
-check("13 region labels", (await page.$$eval(".map-label", (e) => e.length)) === 13,
+check("7 region labels", (await page.$$eval(".map-label", (e) => e.length)) === 7,
   await page.$$eval(".map-label", (e) => e.length));
 
 // A shape goes to the deepest place that wholly contains it: a cluster where one
 // does, the region where two of its clusters split it — Placer is Gold Country
-// and Tahoe, but it is all Sierra Nevada. Six counties are split across two
-// regions (the Mojave takes part of Kern, LA and San Bernardino; the low desert
-// part of Riverside; Ventura splits at the Conejo grade), so nobody claims those
-// and they draw as background with the dots inside carrying the meaning.
-check("52 county paths are wired to a place",
-  (await page.$$eval(".map-county", (e) => e.filter((p) => p.dataset.place).length)) === 52,
+// and Tahoe, but it is all Sierra Nevada.
+//
+// Every county is claimed now. Nothing in the tree cuts through one any more:
+// the deserts are tags rather than levels, so Kern, LA and San Bernardino are
+// each whole, and Ventura is whole under SoCal. That is not a rule the data has
+// to keep — a place is free to straddle a county line and leave the shape as
+// inert background — so this reads as "which counties are split today", and a
+// deliberate split should move the numbers rather than be worked around.
+check("58 county paths are wired to a place",
+  (await page.$$eval(".map-county", (e) => e.filter((p) => p.dataset.place).length)) === 58,
   await page.$$eval(".map-county", (e) => e.filter((p) => p.dataset.place).length));
-check("and the 6 split across two regions are left as background",
-  (await page.$$eval(".map-county", (e) => e.filter((p) => !p.dataset.place).length)) === 6);
+check("and none is left as background",
+  (await page.$$eval(".map-county", (e) => e.filter((p) => !p.dataset.place).length)) === 0,
+  await page.$$eval(".map-county", (e) => e.filter((p) => !p.dataset.place).length));
 
 // --- the position marker is not drawn until asked for
 check("position marker hidden at rest",
@@ -230,10 +235,10 @@ async function pointFor(code) {
         return !!(e && e.classList && e.classList.contains("map-county"));
       }, [x, y]);
       if (!onLand) { continue; }
-      // Six counties are split across two regions, so no place wholly contains
-      // them and none claims their shape. They draw as background and stay
-      // inert on purpose — the dots inside them carry the meaning. Only claimed
-      // ground is required to respond.
+      // A county split across two places is claimed by neither. It draws as
+      // background and stays inert on purpose — the dots inside it carry the
+      // meaning — so only claimed ground is required to respond. No county is
+      // split today, but the skip stays: it is what lets one be.
       const claimed = await page.evaluate(([x, y]) => {
         const e = document.elementFromPoint(x, y);
         return !!(e && e.dataset && e.dataset.place);

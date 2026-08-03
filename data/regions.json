@@ -2,7 +2,7 @@
   "format": 2,
   "name": "California",
   "description": "MeshCore repeater region scopes for California, as a tree of nested places.",
-  "updated": "2026-08-02",
+  "updated": "2026-08-03",
   "license": "MIT",
   "source": "https://github.com/matkam/meshcore-settings",
   "limits": {
@@ -39,33 +39,28 @@
     {
       "code": "ie",
       "name": "Inland Empire",
-      "blurb": "San Bernardino and Riverside valley floor and mountains — not the high or low deserts."
+      "blurb": "San Bernardino and Riverside valley floor and mountains, not the deserts."
     },
     {
-      "code": "mojave",
-      "name": "Mojave / High Desert",
+      "code": "highdesert",
+      "name": "High Desert",
       "blurb": "Antelope Valley through Victor Valley out to Needles and the Morongo Basin."
     },
     {
       "code": "lowdesert",
       "name": "Low Desert",
       "blurb": "Coachella, Palo Verde and the Imperial Valley."
-    },
-    {
-      "code": "applevalley",
-      "name": "Apple Valley",
-      "blurb": "Apple Valley and the surrounding Victor Valley."
     }
   ],
   "places": [
     {
-      "code": "northcoast",
-      "name": "North Coast",
-      "blurb": "Redwood coast from the Oregon line down to Clear Lake.",
-      "short": "N COAST",
-      "outline": ["Del Norte", "Humboldt", "Lake", "Mendocino", "Trinity"],
+      "code": "norcal",
+      "name": "North California",
+      "blurb": "From the Oregon line down to Sonoma County on the west and Placer County on the east.",
+      "short": "NOR CAL",
+      "outline": ["Del Norte", "Humboldt", "Lake", "Mendocino", "Trinity", "Siskiyou", "Shasta", "Tehama", "Plumas", "Modoc", "Lassen", "Sierra", "Nevada", "Butte", "Colusa", "Glenn"],
       "nudge": [40, -20],
-      "aliases": ["Del Norte County", "Humboldt County", "Trinity County", "Mendocino County", "Lake County"],
+      "aliases": ["Del Norte County", "Humboldt County", "Trinity County", "Mendocino County", "Lake County", "Siskiyou County", "Shasta County", "Tehama County", "Plumas County", "Modoc County", "Lassen County", "Sierra County", "Nevada County", "Butte County", "Colusa County", "Glenn County"],
       "children": [
         {
           "code": "crescentcity",
@@ -130,18 +125,7 @@
           "lat": 38.958,
           "lon": -122.626,
           "aliases": ["Clearlake", "Lakeport", "Kelseyville", "Middletown"]
-        }
-      ]
-    },
-    {
-      "code": "shastacascade",
-      "name": "Shasta Cascade",
-      "blurb": "The far northeast: Shasta, Siskiyou, Lassen, Modoc, Plumas, Tehama.",
-      "short": "SHASTA",
-      "outline": ["Lassen", "Modoc", "Plumas", "Shasta", "Siskiyou", "Tehama"],
-      "nudge": [-22, 0],
-      "aliases": ["Siskiyou County", "Modoc County", "Shasta County", "Lassen County", "Tehama County", "Plumas County"],
-      "children": [
+        },
         {
           "code": "yreka",
           "name": "Yreka",
@@ -213,131 +197,30 @@
           "lat": 39.937,
           "lon": -120.947,
           "aliases": ["Quincy", "Portola", "Chester", "Graeagle", "Lake Almanor"]
-        }
-      ]
-    },
-    {
-      "code": "sacramentovalley",
-      "name": "Sacramento Valley",
-      "blurb": "Sacramento and the valley floor north of the Delta.",
-      "short": "SAC VALLEY",
-      "outline": ["Colusa", "Glenn", "Sutter", "Yuba"],
-      "nudge": [-32, -92],
-      "aliases": ["Glenn County", "Colusa County", "Sutter County", "Yuba County", "Placer County"],
-      "children": [
-        {
-          "code": "sacmetro",
-          "name": "Sacramento Metro",
-          "blurb": "Sacramento, the Yolo side of the river, and the Placer suburbs.",
-          "outline": ["Sacramento", "Yolo"],
-          "aliases": ["Yolo County", "Sacramento County"],
-          "children": [
-            {
-              "code": "sacramento",
-              "name": "Sacramento Central",
-              "county": "Sacramento",
-              "lat": 38.582,
-              "lon": -121.494,
-              "aliases": ["Sacramento", "Midtown", "Land Park", "Natomas"]
-            },
-            {
-              "code": "citrusheights",
-              "name": "Citrus Heights / Carmichael",
-              "county": "Sacramento",
-              "lat": 38.707,
-              "lon": -121.281,
-              "aliases": ["Citrus Heights", "Carmichael", "Fair Oaks", "Orangevale", "Antelope"]
-            },
-            {
-              "code": "folsom",
-              "name": "Folsom / Rancho Cordova",
-              "county": "Sacramento",
-              "lat": 38.678,
-              "lon": -121.176,
-              "aliases": ["Folsom", "Rancho Cordova", "Gold River"]
-            },
-            {
-              "code": "elkgrove",
-              "name": "Elk Grove / Galt",
-              "county": "Sacramento",
-              "lat": 38.409,
-              "lon": -121.372,
-              "aliases": ["Elk Grove", "Galt", "Laguna", "Isleton"]
-            },
-            {
-              "code": "westsac",
-              "name": "West Sacramento",
-              "county": "Yolo",
-              "lat": 38.581,
-              "lon": -121.53,
-              "aliases": ["West Sacramento", "Clarksburg"]
-            },
-            {
-              "code": "davis",
-              "name": "Davis",
-              "county": "Yolo",
-              "lat": 38.545,
-              "lon": -121.741,
-              "aliases": ["Davis", "Winters"]
-            },
-            {
-              "code": "woodland",
-              "name": "Woodland",
-              "county": "Yolo",
-              "lat": 38.679,
-              "lon": -121.773,
-              "aliases": ["Woodland", "Esparto", "Knights Landing"]
-            },
-            {
-              "code": "southplacer",
-              "name": "South Placer",
-              "county": "Placer",
-              "lat": 38.752,
-              "lon": -121.288,
-              "aliases": ["Roseville", "Rocklin", "Lincoln", "Loomis"]
-            }
-          ]
         },
         {
-          "code": "buttecounty",
-          "name": "Butte County",
-          "blurb": "Chico, Oroville and the Paradise ridge.",
-          "outline": ["Butte"],
-          "aliases": ["Butte County"],
-          "children": [
-            {
-              "code": "chico",
-              "name": "Chico",
-              "county": "Butte",
-              "lat": 39.729,
-              "lon": -121.837,
-              "aliases": ["Chico", "Durham", "Hamilton City"]
-            },
-            {
-              "code": "oroville",
-              "name": "Oroville",
-              "county": "Butte",
-              "lat": 39.514,
-              "lon": -121.556,
-              "aliases": ["Oroville", "Palermo", "Thermalito", "Gridley", "Biggs"]
-            },
-            {
-              "code": "paradise",
-              "name": "Paradise Ridge",
-              "county": "Butte",
-              "lat": 39.759,
-              "lon": -121.622,
-              "aliases": ["Paradise", "Magalia", "Concow", "Stirling City"]
-            }
-          ]
+          "code": "chico",
+          "name": "Chico",
+          "county": "Butte",
+          "lat": 39.729,
+          "lon": -121.837,
+          "aliases": ["Chico", "Durham", "Hamilton City"]
         },
         {
-          "code": "yubasutter",
-          "name": "Yuba-Sutter",
-          "county": ["Yuba", "Sutter"],
-          "lat": 39.143,
-          "lon": -121.604,
-          "aliases": ["Marysville", "Linda", "Olivehurst", "Wheatland", "Brownsville", "Yuba City", "Live Oak", "Sutter"]
+          "code": "oroville",
+          "name": "Oroville",
+          "county": "Butte",
+          "lat": 39.514,
+          "lon": -121.556,
+          "aliases": ["Oroville", "Palermo", "Thermalito", "Gridley", "Biggs"]
+        },
+        {
+          "code": "paradise",
+          "name": "Paradise Ridge",
+          "county": "Butte",
+          "lat": 39.759,
+          "lon": -121.622,
+          "aliases": ["Paradise", "Magalia", "Concow", "Stirling City"]
         },
         {
           "code": "willows",
@@ -354,6 +237,113 @@
           "lat": 39.214,
           "lon": -122.009,
           "aliases": ["Colusa", "Williams", "Arbuckle", "Maxwell"]
+        },
+        {
+          "code": "sierracounty",
+          "name": "Sierra County",
+          "county": "Sierra",
+          "lat": 39.677,
+          "lon": -120.24,
+          "aliases": ["Loyalton", "Downieville", "Sierra City", "Sierraville"]
+        }
+      ]
+    },
+    {
+      "code": "sacramentofoothills",
+      "name": "Sacramento Foothills",
+      "blurb": "Sacramento and the foothills north of the Delta.",
+      "short": "SAC",
+      "outline": ["Sacramento", "Yolo", "Placer", "Sutter", "Yuba"],
+      "nudge": [-21, 23],
+      "aliases": ["Yolo County", "Sacramento County", "Placer County", "Sutter County", "Yuba County"],
+      "children": [
+        {
+          "code": "sacramento",
+          "name": "Sacramento Central",
+          "county": "Sacramento",
+          "lat": 38.582,
+          "lon": -121.494,
+          "aliases": ["Sacramento", "Midtown", "Land Park", "Natomas"]
+        },
+        {
+          "code": "citrusheights",
+          "name": "Citrus Heights / Carmichael",
+          "county": "Sacramento",
+          "lat": 38.707,
+          "lon": -121.281,
+          "aliases": ["Citrus Heights", "Carmichael", "Fair Oaks", "Orangevale", "Antelope"]
+        },
+        {
+          "code": "folsom",
+          "name": "Folsom / Rancho Cordova",
+          "county": "Sacramento",
+          "lat": 38.678,
+          "lon": -121.176,
+          "aliases": ["Folsom", "Rancho Cordova", "Gold River"]
+        },
+        {
+          "code": "elkgrove",
+          "name": "Elk Grove / Galt",
+          "county": "Sacramento",
+          "lat": 38.409,
+          "lon": -121.372,
+          "aliases": ["Elk Grove", "Galt", "Laguna", "Isleton"]
+        },
+        {
+          "code": "westsac",
+          "name": "West Sacramento",
+          "county": "Yolo",
+          "lat": 38.581,
+          "lon": -121.53,
+          "aliases": ["West Sacramento", "Clarksburg"]
+        },
+        {
+          "code": "davis",
+          "name": "Davis",
+          "county": "Yolo",
+          "lat": 38.545,
+          "lon": -121.741,
+          "aliases": ["Davis", "Winters"]
+        },
+        {
+          "code": "woodland",
+          "name": "Woodland",
+          "county": "Yolo",
+          "lat": 38.679,
+          "lon": -121.773,
+          "aliases": ["Woodland", "Esparto", "Knights Landing"]
+        },
+        {
+          "code": "southplacer",
+          "name": "South Placer",
+          "county": "Placer",
+          "lat": 38.752,
+          "lon": -121.288,
+          "aliases": ["Roseville", "Rocklin", "Lincoln", "Loomis"]
+        },
+        {
+          "code": "yubasutter",
+          "name": "Yuba-Sutter",
+          "county": ["Yuba", "Sutter"],
+          "lat": 39.143,
+          "lon": -121.604,
+          "aliases": ["Marysville", "Linda", "Olivehurst", "Wheatland", "Brownsville", "Yuba City", "Live Oak", "Sutter"]
+        },
+        {
+          "code": "auburn",
+          "name": "Auburn",
+          "county": "Placer",
+          "lat": 38.897,
+          "lon": -121.077,
+          "aliases": ["Auburn", "Colfax", "Foresthill", "Newcastle"]
+        },
+        {
+          "code": "grassvalley",
+          "name": "Grass Valley / Nevada City",
+          "county": "Nevada",
+          "lat": 39.219,
+          "lon": -121.061,
+          "aliases": ["Grass Valley", "Nevada City", "Penn Valley", "Rough and Ready"]
         }
       ]
     },
@@ -362,9 +352,9 @@
       "name": "Sierra Nevada",
       "blurb": "Gold Country, Tahoe and the Eastern Sierra.",
       "short": "SIERRA",
-      "outline": ["El Dorado", "Nevada"],
+      "outline": ["El Dorado", "Amador", "Alpine", "Calaveras", "Mariposa", "Tuolumne"],
       "nudge": [10, -10],
-      "aliases": ["Nevada County", "El Dorado County"],
+      "aliases": ["El Dorado County", "Amador County", "Alpine County", "Calaveras County", "Mariposa County", "Tuolumne County"],
       "children": [
         {
           "code": "goldcountry",
@@ -373,22 +363,6 @@
           "outline": ["Amador", "Calaveras", "Mariposa", "Sierra", "Tuolumne"],
           "aliases": ["Sierra County", "Amador County", "Calaveras County", "Tuolumne County", "Mariposa County"],
           "children": [
-            {
-              "code": "auburn",
-              "name": "Auburn",
-              "county": "Placer",
-              "lat": 38.897,
-              "lon": -121.077,
-              "aliases": ["Auburn", "Colfax", "Foresthill", "Newcastle"]
-            },
-            {
-              "code": "grassvalley",
-              "name": "Grass Valley / Nevada City",
-              "county": "Nevada",
-              "lat": 39.219,
-              "lon": -121.061,
-              "aliases": ["Grass Valley", "Nevada City", "Penn Valley", "Rough and Ready"]
-            },
             {
               "code": "placerville",
               "name": "Placerville",
@@ -436,14 +410,6 @@
               "lat": 37.485,
               "lon": -119.966,
               "aliases": ["Mariposa", "Yosemite Valley", "El Portal", "Coulterville"]
-            },
-            {
-              "code": "sierracounty",
-              "name": "Sierra County",
-              "county": "Sierra",
-              "lat": 39.677,
-              "lon": -120.24,
-              "aliases": ["Loyalton", "Downieville", "Sierra City", "Sierraville"]
             }
           ]
         },
@@ -963,7 +929,7 @@
       "blurb": "Stockton down to Bakersfield — the stretch Central Valley Mesh covers.",
       "short": "C VALLEY",
       "nudge": [10, 22],
-      "aliases": ["Kern County"],
+      "aliases": ["Kern County", "Kings County", "Tulare County", "Fresno County", "Madera County", "Merced County", "Stanislaus County", "San Joaquin County"],
       "children": [
         {
           "code": "cvnorth",
@@ -1083,8 +1049,8 @@
           "code": "cvsouth",
           "name": "South Valley",
           "blurb": "Hanford down to Bakersfield.",
-          "outline": ["Kings", "Tulare"],
-          "aliases": ["Kings County", "Tulare County"],
+          "outline": ["Kings", "Tulare", "Kern"],
+          "aliases": ["Kings County", "Tulare County", "Kern County"],
           "children": [
             {
               "code": "hanford",
@@ -1157,7 +1123,7 @@
               "lat": 35.132,
               "lon": -118.449,
               "aliases": ["Tehachapi", "Mojave", "California City", "Frazier Park", "Lebec"],
-              "tags": ["mojave"]
+              "tags": ["highdesert"]
             },
             {
               "code": "ridgecrest",
@@ -1166,7 +1132,7 @@
               "lat": 35.622,
               "lon": -117.671,
               "aliases": ["Ridgecrest", "Inyokern", "China Lake", "Trona"],
-              "tags": ["mojave"]
+              "tags": ["highdesert"]
             }
           ]
         }
@@ -1177,6 +1143,7 @@
       "name": "Southern California",
       "blurb": "The eight southern counties — Santa Barbara through San Diego, including the Inland Empire and deserts.",
       "short": "SOCAL",
+      "nudge": [-12, 53],
       "aliases": ["SoCal", "Southern California"],
       "children": [
         {
@@ -1366,7 +1333,7 @@
               "lat": 34.687,
               "lon": -118.154,
               "aliases": ["Lancaster", "Palmdale", "Quartz Hill", "Acton", "Rosamond"],
-              "tags": ["mojave"]
+              "tags": ["highdesert"]
             }
           ]
         },
@@ -1455,7 +1422,7 @@
               "lat": 34.536,
               "lon": -117.291,
               "aliases": ["Victorville", "Apple Valley", "Hesperia", "Adelanto", "Phelan"],
-              "tags": ["mojave", "applevalley"]
+              "tags": ["highdesert"]
             },
             {
               "code": "barstow",
@@ -1464,7 +1431,7 @@
               "lat": 34.896,
               "lon": -117.017,
               "aliases": ["Barstow", "Newberry Springs", "Yermo", "Baker"],
-              "tags": ["mojave"]
+              "tags": ["highdesert"]
             },
             {
               "code": "needles",
@@ -1473,7 +1440,7 @@
               "lat": 34.848,
               "lon": -114.614,
               "aliases": ["Needles", "Havasu Lake", "Big River"],
-              "tags": ["mojave"]
+              "tags": ["highdesert"]
             },
             {
               "code": "yuccavalley",
@@ -1482,7 +1449,7 @@
               "lat": 34.114,
               "lon": -116.432,
               "aliases": ["Yucca Valley", "Joshua Tree", "Twentynine Palms", "Landers", "Pioneertown"],
-              "tags": ["mojave"]
+              "tags": ["highdesert"]
             }
           ]
         },

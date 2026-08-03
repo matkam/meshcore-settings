@@ -112,14 +112,16 @@ check("a tag is placed as its own name on 1.10", await cmds(), [
   "set af 0", "set flood.advert.interval 24",
   "region put west", "region allowf west",
   "region put california west", "region allowf california",
-  "region put losangeles california", "region allowf losangeles",
-  "region put dtla losangeles", "region allowf dtla",
   "region put socal california", "region allowf socal",
+  "region put sanbernardino socal", "region allowf sanbernardino",
+  "region put ontario sanbernardino", "region allowf ontario",
+  "region put ie california", "region allowf ie",
   "region save"].join("\n"));
 await page.selectOption("#opt-fw", "116");
 check("and the same line on 1.16, where the chain uses region def", await cmds(), [
   "set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
-  "region def west california losangeles dtla", "region put socal california", "region save"].join("\n"));
+  "region def west california socal sanbernardino ontario", "region put ie california",
+  "region save"].join("\n"));
 await page.goto(SITE + "#slonorth", { waitUntil: "networkidle" });
 
 for (const w of [390, 768, 1200]) {
