@@ -75,10 +75,13 @@
 # The levels follow communities and RF propagation rather than administrative
 # lines. A region is a mesh that can hear itself, so a county line is ignored
 # where it cuts through one — Lake Tahoe is one place across three counties.
-# Where the two agree the county stands: SoCal runs its own frequency and is
-# linked from Santa Barbara to San Diego, and inside it the counties are what
-# the local groups organise around, so there they are the level. Same rule,
-# different answer.
+# Where the two agree the county stands: SoCal is on its own radio preset
+# rather than the standard USA one and is linked from Santa Barbara to San
+# Diego, so it is one mesh and the counties inside it are what the local groups
+# organise around. Same rule, different answer.
+#
+# Frequencies and presets live at https://wcmesh.com, not here — nothing in
+# this file or the page it feeds sets a radio parameter.
 #
 # What a county cannot draw becomes a tag instead. The high desert reaches
 # across three counties and two regions; `ie` spans three. See `tags` above.

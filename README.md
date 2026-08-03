@@ -288,10 +288,14 @@ A region is a mesh that can actually hear itself, so where a county line cuts
 through one it is ignored: Lake Tahoe is one place across three counties, and
 the Central Valley runs Stockton to Bakersfield because that is the stretch one
 group covers. Where the two happen to agree, the county stands — Southern
-California runs its own frequency and is linked from Santa Barbara through to
-San Diego, and inside it the counties are what the local groups organise around,
-so they are the level. That is the same rule reaching a different answer, not an
-exception to it.
+California is on its own radio preset rather than the standard USA one, and is
+linked from Santa Barbara through to San Diego, so it is one mesh and the
+counties inside it are what the local groups organise around. That is the same
+rule reaching a different answer, not an exception to it.
+
+Radio settings are not this repo's to publish and none are generated here — this
+site only produces the region scope chain. [West Coast Mesh](https://wcmesh.com)
+is where the frequency and preset for an area come from.
 
 Counties also survive as a `county` field on each local area, which never appears
 in a generated chain: it gives the validator its point-in-boundary check and
@@ -378,7 +382,8 @@ MeshCore does not ship a national region list, and there is no body that assigns
 these. What actually matters is that the repeaters around you use the same names.
 The codes here follow the widely used `west` / `california` top-level tags and stay
 lowercase, but **check with your local mesh group before deploying**, and open a
-PR if your area is missing or named wrong.
+PR if your area is missing or named wrong. [West Coast Mesh](https://wcmesh.com)
+is where most of California coordinates that.
 
 Region names never appear in packets — a scoped packet carries two 16-bit
 transport codes derived from the region's key, so a code's length has no effect on

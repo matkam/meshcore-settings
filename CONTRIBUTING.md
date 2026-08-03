@@ -229,5 +229,7 @@ preview.
 - [ ] `data/regions.json` is rebuilt and committed alongside the YAML
 - [ ] `npm run validate` passes
 - [ ] `npm test` passes (`npm install` first — it needs Playwright)
-- [ ] You've checked the names against your local mesh group, not just a map
+- [ ] You've checked the names against your local mesh group, not just a map —
+      [West Coast Mesh](https://wcmesh.com) is where most of California
+      coordinates, including which areas are on which radio preset
 - [ ] The alias list covers what people would search for
