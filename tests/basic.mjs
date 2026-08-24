@@ -81,26 +81,26 @@ await page.fill("#opt-duty", "100");
 await page.selectOption("#opt-hash", "1");
 
 // --- 5. deep link
-await page.goto(SITE + "#palmsprings", { waitUntil: "networkidle" });
-// SoCal is a real place; palmsprings also carries the lowdesert tag alongside the chain.
-pass &= check("deep link #palmsprings under socal, with the lowdesert tag",
+await page.goto(SITE + "#coachellavalley", { waitUntil: "networkidle" });
+pass &= check("deep link #coachellavalley under socal",
   (await page.textContent("#commands")).trim(),
   ["set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
-   "region def west california lowdesert palmsprings", "region put socal california", "region save"].join("\n"));
+   "region def west california socal riverside coachellavalley", "region save"].join("\n"));
 console.log("deep-link search box:", JSON.stringify(await page.inputValue("#search")));
 
-// --- 5b. places outside tagged areas carry nothing extra
+// --- 5b. places outside SoCal stay on their own chain
 await page.goto(SITE + "#eureka", { waitUntil: "networkidle" });
-pass &= check("a place with no tag carries no extra name",
+pass &= check("a NorCal place keeps its own chain",
   (await page.textContent("#commands")).trim(),
   ["set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
-   "region def west california northcoast eureka", "region save"].join("\n"));
+   "region def west california norcal eureka", "region save"].join("\n"));
 
 // --- 6. searches that should resolve
-for (const [q, want] of [["Big Bear", "bigbear"], ["Humboldt", "eureka"], ["Truckee", "truckee"],
+for (const [q, want] of [["Big Bear", "sbmountains"], ["Humboldt", "eureka"], ["Truckee", "truckee"],
                          ["slo", "slocity"], ["Santa Cruz", "santacruz"], ["Bakersfield", "bakersfield"],
-                         ["Yosemite", "mariposa"], ["Chula Vista", "chulavista"],
-                         ["Alameda County", "eastbay"], ["Paso Robles", "slonorth"]]) {
+                         ["Yosemite", "mariposa"], ["Chula Vista", "sdsouth"],
+                         ["Alameda County", "eastbay"], ["Paso Robles", "slonorth"],
+                         ["Palm Springs", "coachellavalley"]]) {
   await page.fill("#search", "");
   await page.fill("#search", q);
   await page.waitForTimeout(60);

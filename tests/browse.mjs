@@ -252,21 +252,21 @@ check("and so does a search result",
 
 check("the scope line says where chains start and how much there is",
   (await page.textContent("#pick-scope")) ===
-    "west › california prefixes every chain · 13 regions, 84 areas and 94 local areas to choose from.",
+    "west › california prefixes every chain · 7 regions, 58 areas and 128 local areas to choose from.",
   await page.textContent("#pick-scope"));
 
 /* ---------- keyboard ---------- */
 
 await page.goto(SITE, { waitUntil: "networkidle" });
-await page.focus('.pick-toggle[data-code="northcoast"]');
+await page.focus('.pick-toggle[data-code="norcal"]');
 await page.keyboard.press("Enter");
 await page.waitForTimeout(150);
-check("the disclosure works from the keyboard", (await isOpen("northcoast")) === "true");
+check("the disclosure works from the keyboard", (await isOpen("norcal")) === "true");
 check("without selecting anything", (await picks(page)).length === 0);
 
 await page.keyboard.press("Tab");
 check("and tab moves on to that row's checkbox",
-  await page.evaluate(() => document.activeElement.dataset.code) === "northcoast",
+  await page.evaluate(() => document.activeElement.dataset.code) === "norcal",
   await page.evaluate(() => document.activeElement.tagName + "/" +
     (document.activeElement.dataset.code || "")));
 

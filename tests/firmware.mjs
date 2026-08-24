@@ -101,25 +101,24 @@ await tick(page, "slonorth");
 await page.evaluate(() => { document.querySelector("details.advanced").open = false; });
 await page.screenshot({ path: shot("fw-old.png"), clip: { x: 0, y: 180, width: 1000, height: 1250 } });
 
-/* ---------- tags ----------
- * A tag is one extra name rather than a chain, so `region put` places it on
- * every tier — the only difference further down is that 1.14 and older need an
- * explicit allowf, the same as every other name.
+/* ---------- SoCal nesting ----------
+ * Southern California is a region with counties underneath, so an area like
+ * San Fernando Valley sits on a five-token chain.
  */
-await page.goto(SITE + "#ontario", { waitUntil: "networkidle" });
+await page.goto(SITE + "#sfv", { waitUntil: "networkidle" });
 await page.selectOption("#opt-fw", "110");
-check("a tag is placed as its own name on 1.10", await cmds(), [
+check("SoCal nesting expands the put/allowf chain on 1.10", await cmds(), [
   "set af 0", "set flood.advert.interval 24",
   "region put west", "region allowf west",
   "region put california west", "region allowf california",
-  "region put losangeles california", "region allowf losangeles",
-  "region put dtla losangeles", "region allowf dtla",
   "region put socal california", "region allowf socal",
+  "region put losangeles socal", "region allowf losangeles",
+  "region put sfv losangeles", "region allowf sfv",
   "region save"].join("\n"));
 await page.selectOption("#opt-fw", "116");
-check("and the same line on 1.16, where the chain uses region def", await cmds(), [
+check("and the same nesting on 1.16 via region def", await cmds(), [
   "set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
-  "region def west california losangeles dtla", "region put socal california", "region save"].join("\n"));
+  "region def west california socal losangeles sfv", "region save"].join("\n"));
 await page.goto(SITE + "#slonorth", { waitUntil: "networkidle" });
 
 for (const w of [390, 768, 1200]) {

@@ -34,7 +34,7 @@
 #             16-bit transport code derived from the name, never the name —
 #             so prefer the word people say over an abbreviation they have to
 #             look up. Established vernacular is the exception worth making:
-#             `sf`, `oc`, `ie`, `sfv`, `dtla` are what operators already type.
+#             `sf`, `oc`, `sfv` are what operators already type.
 #
 #             Codes are stable: once one is in use on real hardware, renaming
 #             it breaks every node that has it, so get it right before anyone
@@ -110,6 +110,8 @@ limits:
 # Prefixed to every chain, and not selectable: everything on this site is
 # somewhere in California, so there is nothing to choose here.
 root:
+  - code: us
+    name: United States
   - code: west
     name: Western US
   - code: california
@@ -124,18 +126,8 @@ levels:
 
 # Extra region names carried alongside a place's chain. Not levels: nothing
 # nests under a tag, and a place opts in rather than inheriting one by position.
-# SoCal's counties are the tree; these name the communities that cut across them.
-tags:
-  - code: ie
-    name: Inland Empire
-    blurb: San Bernardino and Riverside valley floor and mountains
-  - code: highdesert
-    name: High Desert
-    blurb: Antelope Valley through Victor Valley out to Needles and the Morongo Basin.
-  - code: lowdesert
-    name: Low Desert
-    blurb: Coachella, Palo Verde and the Imperial Valley.
-
+# (None declared — SoCal communities live as areas under each county.)
+tags: []
 
 places:
   - code: norcal
@@ -933,17 +925,15 @@ places:
             lat: 35.132
             lon: -118.449
             aliases: ["Tehachapi", "Mojave", "California City", "Frazier Park", "Lebec"]
-            tags: [mojave]
           - code: ridgecrest
             name: Indian Wells Valley
             county: Kern
             lat: 35.622
             lon: -117.671
             aliases: ["Ridgecrest", "Inyokern", "China Lake", "Trona"]
-            tags: [mojave]
   - code: socal
     name: Southern California
-    blurb: The eight southern counties — Santa Barbara through San Diego, including the Inland Empire and deserts.
+    blurb: The eight southern counties.
     short: SOCAL
     aliases: ["SoCal", "Southern California"]
     children:
@@ -959,14 +949,14 @@ places:
             lat: 34.421
             lon: -119.698
             aliases: ["Santa Barbara", "Goleta", "Carpinteria", "Montecito", "Isla Vista"]
-          - code: solvang
+          - code: santaynez
             name: Santa Ynez Valley
             county: Santa Barbara
             lat: 34.596
             lon: -120.138
             aliases: ["Solvang", "Buellton", "Santa Ynez", "Los Olivos", "Ballard"]
-          - code: lompoc
-            name: Lompoc
+          - code: lompocvalley
+            name: Lompoc Valley
             county: Santa Barbara
             lat: 34.639
             lon: -120.458
@@ -977,25 +967,37 @@ places:
             lat: 34.953
             lon: -120.436
             aliases: ["Santa Maria", "Orcutt", "Guadalupe", "Los Alamos"]
+          - code: cuyama
+            name: Cuyama Valley
+            county: Santa Barbara
+            lat: 34.932
+            lon: -119.693
+            aliases: ["New Cuyama", "Cuyama", "Ventucopa"]
       - code: ventura
         name: Ventura County
         blurb: "Ventura County, including Conejo and Simi."
         outline: ["Ventura"]
         aliases: ["Ventura County"]
         children:
-          - code: oxnard
+          - code: oxnardplain
             name: Oxnard Plain
             county: Ventura
             lat: 34.198
             lon: -119.177
             aliases: ["Oxnard", "Ventura", "Camarillo", "Port Hueneme"]
-          - code: ojai
+          - code: santaclarariver
+            name: Santa Clara River Valley
+            county: Ventura
+            lat: 34.354
+            lon: -119.059
+            aliases: ["Santa Paula", "Fillmore", "Piru"]
+          - code: ojaivalley
             name: Ojai Valley
             county: Ventura
             lat: 34.448
             lon: -119.243
-            aliases: ["Ojai", "Oak View", "Meiners Oaks", "Santa Paula", "Fillmore"]
-          - code: thousandoaks
+            aliases: ["Ojai", "Oak View", "Meiners Oaks"]
+          - code: conejovalley
             name: Conejo Valley
             county: Ventura
             lat: 34.17
@@ -1015,13 +1017,13 @@ places:
         aliases: ["Los Angeles County", "LA County"]
         nudge: [-14, 14]
         children:
-          - code: dtla
-            name: Central LA
+          - code: labasin
+            name: LA Basin
             county: Los Angeles
             lat: 34.048
             lon: -118.253
-            aliases: ["Downtown", "Hollywood", "Koreatown", "Echo Park", "Silver Lake", "Boyle Heights"]
-          - code: westla
+            aliases: ["Downtown", "Hollywood", "Koreatown", "Echo Park", "Silver Lake", "Boyle Heights", "Central LA"]
+          - code: westside
             name: Westside
             county: Los Angeles
             lat: 34.019
@@ -1039,32 +1041,31 @@ places:
             lat: 34.148
             lon: -118.144
             aliases: ["Pasadena", "Alhambra", "El Monte", "West Covina", "Arcadia", "Monrovia"]
-          - code: pomona
+          - code: pomonavalley
             name: Pomona Valley
             county: Los Angeles
             lat: 34.055
             lon: -117.752
             aliases: ["Pomona", "Claremont", "La Verne", "San Dimas", "Diamond Bar"]
-            tags: [ie]
-          - code: torrance
-            name: LA South Bay
+          - code: southbay
+            name: South Bay
             county: Los Angeles
             lat: 33.836
             lon: -118.341
             aliases: ["Torrance", "Redondo Beach", "Hermosa Beach", "Manhattan Beach", "El Segundo", "San Pedro"]
-          - code: longbeach
-            name: Long Beach
+          - code: harbor
+            name: Harbor Area
             county: Los Angeles
             lat: 33.77
             lon: -118.194
-            aliases: ["Long Beach", "Signal Hill", "Lakewood", "Cerritos"]
-          - code: downey
-            name: Southeast LA
+            aliases: ["Long Beach", "Signal Hill", "Lakewood", "Cerritos", "San Pedro Harbor"]
+          - code: gateway
+            name: Gateway Cities
             county: Los Angeles
             lat: 33.94
             lon: -118.133
             aliases: ["Downey", "Whittier", "Norwalk", "Compton", "Bellflower", "Paramount"]
-          - code: malibu
+          - code: santamonicamtns
             name: Santa Monica Mountains
             county: Los Angeles
             lat: 34.026
@@ -1076,50 +1077,55 @@ places:
             lat: 34.391
             lon: -118.542
             aliases: ["Santa Clarita", "Valencia", "Newhall", "Castaic", "Stevenson Ranch"]
+          - code: antelopevalley
+            name: Antelope Valley
+            county: Los Angeles
+            lat: 34.687
+            lon: -118.154
+            aliases: ["Lancaster", "Palmdale", "Quartz Hill", "Acton", "Rosamond"]
           - code: catalina
             name: Catalina Island
             county: Los Angeles
             lat: 33.343
             lon: -118.328
             aliases: ["Avalon", "Two Harbors", "Santa Catalina"]
-          - code: lancaster
-            name: Antelope Valley
-            county: Los Angeles
-            lat: 34.687
-            lon: -118.154
-            aliases: ["Lancaster", "Palmdale", "Quartz Hill", "Acton", "Rosamond"]
-            tags: [mojave]
-      - code: oc
+      - code: orangecounty
         name: Orange County
-        blurb: Anaheim down to San Clemente.
+        blurb: North County down to San Clemente.
         outline: ["Orange"]
         aliases: ["Orange County"]
         nudge: [6, 12]
         children:
-          - code: anaheim
-            name: North OC
+          - code: ocnorth
+            name: North County
             county: Orange
             lat: 33.836
             lon: -117.914
             aliases: ["Anaheim", "Fullerton", "Buena Park", "Orange", "Brea", "Yorba Linda"]
-          - code: santaana
-            name: Central OC
+          - code: occentral
+            name: Central County
             county: Orange
             lat: 33.746
             lon: -117.868
             aliases: ["Santa Ana", "Irvine", "Tustin", "Costa Mesa", "Garden Grove", "Westminster"]
-          - code: hb
-            name: Coastal OC
+          - code: occoast
+            name: Coast
             county: Orange
             lat: 33.66
             lon: -117.999
             aliases: ["Huntington Beach", "Newport Beach", "Seal Beach", "Laguna Beach", "Fountain Valley"]
-          - code: missionviejo
-            name: South OC
+          - code: ocsouth
+            name: South County
             county: Orange
             lat: 33.6
             lon: -117.672
             aliases: ["Mission Viejo", "Lake Forest", "San Clemente", "Dana Point", "Laguna Niguel", "Rancho Santa Margarita"]
+          - code: occanyon
+            name: Santa Ana Mountains
+            county: Orange
+            lat: 33.71
+            lon: -117.53
+            aliases: ["Silverado", "Modjeska", "Trabuco Canyon", "Rancho Santa Margarita foothills"]
       - code: sanbernardino
         name: San Bernardino County
         blurb: "The valley floor, mountains and high desert."
@@ -1128,55 +1134,48 @@ places:
         aliases: ["San Bernardino County"]
         nudge: [6, -8]
         children:
-          - code: ontario
-            name: West End
+          - code: cucamonga
+            name: Cucamonga Valley
             county: San Bernardino
             lat: 34.064
             lon: -117.649
-            aliases: ["Ontario", "Rancho Cucamonga", "Chino", "Upland", "Fontana", "Montclair"]
-            tags: [ie]
+            aliases: ["Ontario", "Rancho Cucamonga", "Chino", "Upland", "Fontana", "Montclair", "West End"]
           - code: sbvalley
             name: San Bernardino Valley
             county: San Bernardino
             lat: 34.108
             lon: -117.29
             aliases: ["San Bernardino", "Redlands", "Rialto", "Colton", "Highland", "Yucaipa", "Loma Linda"]
-            tags: [ie]
-          - code: bigbear
+          - code: sbmountains
             name: San Bernardino Mountains
             county: San Bernardino
             lat: 34.244
             lon: -116.911
             aliases: ["Big Bear Lake", "Lake Arrowhead", "Running Springs", "Crestline", "Wrightwood"]
-            tags: [ie]
-          - code: victorville
+          - code: victorvalley
             name: Victor Valley
             county: San Bernardino
             lat: 34.536
             lon: -117.291
             aliases: ["Victorville", "Apple Valley", "Hesperia", "Adelanto", "Phelan"]
-            tags: [mojave, applevalley]
-          - code: barstow
-            name: Barstow
+          - code: centralmojave
+            name: Central Mojave
             county: San Bernardino
             lat: 34.896
             lon: -117.017
             aliases: ["Barstow", "Newberry Springs", "Yermo", "Baker"]
-            tags: [mojave]
-          - code: needles
-            name: Needles
-            county: San Bernardino
-            lat: 34.848
-            lon: -114.614
-            aliases: ["Needles", "Havasu Lake", "Big River"]
-            tags: [mojave]
-          - code: yuccavalley
+          - code: morongobasin
             name: Morongo Basin
             county: San Bernardino
             lat: 34.114
             lon: -116.432
             aliases: ["Yucca Valley", "Joshua Tree", "Twentynine Palms", "Landers", "Pioneertown"]
-            tags: [mojave]
+          - code: coloradoriver
+            name: Colorado River
+            county: San Bernardino
+            lat: 34.848
+            lon: -114.614
+            aliases: ["Needles", "Havasu Lake", "Big River"]
       - code: riverside
         name: Riverside County
         blurb: "The valley floor, mountains and Coachella Valley."
@@ -1185,89 +1184,78 @@ places:
         aliases: ["Riverside County"]
         nudge: [10, 14]
         children:
-          - code: rivcorona
-            name: Riverside / Corona
+          - code: westernriverside
+            name: Western Riverside
             county: Riverside
             lat: 33.953
             lon: -117.396
             aliases: ["Riverside", "Corona", "Norco", "Jurupa Valley", "Eastvale"]
-            tags: [ie]
-          - code: morenovalley
-            name: Moreno Valley / Perris
+          - code: perrisvalley
+            name: Perris Valley
             county: Riverside
             lat: 33.937
             lon: -117.23
             aliases: ["Moreno Valley", "Perris", "Menifee", "Lake Elsinore", "Wildomar"]
-            tags: [ie]
-          - code: temecula
+          - code: temeculavalley
             name: Temecula Valley
             county: Riverside
             lat: 33.494
             lon: -117.148
             aliases: ["Temecula", "Murrieta", "Winchester", "Anza"]
-            tags: [ie]
-          - code: hemet
+          - code: sanjacintovalley
             name: San Jacinto Valley
             county: Riverside
             lat: 33.748
             lon: -116.972
             aliases: ["Hemet", "San Jacinto", "Beaumont", "Banning", "Cabazon"]
-            tags: [ie]
-          - code: idyllwild
-            name: Idyllwild
+          - code: sanjacintomountains
+            name: San Jacinto Mountains
             county: Riverside
             lat: 33.74
             lon: -116.719
             aliases: ["Idyllwild", "Pine Cove", "Mountain Center"]
-            tags: [ie]
-          - code: palmsprings
+          - code: coachellavalley
             name: Coachella Valley
             county: Riverside
             lat: 33.83
             lon: -116.545
             aliases: ["Palm Springs", "Palm Desert", "Indio", "La Quinta", "Cathedral City", "Coachella"]
-            tags: [lowdesert]
-          - code: blythe
+          - code: paloverde
             name: Palo Verde Valley
             county: Riverside
             lat: 33.61
             lon: -114.596
             aliases: ["Blythe", "Ripley", "Desert Center"]
-            tags: [lowdesert]
       - code: imperial
         name: Imperial County
         blurb: The Imperial Valley.
         outline: ["Imperial"]
         aliases: ["Imperial County"]
         children:
-          - code: elcentro
-            name: El Centro
+          - code: imperialvalley
+            name: Imperial Valley
             county: Imperial
             lat: 32.792
             lon: -115.563
             aliases: ["El Centro", "Imperial", "Holtville", "Seeley"]
-            tags: [lowdesert]
-          - code: brawley
-            name: Brawley
+          - code: northimperial
+            name: North Imperial
             county: Imperial
             lat: 32.979
             lon: -115.53
             aliases: ["Brawley", "Westmorland", "Calipatria", "Niland", "Salton Sea"]
-            tags: [lowdesert]
-          - code: calexico
-            name: Calexico
+          - code: imperialborder
+            name: Imperial Border
             county: Imperial
             lat: 32.679
             lon: -115.499
             aliases: ["Calexico", "Heber"]
-            tags: [lowdesert]
-          - code: winterhaven
-            name: Winterhaven
+          - code: lowercolorado
+            name: Lower Colorado
             county: Imperial
             lat: 32.739
             lon: -114.622
             aliases: ["Winterhaven", "Bard", "Felicity", "Ogilby"]
-            tags: [lowdesert]
       - code: sandiego
         name: San Diego County
         blurb: San Diego County.
@@ -1276,38 +1264,44 @@ places:
         nudge: [0, 56]
         children:
           - code: sdmetro
-            name: Metro San Diego
+            name: Metro
             county: San Diego
             lat: 32.716
             lon: -117.161
             aliases: ["San Diego", "La Jolla", "Pacific Beach", "Point Loma", "Mission Valley", "North Park"]
-          - code: oceanside
+          - code: sdnorthcoast
             name: North County Coastal
             county: San Diego
             lat: 33.166
             lon: -117.323
             aliases: ["Oceanside", "Carlsbad", "Encinitas", "Del Mar", "Solana Beach", "Vista"]
-          - code: escondido
+          - code: sdnorthinland
             name: North County Inland
             county: San Diego
             lat: 33.119
             lon: -117.086
             aliases: ["Escondido", "San Marcos", "Poway", "Rancho Bernardo", "Fallbrook", "Valley Center"]
-          - code: elcajon
+          - code: sdeast
             name: East County
             county: San Diego
             lat: 32.795
             lon: -116.962
             aliases: ["El Cajon", "Santee", "La Mesa", "Lakeside", "Alpine", "Spring Valley"]
-          - code: chulavista
-            name: South County
+          - code: sdsouth
+            name: South Bay
             county: San Diego
             lat: 32.64
             lon: -117.084
             aliases: ["Chula Vista", "National City", "Imperial Beach", "Bonita", "San Ysidro"]
-          - code: ramona
+          - code: sdbackcountry
             name: Backcountry
             county: San Diego
             lat: 33.042
             lon: -116.868
-            aliases: ["Ramona", "Julian", "Borrego Springs", "Descanso", "Campo", "Warner Springs"]
+            aliases: ["Ramona", "Julian", "Descanso", "Campo", "Warner Springs", "Mountain Empire"]
+          - code: borregovalley
+            name: Borrego Valley
+            county: San Diego
+            lat: 33.257
+            lon: -116.375
+            aliases: ["Borrego Springs", "Ocotillo Wells", "Anza-Borrego"]
