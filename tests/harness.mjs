@@ -4,7 +4,7 @@
  * Nothing here is a test. It exists so the suites don't hard-code anything
  * about the machine they happen to be running on.
  */
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -86,4 +86,36 @@ export async function clearPicks(page) {
     await page.uncheck(`.picker input[data-code="${code}"]`);
     await page.waitForTimeout(80);
   }
+}
+
+/*
+ * The shape of data/regions.yaml, counted straight from the built tree.
+ *
+ * Suites that assert on how much the picker or the map is showing derive the
+ * number from here rather than writing it down. A hard-coded 161 turns every
+ * added place into a failing test the contributor didn't cause, which is a bad
+ * way to greet a first PR — and it says nothing a count from the data doesn't.
+ */
+export function regionShape() {
+  const data = JSON.parse(readFileSync(join(here, "..", "data", "regions.json"), "utf8"));
+  const outlines = JSON.parse(readFileSync(join(here, "..", "data", "outlines.json"), "utf8"));
+  const shape = {
+    regions: 0, areas: 0, locals: 0, places: 0, dots: 0,
+    outlines: new Set(),
+    shapes: outlines.shapes.length,
+    rootLine: data.root.map((r) => r.code).join(" \u203a "),
+    kids: new Map(),
+  };
+  (function walk(nodes, depth) {
+    for (const node of nodes ?? []) {
+      shape.places++;
+      if (depth === 0) { shape.regions++; } else if (depth === 1) { shape.areas++; } else { shape.locals++; }
+      if (node.lat !== undefined && node.lon !== undefined) { shape.dots++; }
+      for (const name of [].concat(node.outline ?? [])) { shape.outlines.add(name); }
+      shape.kids.set(node.code, (node.children ?? []).length);
+      walk(node.children, depth + 1);
+    }
+  })(data.places, 0);
+  shape.childrenOf = (code) => shape.kids.get(code);
+  return shape;
 }

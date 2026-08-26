@@ -23,13 +23,13 @@ const cmds = async () => (await page.textContent("#commands")).trim();
 // 1.16+ default
 check("1.16 default", await cmds(), [
   "set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
-  "region def west california centralcoast slo slonorth", "region save"].join("\n"));
+  "region def us west california centralcoast slo slonorth", "region save"].join("\n"));
 
 // 1.15: region put/allowf, dutycycle + hash still present
 await page.selectOption("#opt-fw", "115");
 check("1.15 (no allowf)", await cmds(), [
   "set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
-  "region put west", "region put california west", "region put centralcoast california",
+  "region put us", "region put west us", "region put california west", "region put centralcoast california",
   "region put slo centralcoast", "region put slonorth slo",
   "region save"].join("\n"));
 
@@ -37,7 +37,8 @@ check("1.15 (no allowf)", await cmds(), [
 await page.selectOption("#opt-fw", "114");
 check("1.14", await cmds(), [
   "set af 0", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
-  "region put west", "region allowf west",
+  "region put us", "region allowf us",
+  "region put west us", "region allowf west",
   "region put california west", "region allowf california",
   "region put centralcoast california", "region allowf centralcoast",
   "region put slo centralcoast", "region allowf slo",
@@ -48,7 +49,8 @@ check("1.14", await cmds(), [
 await page.selectOption("#opt-fw", "110");
 check("1.10-1.13 matches user's example", await cmds(), [
   "set af 0", "set flood.advert.interval 24",
-  "region put west", "region allowf west",
+  "region put us", "region allowf us",
+  "region put west us", "region allowf west",
   "region put california west", "region allowf california",
   "region put centralcoast california", "region allowf centralcoast",
   "region put slo centralcoast", "region allowf slo",
@@ -82,7 +84,8 @@ await page.uncheck("#opt-home");
 await untick(page, "slonorth");
 check("county-level on 1.10", await cmds(), [
   "set af 0", "set flood.advert.interval 24",
-  "region put west", "region allowf west",
+  "region put us", "region allowf us",
+  "region put west us", "region allowf west",
   "region put california west", "region allowf california",
   "region put centralcoast california", "region allowf centralcoast",
   "region put slo centralcoast", "region allowf slo",
@@ -92,7 +95,7 @@ check("county-level on 1.10", await cmds(), [
 await page.selectOption("#opt-fw", "116");
 check("back to 1.16", await cmds(), [
   "set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
-  "region def west california centralcoast slo", "region save"].join("\n"));
+  "region def us west california centralcoast slo", "region save"].join("\n"));
 console.log("hash re-enabled:", !(await page.isDisabled("#opt-hash")));
 
 // screenshot of the old-firmware view
@@ -109,7 +112,8 @@ await page.goto(SITE + "#sfv", { waitUntil: "networkidle" });
 await page.selectOption("#opt-fw", "110");
 check("SoCal nesting expands the put/allowf chain on 1.10", await cmds(), [
   "set af 0", "set flood.advert.interval 24",
-  "region put west", "region allowf west",
+  "region put us", "region allowf us",
+  "region put west us", "region allowf west",
   "region put california west", "region allowf california",
   "region put socal california", "region allowf socal",
   "region put losangeles socal", "region allowf losangeles",
@@ -118,7 +122,7 @@ check("SoCal nesting expands the put/allowf chain on 1.10", await cmds(), [
 await page.selectOption("#opt-fw", "116");
 check("and the same nesting on 1.16 via region def", await cmds(), [
   "set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
-  "region def west california socal losangeles sfv", "region save"].join("\n"));
+  "region def us west california socal losangeles sfv", "region save"].join("\n"));
 await page.goto(SITE + "#slonorth", { waitUntil: "networkidle" });
 
 for (const w of [390, 768, 1200]) {

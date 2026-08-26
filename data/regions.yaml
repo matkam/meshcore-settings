@@ -1047,7 +1047,7 @@ places:
             lat: 34.055
             lon: -117.752
             aliases: ["Pomona", "Claremont", "La Verne", "San Dimas", "Diamond Bar"]
-          - code: southbay
+          - code: lasouthbay
             name: South Bay
             county: Los Angeles
             lat: 33.836

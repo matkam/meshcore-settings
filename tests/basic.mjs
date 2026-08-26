@@ -34,7 +34,7 @@ pass &= check("north county SLO commands",
    "set path.hash.mode 1",
    "set flood.advert.interval 24",
    "set loop.detect moderate",
-   "region def west california centralcoast slo slonorth",
+   "region def us west california centralcoast slo slonorth",
    "region save"].join("\n"));
 
 console.log("chain:", (await page.$$eval("#chain .tok", (n) => n.map((x) => x.textContent))).join(" > "));
@@ -48,20 +48,20 @@ await tick(page, "bayarea", "eastbay");
 pass &= check("area-wide (East Bay)",
   (await page.textContent("#commands")).trim(),
   ["set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
-   "region def west california bayarea eastbay", "region save"].join("\n"));
+   "region def us west california bayarea eastbay", "region save"].join("\n"));
 
 await tick(page, "oakland");
 pass &= check("area (Oakland)",
   (await page.textContent("#commands")).trim(),
   ["set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
-   "region def west california bayarea eastbay oakland", "region save"].join("\n"));
+   "region def us west california bayarea eastbay oakland", "region save"].join("\n"));
 
 // --- 3. region-wide
 await untick(page, "eastbay");
 pass &= check("region-wide (Bay Area)",
   (await page.textContent("#commands")).trim(),
   ["set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
-   "region def west california bayarea", "region save"].join("\n"));
+   "region def us west california bayarea", "region save"].join("\n"));
 
 // --- 4. options
 await clearPicks(page);
@@ -73,7 +73,7 @@ await page.selectOption("#opt-hash", "0");
 pass &= check("options applied",
   (await page.textContent("#commands")).trim(),
   ["set dutycycle 50", "set path.hash.mode 0", "set flood.advert.interval 24", "set loop.detect moderate",
-   "region def west california bayarea southbay sanjose",
+   "region def us west california bayarea southbay sanjose",
    "region home sanjose", "region default sanjose", "region save"].join("\n"));
 
 await page.uncheck("#opt-home");
@@ -85,7 +85,7 @@ await page.goto(SITE + "#coachellavalley", { waitUntil: "networkidle" });
 pass &= check("deep link #coachellavalley under socal",
   (await page.textContent("#commands")).trim(),
   ["set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
-   "region def west california socal riverside coachellavalley", "region save"].join("\n"));
+   "region def us west california socal riverside coachellavalley", "region save"].join("\n"));
 console.log("deep-link search box:", JSON.stringify(await page.inputValue("#search")));
 
 // --- 5b. places outside SoCal stay on their own chain
@@ -93,7 +93,7 @@ await page.goto(SITE + "#eureka", { waitUntil: "networkidle" });
 pass &= check("a NorCal place keeps its own chain",
   (await page.textContent("#commands")).trim(),
   ["set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
-   "region def west california norcal eureka", "region save"].join("\n"));
+   "region def us west california norcal eureka", "region save"].join("\n"));
 
 // --- 6. searches that should resolve
 for (const [q, want] of [["Big Bear", "sbmountains"], ["Humboldt", "eureka"], ["Truckee", "truckee"],
@@ -123,7 +123,7 @@ await page.click("#copy");
 const clip = await page.evaluate(() => navigator.clipboard.readText());
 pass &= check("clipboard", clip.trim(),
   ["set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
-   "region def west california centralcoast slo slonorth", "region save"].join("\n"));
+   "region def us west california centralcoast slo slonorth", "region save"].join("\n"));
 
 // --- 9. screenshots
 await page.screenshot({ path: shot("shot-desktop.png"), fullPage: true });

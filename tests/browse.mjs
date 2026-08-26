@@ -12,7 +12,11 @@
  * happens to be three deep.
  */
 import { chromium } from "playwright";
-import { launchOptions, tick, untick, expand, picks, collapseAll } from "./harness.mjs";
+import { launchOptions, tick, untick, expand, picks, collapseAll, regionShape } from "./harness.mjs";
+
+// Counted from the data rather than written down, so adding a place is not a
+// failing test for the contributor who added it.
+const shape = regionShape();
 
 const SITE = process.env.SITE || "http://127.0.0.1:8765/";
 const browser = await chromium.launch(launchOptions);
@@ -40,18 +44,20 @@ const cmds = async () => (await page.textContent("#commands")).trim();
 
 /* ---------- browsing, with nothing selected ---------- */
 
-check("only the top level is listed at rest", (await rows()) === 13, await rows());
+check("only the top level is listed at rest", (await rows()) === shape.regions, await rows());
 check("every top-level place can be opened",
-  (await page.$$eval(".pick-toggle:not(.is-leaf)", (n) => n.length)) === 13);
+  (await page.$$eval(".pick-toggle:not(.is-leaf)", (n) => n.length)) === shape.regions);
 
 await expand(page, "bayarea");
-check("opening a region reveals its areas", (await rowsAt(1)) === 5, await rowsAt(1));
+check("opening a region reveals its areas", (await rowsAt(1)) === shape.childrenOf("bayarea"),
+  await rowsAt(1));
 check("and ticks nothing", (await picks(page)).length === 0, JSON.stringify(await picks(page)));
 check("so the settings panel stays away", await page.isHidden("#output-panel"));
 check("the toggle reports itself as open", (await isOpen("bayarea")) === "true");
 
 await expand(page, "eastbay");
-check("opening an area reveals its local areas", (await rowsAt(2)) === 8, await rowsAt(2));
+check("opening an area reveals its local areas", (await rowsAt(2)) === shape.childrenOf("eastbay"),
+  await rowsAt(2));
 check("still nothing ticked", (await picks(page)).length === 0);
 
 /* ---------- a leaf has nothing to open ----------
@@ -104,7 +110,7 @@ check("the button offers to expand while anything is closed",
 
 await page.click("#expand-picks");
 await page.waitForTimeout(500);
-check("expand all opens the whole tree", (await rows()) === 191, await rows());
+check("expand all opens the whole tree", (await rows()) === shape.places, await rows());
 check("and it is still a selection of nothing", (await picks(page)).length === 0);
 check("the button turns into collapse",
   (await page.textContent("#expand-picks")) === "Collapse all");
@@ -113,9 +119,9 @@ check("the list scrolls rather than the page growing without limit",
 
 await page.click("#expand-picks");
 await page.waitForTimeout(300);
-check("collapse all flattens it again", (await rows()) === 13, await rows());
+check("collapse all flattens it again", (await rows()) === shape.regions, await rows());
 
-await expand(page, "sacramentovalley");
+await expand(page, "sacramentofoothills");
 check("opening one by hand puts the button back to expand",
   (await page.textContent("#expand-picks")) === "Expand all");
 
@@ -187,11 +193,12 @@ check("opening one by hand puts the button back to expand",
 await collapseAll(page);
 await tick(page, "centralcoast");
 check("ticking a place still opens it", (await isOpen("centralcoast")) === "true");
-check("which is what makes the next level reachable", (await rowsAt(1)) === 7, await rowsAt(1));
+check("which is what makes the next level reachable",
+  (await rowsAt(1)) === shape.childrenOf("centralcoast"), await rowsAt(1));
 
 await tick(page, "slo", "slonorth");
 check("the chain builds as before",
-  (await cmds()).includes("region def west california centralcoast slo slonorth"), await cmds());
+  (await cmds()).includes("region def us west california centralcoast slo slonorth"), await cmds());
 
 // The name sits inside a wrapper now, so the rule that marks a chosen row is
 // two levels down from the checkbox rather than beside it. Easy to break by
@@ -252,7 +259,8 @@ check("and so does a search result",
 
 check("the scope line says where chains start and how much there is",
   (await page.textContent("#pick-scope")) ===
-    "west › california prefixes every chain · 7 regions, 58 areas and 128 local areas to choose from.",
+    `${shape.rootLine} prefixes every chain · ${shape.regions} regions, ${shape.areas} areas ` +
+    `and ${shape.locals} local areas to choose from.`,
   await page.textContent("#pick-scope"));
 
 /* ---------- keyboard ---------- */

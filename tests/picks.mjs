@@ -30,22 +30,22 @@ async function only(...codes) {
 
 await only("centralcoast");
 check("a region alone gives a region chain",
-  (await defs())[0] === "region def west california centralcoast", await cmds());
+  (await defs())[0] === "region def us west california centralcoast", await cmds());
 check("nothing is generated before anything is picked", true);
 
 await tick(page, "slo");
 check("adding an area deepens the chain",
-  (await defs())[0] === "region def west california centralcoast slo", await cmds());
+  (await defs())[0] === "region def us west california centralcoast slo", await cmds());
 
 await tick(page, "slonorth");
 check("adding a local area deepens it again",
-  (await defs())[0] === "region def west california centralcoast slo slonorth", await cmds());
+  (await defs())[0] === "region def us west california centralcoast slo slonorth", await cmds());
 
 /* ---------- several at the deepest level ---------- */
 
 await tick(page, "slocity");
 check("two local areas share their ancestry on one line",
-  (await defs())[0] === "region def west california centralcoast slo slonorth|slo slocity", await cmds());
+  (await defs())[0] === "region def us west california centralcoast slo slonorth|slo slocity", await cmds());
 check("one def line, not two", (await defs()).length === 1, JSON.stringify(await defs()));
 
 const verifyText = await page.textContent("#verify-block");
@@ -58,7 +58,11 @@ check("carrying several is explained where they are picked",
 /* ---------- across an area, and across a region ---------- */
 
 await only("centralcoast", "bayarea", "slo", "eastbay", "slonorth", "oakland");
-check("areas from every ticked region are shown", (await rows(1)) > 10,
+// Both ticked regions must contribute, rather than one of them filling the
+// list on its own — a count would only say "enough rows", not "rows from both".
+check("areas from every ticked region are shown",
+  (await page.$$eval('.pick-row.lvl-1 input[data-code="slo"]', (n) => n.length)) === 1 &&
+  (await page.$$eval('.pick-row.lvl-1 input[data-code="eastbay"]', (n) => n.length)) === 1,
   String(await rows(1)));
 check("local areas from every ticked area are shown",
   (await page.$$eval('.picker input[data-code="oakland"]', (n) => n.length)) === 1);
@@ -81,7 +85,7 @@ await untick(page, "slo", "eastbay");
 // Order follows the option order, which is the order they appear in the data
 // file — bayarea before centralcoast — not the order they were clicked.
 check("unticking the areas falls back to the regions",
-  (await defs())[0] === "region def west california bayarea|california centralcoast", (await defs())[0]);
+  (await defs())[0] === "region def us west california bayarea|california centralcoast", (await defs())[0]);
 
 await clearPicks(page);
 check("clearing everything hides the output", await page.isHidden("#output-panel"));
@@ -123,7 +127,7 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
   const puts = (await lines()).filter((l) => l.startsWith("region put"));
   check("no def lines on 1.10", !(await cmds()).includes("region def"));
   check("shared ancestry is placed once",
-    puts.filter((l) => l === "region put west").length === 1 &&
+    puts.filter((l) => l === "region put west us").length === 1 &&
     puts.filter((l) => l === "region put california west").length === 1, JSON.stringify(puts));
   check("each pick's own ancestry is placed",
     puts.includes("region put slonorth slo") && puts.includes("region put oakland eastbay"), JSON.stringify(puts));
@@ -138,7 +142,7 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
 {
   await page.goto(SITE + "#slonorth", { waitUntil: "networkidle" });
   check("a single deep link still works",
-    (await defs())[0] === "region def west california centralcoast slo slonorth", await cmds());
+    (await defs())[0] === "region def us west california centralcoast slo slonorth", await cmds());
   await tick(page, "slocity");
   check("picking several writes them all to the hash",
     /^#(slonorth,slocity|centralcoast,slo,slonorth,slocity)$/
@@ -199,7 +203,7 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
 {
   await page.goto(SITE + "#slonorth", { waitUntil: "networkidle" });
   check("the count is shown while it is comfortable",
-    /5 of 32 region names/.test(await page.textContent("#line-note")),
+    /6 of 32 region names/.test(await page.textContent("#line-note")),
     await page.textContent("#line-note"));
 
   for (const code of ["norcal", "sacramentofoothills", "sierranevada",

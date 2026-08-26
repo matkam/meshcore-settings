@@ -61,7 +61,7 @@ await page.waitForSelector("#output-panel:not([hidden])", { timeout: 5000 });
 check("accepting suggestion reveals the settings", true);
 check("send enabled once an area exists", !(await page.isDisabled("#btn-push")));
 check("area is North County", await page.$eval('.picker input[data-code="slonorth"]', (x) => x.checked));
-check("commands generated", /region def west california centralcoast slo slonorth/.test(await page.textContent("#commands")));
+check("commands generated", /region def us west california centralcoast slo slonorth/.test(await page.textContent("#commands")));
 
 // --- and it can actually send
 page.once("dialog", d => d.accept());

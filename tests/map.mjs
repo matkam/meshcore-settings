@@ -1,5 +1,10 @@
 import { chromium } from "playwright";
-import { launchOptions, shot, tick, clearPicks, isTicked } from "./harness.mjs";
+import { launchOptions, shot, tick, clearPicks, isTicked, regionShape } from "./harness.mjs";
+
+// Counted from the data, so adding a place does not fail a test about how many
+// places there are. The geometric checks further down are the ones that matter
+// here, and no count stands in for them.
+const shape = regionShape();
 
 const SITE = process.env.SITE || "http://127.0.0.1:8765/";
 const browser = await chromium.launch(launchOptions);
@@ -17,11 +22,14 @@ await page.goto(SITE, { waitUntil: "networkidle" });
 
 // --- it drew
 check("map rendered", await page.isVisible("#map-host .map-svg"));
-check("58 county paths", (await page.$$eval(".map-county", (e) => e.length)) === 58,
+check("every county shape is drawn",
+  (await page.$$eval(".map-county", (e) => e.length)) === shape.shapes,
   await page.$$eval(".map-county", (e) => e.length));
-check("161 area dots", (await page.$$eval(".map-dot", (e) => e.length)) === 161,
+check("a dot for every placed area",
+  (await page.$$eval(".map-dot", (e) => e.length)) === shape.dots,
   await page.$$eval(".map-dot", (e) => e.length));
-check("13 region labels", (await page.$$eval(".map-label", (e) => e.length)) === 13,
+check("a label for every region",
+  (await page.$$eval(".map-label", (e) => e.length)) === shape.regions,
   await page.$$eval(".map-label", (e) => e.length));
 
 // A shape goes to the deepest place that wholly contains it: a cluster where one
@@ -30,11 +38,12 @@ check("13 region labels", (await page.$$eval(".map-label", (e) => e.length)) ===
 // regions (the Mojave takes part of Kern, LA and San Bernardino; the low desert
 // part of Riverside; Ventura splits at the Conejo grade), so nobody claims those
 // and they draw as background with the dots inside carrying the meaning.
-check("52 county paths are wired to a place",
-  (await page.$$eval(".map-county", (e) => e.filter((p) => p.dataset.place).length)) === 52,
+check("every claimed shape is wired to a place",
+  (await page.$$eval(".map-county", (e) => e.filter((p) => p.dataset.place).length)) === shape.outlines.size,
   await page.$$eval(".map-county", (e) => e.filter((p) => p.dataset.place).length));
-check("and the 6 split across two regions are left as background",
-  (await page.$$eval(".map-county", (e) => e.filter((p) => !p.dataset.place).length)) === 6);
+check("and a shape nobody claims is left as background",
+  (await page.$$eval(".map-county", (e) => e.filter((p) => !p.dataset.place).length)) ===
+    shape.shapes - shape.outlines.size);
 
 // --- the position marker is not drawn until asked for
 check("position marker hidden at rest",
