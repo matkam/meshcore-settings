@@ -240,9 +240,9 @@
       "code": "sacramentofoothills",
       "name": "Sacramento Foothills",
       "blurb": "Sacramento and the foothills north of the Delta.",
-      "short": "SAC FOOTHILLS",
+      "short": "SAC",
       "outline": ["Sacramento", "Yolo", "Placer", "Sutter", "Yuba"],
-      "nudge": [-32, -92],
+      "nudge": [18, -42],
       "aliases": ["Yolo County", "Sacramento County", "Placer County", "Sutter County", "Yuba County"],
       "children": [
         {
@@ -1129,6 +1129,7 @@
       "name": "Southern California",
       "blurb": "The eight southern counties.",
       "short": "SOCAL",
+      "nudge": [-8, 50],
       "aliases": ["SoCal", "Southern California"],
       "children": [
         {

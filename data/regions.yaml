@@ -279,10 +279,15 @@ places:
   - code: sacramentofoothills
     name: Sacramento Foothills
     blurb: Sacramento and the foothills north of the Delta.
-    short: SAC FOOTHILLS
+    # "SAC FOOTHILLS" is 90px on the map, and at that width there is nowhere in
+    # this region clear of a dot — every candidate lands on North California,
+    # Gold Country or the North Bay, labelling somebody else's ground. "SAC" is
+    # 38px and fits, and the full name is still on the row in the picker.
+    short: SAC
     outline: ["Sacramento", "Yolo", "Placer", "Sutter", "Yuba"]
     aliases: ["Yolo County", "Sacramento County", "Placer County", "Sutter County", "Yuba County"]
-    nudge: [-32, -92]
+    # Far enough south-east to sit on this region rather than North California.
+    nudge: [18, -42]
     children:
       - code: sacramento
         name: Sacramento Central
@@ -936,6 +941,11 @@ places:
     blurb: The eight southern counties.
     short: SOCAL
     aliases: ["SoCal", "Southern California"]
+    # Out into the bight rather than onto a county: at its centroid the label
+    # covers the Pomona Valley, North County, Western Riverside and Perris
+    # Valley dots, and every clear spot inland sits on one county in a way that
+    # reads as labelling that county rather than the region.
+    nudge: [-8, 50]
     children:
       - code: santabarbara
         name: Santa Barbara County
@@ -1047,6 +1057,11 @@ places:
             lat: 34.055
             lon: -117.752
             aliases: ["Pomona", "Claremont", "La Verne", "San Dimas", "Diamond Bar"]
+          # Duplicate codes are allowed as a matter of policy now (validate reports
+          # rather than rejects), but the site cannot honour one yet: assets/data.js
+          # keys every place by code, so with two `southbay` entries the picker
+          # resolves this row to the Bay Area's and renders it a level too deep.
+          # Named apart until node identity stops being the code.
           - code: lasouthbay
             name: South Bay
             county: Los Angeles
