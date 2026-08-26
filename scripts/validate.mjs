@@ -4,9 +4,14 @@
  * (`npm run validate` runs build-regions.mjs --check first, so a JSON that has
  * drifted from the YAML is caught before any of this.)
  *
- * MeshCore region names live in one flat namespace on a node, so a duplicate
- * code anywhere in the tree is a real bug — it would silently merge two
- * unrelated places on any repeater that carries both.
+ * MeshCore region names live in one flat namespace on a node, so two places
+ * sharing a code merge on any repeater that carries both. Places far enough
+ * apart that no repeater will ever hold both may reuse a name — "South Bay"
+ * means something to operators in the Bay Area, LA and San Diego alike, and
+ * making two of them carry a prefix serves the file rather than the people
+ * typing it. Duplicates are reported as warnings so they stay visible, and
+ * whether a given pair is far enough apart is a judgement for the PR, not a
+ * rule this script can decide.
  *
  * Nothing here knows what a "county" is. The tree nests as deep as it likes;
  * every check below is a property of a place, not of a level.
@@ -76,7 +81,10 @@ function claim(code, path) {
     return;
   }
   if (seen.has(code)) {
-    fail(`duplicate code "${code}": ${seen.get(code)} and ${path}`);
+    // Reported, not rejected: see the note at the top of this file. The pair
+    // still shares one namespace, so this is worth a second look every time.
+    warn(`duplicate code "${code}": ${seen.get(code)} and ${path} — ` +
+         `these merge on any repeater that carries both`);
     return;
   }
   seen.set(code, path);

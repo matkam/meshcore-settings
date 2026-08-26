@@ -13,6 +13,10 @@
   },
   "root": [
     {
+      "code": "us",
+      "name": "United States"
+    },
+    {
       "code": "west",
       "name": "Western US"
     },
@@ -1123,7 +1127,7 @@
     {
       "code": "socal",
       "name": "Southern California",
-      "blurb": "The eight southern counties — Santa Barbara through San Diego.",
+      "blurb": "The eight southern counties.",
       "short": "SOCAL",
       "aliases": ["SoCal", "Southern California"],
       "children": [
@@ -1275,7 +1279,7 @@
               "aliases": ["Pomona", "Claremont", "La Verne", "San Dimas", "Diamond Bar"]
             },
             {
-              "code": "lasouthbay",
+              "code": "southbay",
               "name": "South Bay",
               "county": "Los Angeles",
               "lat": 33.836,
@@ -1333,7 +1337,7 @@
           ]
         },
         {
-          "code": "oc",
+          "code": "orangecounty",
           "name": "Orange County",
           "blurb": "North County down to San Clemente.",
           "outline": ["Orange"],
@@ -1373,11 +1377,11 @@
               "aliases": ["Mission Viejo", "Lake Forest", "San Clemente", "Dana Point", "Laguna Niguel", "Rancho Santa Margarita"]
             },
             {
-              "code": "ocanyon",
+              "code": "occanyon",
               "name": "Santa Ana Mountains",
               "county": "Orange",
-              "lat": 33.745,
-              "lon": -117.625,
+              "lat": 33.71,
+              "lon": -117.53,
               "aliases": ["Silverado", "Modjeska", "Trabuco Canyon", "Rancho Santa Margarita foothills"]
             }
           ]
