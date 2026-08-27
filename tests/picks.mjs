@@ -83,6 +83,30 @@ check("carrying several is explained where they are picked",
     check("the chain ends in the shared code both times",
       first.endsWith(" " + dupes[0]) && second.endsWith(" " + dupes[0]),
       first + "  |  " + second);
+
+    // One node cannot carry both: the firmware keys regions by name, so the two
+    // would merge. The picker says so by refusing the second rather than
+    // building a chain that quietly does the wrong thing.
+    check("the other one cannot be ticked while the first is",
+      await page.$eval(`.picker input[data-id="${a}"]`, (n) => n.disabled),
+      "expected " + a + " to be disabled while " + b + " is picked");
+    check("and its row says which place is in the way",
+      /already carrying/i.test(
+        await page.$eval(`.pick-row:has(input[data-id="${a}"])`, (r) => r.title || "")),
+      await page.$eval(`.pick-row:has(input[data-id="${a}"])`, (r) => r.title || "(no title)"));
+    check("unticking the first frees the other again", await (async () => {
+      await untick(page, b);
+      await page.waitForTimeout(120);
+      return !(await page.$eval(`.picker input[data-id="${a}"]`, (n) => n.disabled));
+    })());
+
+    // A hand-written link can name both halves; the state drops the later one
+    // rather than emitting a chain that merges them.
+    await page.goto(SITE + "#" + a + "," + b, { waitUntil: "networkidle" });
+    await page.waitForTimeout(150);
+    const both = await picks(page);
+    check("a link naming both carries only one of them",
+      both.filter((c) => c === dupes[0]).length === 1, JSON.stringify(both));
   }
 }
 
@@ -127,9 +151,12 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
   // The tree rebuilds on every tick, so the nodes have to be re-queried each
   // time rather than collected once and clicked in a loop.
   await clearPicks(page);
+  // :not(:disabled) as well as :not(:checked) — a row whose code is already
+  // carried by another place cannot be ticked, and waiting for it to become
+  // checked would never finish.
   async function tickAll(level) {
     for (;;) {
-      const next = await page.$$eval(`.pick-row.lvl-${level} input:not(:checked)`,
+      const next = await page.$$eval(`.pick-row.lvl-${level} input:not(:checked):not(:disabled)`,
         (n) => (n.length ? n[0].dataset.id : null));
       if (!next) { break; }
       await page.check(`.picker input[data-id="${next}"]`);
@@ -138,7 +165,8 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
   }
   await tickAll(0);
   await tickAll(1);
-  const areas = await page.$$eval(".pick-row.lvl-2 input", (n) => n.map((x) => x.dataset.code));
+  const areas = await page.$$eval(".pick-row.lvl-2 input:not(:disabled)",
+    (n) => n.map((x) => x.dataset.code));
   await tickAll(2);
   await page.waitForTimeout(300);
   const many = await defs();

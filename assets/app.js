@@ -358,6 +358,16 @@ window.RegionData.ready(function (DATA) {
   // map and a connected repeater all mean "this one", and the multi-selects are
   // where a set is built up deliberately.
   function selectEntries(entries, opts) {
+    // One code, one place. A link can name both halves of a shared code — the
+    // picker will not let you tick both, but a hand-written URL can ask — and a
+    // node carrying both would merge them, so the later one is dropped rather
+    // than generating a chain that quietly does the wrong thing.
+    var takenCode = {};
+    entries = entries.filter(function (e) {
+      if (takenCode[e.code]) { return false; }
+      takenCode[e.code] = true;
+      return true;
+    });
     if (!entries.length) { return; }
     current = entries[0];
 
@@ -455,6 +465,19 @@ window.RegionData.ready(function (DATA) {
     return index.filter(function (e) { return isPicked(e.id); });
   }
 
+  // A place is blocked while another with the same code is picked. The two are
+  // one region as far as a repeater is concerned — the firmware keys regions by
+  // name, so a node carrying both would merge them, which is exactly what
+  // sharing a code is only safe *because* nobody does. Returns the place in the
+  // way, so the row can say which one.
+  function blockedBy(entry) {
+    var others = DATA.allByCode(entry.code);
+    for (var i = 0; i < others.length; i++) {
+      if (others[i].id !== entry.id && isPicked(others[i].id)) { return others[i]; }
+    }
+    return null;
+  }
+
   function row(entry) {
     var place = entry.node;
     // Depth, not a level name: the styling is "how far in is this", which is a
@@ -473,6 +496,21 @@ window.RegionData.ready(function (DATA) {
     box.checked = isPicked(entry.id);
     box.dataset.code = entry.code;
     box.dataset.id = entry.id;
+
+    var blocker = box.checked ? null : blockedBy(entry);
+    if (blocker) {
+      box.disabled = true;
+      rowEl.className += " is-blocked";
+      // On the row rather than the checkbox, so it is reachable by pointing
+      // anywhere along it — and on the label too, since the description carries
+      // its own title and would otherwise be the only thing that answers.
+      var why = "Already carrying " + entry.code + " as " + blocker.name +
+        " (" + DATA.chain(blocker.id).map(function (n) { return n.name; }).join(" \u203a ") +
+        "). One node cannot hold both — the same name is one region to a repeater.";
+      rowEl.title = why;
+      main.title = why;
+      box.setAttribute("aria-label", entry.name + " — unavailable. " + why);
+    }
     box.addEventListener("change", function () {
       if (box.checked) {
         picked[entry.id] = true;
