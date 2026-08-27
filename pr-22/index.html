@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>California MeshCore Repeater Settings</title>
+<meta name="description" content="Pick your area in California and get the MeshCore repeater settings to paste in, including region scopes, flood advert interval and loop detection.">
+<meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='13'>📡</text></svg>">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <h1>California MeshCore Repeater Settings</h1>
+    <p class="tagline">
+      Duty cycle, path hash mode, flood advert interval, loop detection and region
+      scopes for your repeater. Connect it and the settings are worked out for you,
+      or pick your area and copy them by hand.
+    </p>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="panel" id="push-panel" aria-labelledby="push-heading" hidden>
+    <h2 id="push-heading">
+      <span class="step alt">⚡</span> Push straight to the repeater
+      <span class="badge">experimental</span>
+    </h2>
+
+    <p>
+      Your browser can talk to a MeshCore companion node directly. Connect one and the
+      repeater fills in the questions below for you — where it is, and what firmware
+      it's running — then the settings can go over the air instead of through
+      copy-paste. Optional: fill the form in by hand and everything still works.
+    </p>
+
+    <p class="hint">
+      You'll need the repeater's admin password, and your companion has to already know
+      it as a contact. Connecting, reading its position and checking its firmware are
+      all read-only — nothing is written until you press <em>Send settings</em>.
+    </p>
+
+    <div class="warn-box">
+      <strong>Before you send.</strong> Each command is a separate LoRa round trip. If
+      one is lost partway through, the repeater is left half-configured — it will hold
+      some region names and silently drop traffic for the rest. This flow stops at the
+      first failure and lets you resume, but the copy-paste block further down is still
+      the more predictable path.
+    </div>
+
+    <div id="push-connect">
+      <button type="button" id="btn-usb" class="action">Connect over USB</button>
+      <button type="button" id="btn-ble" class="action">Connect over Bluetooth</button>
+      <p class="hint" id="push-support"></p>
+    </div>
+
+    <div id="push-session" hidden>
+      <p class="conn-status" id="conn-status"></p>
+
+      <div class="field">
+        <label for="sel-repeater">Repeater</label>
+        <select id="sel-repeater"></select>
+        <p class="hint" id="repeater-hint"></p>
+      </div>
+
+      <div class="detect" id="detect-box" hidden>
+        <p class="detect-line" id="detect-loc"></p>
+        <div class="detect-choices" id="detect-choices" role="group"
+             aria-label="Suggested areas" hidden></div>
+        <p class="detect-line" id="detect-ver"></p>
+      </div>
+
+      <div class="field">
+        <label for="admin-pw">Admin password</label>
+        <input id="admin-pw" type="password" maxlength="15" autocomplete="off"
+               spellcheck="false" placeholder="max 15 characters">
+        <p class="hint">
+          Stays in this browser tab — it goes to your companion node over USB or
+          Bluetooth and then encrypted over the air. This site has no server and never
+          saves the password or puts it in the URL. The only third-party code on the
+          page is the
+          <a href="https://github.com/liamcottle/meshcore.js">meshcore.js</a> library,
+          vendored at a pinned commit.
+        </p>
+      </div>
+
+      <div class="push-actions">
+        <button type="button" id="btn-login" class="action">Log in</button>
+        <button type="button" id="btn-push" class="action primary" disabled>Send settings</button>
+        <button type="button" id="btn-disconnect" class="action quiet">Disconnect</button>
+      </div>
+
+      <ol class="progress" id="push-progress" hidden></ol>
+      <p class="line-note" id="push-status"></p>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="pick-heading">
+    <h2 id="pick-heading"><span class="step">1</span> Where is your repeater?</h2>
+
+    <p class="hint" id="pick-intro">
+      Pick the area your repeater covers. If you connected a companion node above, use
+      its suggestion instead.
+    </p>
+
+    <figure class="map-figure">
+      <div class="map-host" id="map-host"></div>
+      <figcaption class="map-caption">
+        Click a dot for a local area, or a boundary for an area-wide scope. The
+        boundaries are real county lines, claimed by whichever place wholly
+        contains them; where a place crosses a county line — Lake Tahoe spans
+        three — nobody claims that shape and the dots inside carry the meaning.
+        Local areas are a community convention with no official shape, so
+        they're marked as points.
+      </figcaption>
+    </figure>
+
+    <div class="field">
+      <label for="search">Search for a city, county or area</label>
+      <div class="combo">
+        <input id="search" type="text" autocomplete="off" spellcheck="false"
+               placeholder="Paso Robles, Humboldt, Big Bear…"
+               role="combobox" aria-expanded="false" aria-controls="results" aria-autocomplete="list">
+        <ul id="results" class="results" role="listbox" hidden></ul>
+      </div>
+    </div>
+
+    <p class="or">or browse</p>
+
+    <div class="field">
+      <span class="picker-head">
+        <span class="pseudo-label" id="picker-label">Tick everywhere this repeater covers</span>
+        <span class="picker-tools">
+          <button type="button" id="expand-picks" class="link-btn">Expand all</button>
+          <button type="button" id="clear-picks" class="link-btn" hidden>Clear</button>
+        </span>
+      </span>
+      <p class="pick-scope" id="pick-scope"></p>
+      <div class="picker" id="picker" role="group" aria-labelledby="picker-label"></div>
+      <p class="hint" id="pick-note"></p>
+    </div>
+  </section>
+
+  <section class="panel" id="output-panel" aria-labelledby="settings-heading" hidden>
+    <h2 id="settings-heading"><span class="step">2</span> Paste this into your repeater</h2>
+
+    <div class="field fw-row">
+      <label for="opt-fw">MeshCore firmware version</label>
+      <select id="opt-fw">
+        <option value="116" selected>1.16 or newer</option>
+        <option value="115">1.15</option>
+        <option value="114">1.14</option>
+        <option value="110">1.10 – 1.13</option>
+      </select>
+      <p class="hint" id="fw-hint"></p>
+    </div>
+
+    <p class="chain-label">Your region scope</p>
+    <ol class="chain" id="chain" aria-label="Region hierarchy"></ol>
+
+    <div class="code-block">
+      <div class="code-head">
+        <span class="code-title">Repeater console</span>
+        <button type="button" id="edit-cmds" class="copy-btn">Edit</button>
+        <button type="button" id="copy" class="copy-btn">Copy</button>
+      </div>
+      <pre id="commands" tabindex="0"></pre>
+      <textarea id="commands-edit" spellcheck="false" autocomplete="off"
+                aria-label="Commands to send, editable" hidden></textarea>
+    </div>
+    <p class="edit-note" id="edit-note" hidden>
+      <span id="edit-note-text"></span>
+      <button type="button" id="reset-cmds" class="link-btn">Reset to generated</button>
+    </p>
+    <p class="line-note" id="line-note"></p>
+
+    <div id="verify-block"></div>
+
+    <details class="advanced">
+      <summary>Options</summary>
+      <div class="advanced-body">
+        <div class="field">
+          <label for="opt-owner">Owner info</label>
+          <input id="opt-owner" type="text" maxlength="120" autocomplete="off"
+                 spellcheck="false" placeholder="you@example.com · @you on Discord · K6ABC">
+          <p class="hint" id="owner-hint"></p>
+        </div>
+        <div class="field">
+          <label for="opt-duty">Duty cycle limit (%)</label>
+          <input id="opt-duty" type="number" min="1" max="100" step="1" value="100">
+          <p class="hint" id="duty-hint"></p>
+        </div>
+        <div class="field">
+          <label for="opt-hash">Advert path hash size</label>
+          <select id="opt-hash">
+            <option value="0">0 — 1 byte (256 ids, 64 max flood)</option>
+            <option value="1" selected>1 — 2 bytes (65,536 ids, 32 max flood)</option>
+            <option value="2">2 — 3 bytes (16.7M ids, 21 max flood)</option>
+          </select>
+          <p class="hint" id="hash-hint"></p>
+        </div>
+        <div class="field">
+          <label for="opt-loop">Loop detection</label>
+          <select id="opt-loop">
+            <option value="">Leave unset (don't send)</option>
+            <option value="off">off</option>
+            <option value="minimal">minimal</option>
+            <option value="moderate" selected>moderate</option>
+            <option value="strict">strict</option>
+          </select>
+          <p class="hint" id="loop-hint"></p>
+        </div>
+        <div class="field">
+          <label for="opt-flood">Flood advert interval (hours)</label>
+          <input id="opt-flood" type="number" min="0" max="168" step="1" value="24">
+          <p class="hint" id="flood-hint"></p>
+        </div>
+        <div class="field checkbox">
+          <label><input type="checkbox" id="opt-home"> Set home and default region</label>
+          <p class="hint">
+            Adds <code>region home</code> and <code>region default</code> so the node knows
+            which of its regions it actually sits in, and what scope to stamp on traffic
+            it originates.
+          </p>
+        </div>
+        <div class="field checkbox">
+          <label><input type="checkbox" id="opt-verify" checked> Show verification commands</label>
+          <p class="hint">A second block of read-only commands for checking the result afterwards.</p>
+        </div>
+      </div>
+    </details>
+
+    <div class="explain" id="explain"></div>
+  </section>
+
+  <section class="panel" id="client-panel" aria-labelledby="client-heading" hidden>
+    <h2 id="client-heading"><span class="step">3</span> Set the scope on your phone</h2>
+    <p>
+      Regions live on repeaters; <strong>scopes</strong> live on messages. A repeater only
+      forwards a scoped packet when the scope matches one of its regions. In the MeshCore
+      companion app, set the scope on outgoing traffic to the level you want it to travel:
+    </p>
+    <ul class="scope-list" id="scope-list"></ul>
+    <p class="hint">
+      Messages sent with <em>no</em> scope are still forwarded by everyone, so older nodes
+      and unconfigured clients keep working.
+    </p>
+  </section>
+
+  <section class="panel" aria-labelledby="how-heading">
+    <h2 id="how-heading">How the region tree works</h2>
+    <p>
+      <code>region def</code> walks a chain: each token becomes a child of the one before it.
+      So <code>region def west california centralcoast slo slonorth</code> builds this,
+      top to bottom:
+    </p>
+<pre class="tree">*
+└─ west                 Western US
+   └─ california        California
+      └─ centralcoast   Central Coast
+         └─ slo         SLO County
+            └─ slonorth Paso Robles, Atascadero and the North County</pre>
+    <p>
+      Your repeater now carries all five names. Traffic scoped <code>slonorth</code> stays
+      in the north county. Traffic scoped <code>slo</code> covers the whole county.
+      Traffic scoped <code>west</code> reaches every repeater in the western US that follows
+      this convention.
+    </p>
+    <p>
+      Not every chain is five names. Depth follows how big the local mesh community is:
+      the North Coast lists its towns straight under the region because there is nothing
+      in between worth naming, and Los Angeles holds its local areas directly because the
+      county already <em>is</em> the mesh. Both are four names, and <code>region def</code>
+      does not care.
+    </p>
+    <p>
+      Region matching is <strong>per name, not per level</strong> — a repeater that only has
+      <code>slo</code> and not <code>centralcoast</code> will not forward
+      <code>centralcoast</code>-scoped traffic. That is why every node defines the whole
+      chain from <code>west</code> down, even though it only physically sits in one spot.
+    </p>
+    <p>
+      <code>region def</code> arrived in firmware 1.16. Before that the same tree is built one
+      name at a time with <code>region put &lt;name&gt; [parent]</code>. On 1.15 that is all you
+      need — regions are flood-allowed as they're created. On 1.14 and older each one also
+      needs an explicit <code>region allowf &lt;name&gt;</code>. Switch the firmware version above
+      and you'll get the right form; the resulting tree is identical either way.
+    </p>
+
+    <h3>Things worth knowing</h3>
+    <ul class="notes">
+      <li>
+        <strong>Region names never travel.</strong> A scoped packet carries two 16-bit
+        transport codes — an HMAC of the region's key over the packet — not the name. So a
+        code costs the same airtime however long it is: <code>slo</code> and
+        <code>slocounty</code> are identical on the air. The firmware allows 30 characters,
+        so the codes here are words rather than abbreviations — nobody should have to look
+        up what <code>sjv</code> meant.
+      </li>
+      <li>
+        <strong>SoCal is counties, then areas.</strong> Under Southern California the
+        children are the eight counties, and under each county the named valleys and
+        basins — San Fernando Valley, Coachella Valley, Victor Valley, and so on —
+        not individual cities. Cities stay in search aliases so you can still type
+        them.
+      </li>
+      <li>
+        <strong>Region names are one flat namespace.</strong> Two different places using the same
+        code will merge on any repeater that carries both. The codes on this site are checked
+        for uniqueness across all of California.
+      </li>
+      <li>
+        <strong><code>region def</code> does not wipe the existing tree.</strong> If a name already
+        exists, its parent gets updated. To start clean, <code>region remove</code> the unwanted
+        names first (children before parents).
+      </li>
+      <li>
+        <strong>Review before you save.</strong> <code>region def</code> replies with the resulting
+        tree. Check it, then run <code>region save</code> — nothing persists across reboot until
+        you do.
+      </li>
+      <li>
+        <strong>160 characters per line</strong> on repeater serial. Longer trees have to be split
+        across several <code>region def</code> commands; the cursor resets to <code>*</code> between
+        commands. Every chain on this site fits in one line.
+      </li>
+      <li>
+        <strong>Region filtering needs firmware 1.10+.</strong> Newer commands landed later:
+        <code>set owner.info</code> in 1.12, <code>set path.hash.mode</code> in 1.14,
+        <code>set dutycycle</code> in 1.15 (replacing
+        <code>set af</code>), and <code>region def</code> in 1.16. Check yours with
+        <code>ver</code> and pick the matching version above — if a command still comes back
+        unknown, you're on older firmware than you selected.
+      </li>
+      <li>
+        <strong>These codes are a community convention, not a standard.</strong> MeshCore does not
+        ship a national region list. What matters is that your neighbours use the same names —
+        check with your local mesh group before deploying, and
+        <a href="https://github.com/matkam/meshcore-settings">open a PR</a> if your area is
+        missing or wrong.
+      </li>
+    </ul>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p>
+      Command syntax from the
+      <a href="https://docs.meshcore.io/cli_commands/">MeshCore CLI reference</a>.
+      Not affiliated with MeshCore — community maintained.
+      <a href="https://github.com/matkam/meshcore-settings">Source &amp; contributions</a>.
+    </p>
+  </div>
+</footer>
+
+<!-- data.js fetches data/regions.json and data/outlines.json, then hands them to
+     the two scripts below in the order they registered. -->
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script src="assets/map.js"></script>
+<script type="module" src="assets/push.js"></script>
+</body>
+</html>
