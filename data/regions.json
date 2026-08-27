@@ -1038,7 +1038,7 @@
           "code": "cvsouth",
           "name": "South Valley",
           "blurb": "Hanford down to Bakersfield.",
-          "outline": ["Kings", "Tulare"],
+          "outline": ["Kings", "Tulare", "Kern"],
           "aliases": ["Kings County", "Tulare County"],
           "children": [
             {

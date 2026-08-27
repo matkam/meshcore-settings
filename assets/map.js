@@ -550,8 +550,34 @@ window.RegionData.ready(function (DATA) {
   // when its dot is hovered. Not necessarily its parent: a level can pass
   // through without claiming a shape of its own, and one that does claim may
   // hold several — the North Bay is four counties.
+  //
+  // Preferring an ancestor that actually covers this place matters, because the
+  // nearest one with any shape at all need not be the one it stands on. Gold
+  // Country claims Amador and Calaveras; Placerville sits in El Dorado, which
+  // its grandparent Sierra Nevada claims. Lighting Gold Country there points at
+  // ground the place is not on, which is worse than pointing further out.
+  function covers(id, node) {
+    var owner = DATA.byId[id];
+    if (!owner || !owner.outline) { return false; }
+    var mine = [].concat(node.county || []);
+    var theirs = [].concat(owner.outline);
+    for (var i = 0; i < mine.length; i++) {
+      if (theirs.indexOf(mine[i]) !== -1) { return true; }
+    }
+    return false;
+  }
+
   function enclosingOutlines(node) {
-    for (var i = node.trail.length - 1; i >= 0; i--) {
+    var i;
+    for (i = node.trail.length - 1; i >= 0; i--) {
+      if (outlineEls[node.trail[i]] && covers(node.trail[i], node)) {
+        return outlineEls[node.trail[i]];
+      }
+    }
+    // Nothing above it claims the ground it is on — a place across a county
+    // line from its own region. Fall back to the nearest shape there is, which
+    // at least says which way its region lies.
+    for (i = node.trail.length - 1; i >= 0; i--) {
       if (outlineEls[node.trail[i]]) { return outlineEls[node.trail[i]]; }
     }
     return outlineEls[node.id] || [];
