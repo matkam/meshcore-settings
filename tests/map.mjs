@@ -113,6 +113,56 @@ async function pointFor(code) {
     await page.$eval('.map-county[data-place="eastbay"]', (c) => !c.classList.contains("is-in-region")));
 }
 
+// --- a hovered dot lights ground its own place claims
+{
+  // The shapes that light up are an ancestor's, and the nearest ancestor with
+  // any shape at all need not be one that covers this place: Gold Country
+  // claims Amador and Calaveras, while Placerville sits in El Dorado, which its
+  // grandparent claims. Where some ancestor does claim the county a place is
+  // in, that is the one that has to light up.
+  //
+  // A place can still sit just across a line from every county its branch
+  // claims — Grass Valley and the Tahoe pair do — and there the fallback points
+  // at its region instead. That is data about where the meshes are, not a bug
+  // here, so the check only covers places their own branch does claim.
+  await mapInView();
+  const claims = await page.evaluate(() => {
+    const D = window.RegionData.get();
+    const out = [];
+    for (const dot of document.querySelectorAll(".map-dot")) {
+      const node = D.byId[dot.dataset.id];
+      const mine = [].concat(node.county || []);
+      if (!mine.length) { continue; }
+      // The nearest ancestor claiming a county this place is in.
+      let want = null;
+      for (let i = node.trail.length - 1; i >= 0 && !want; i--) {
+        const anc = D.byId[node.trail[i]];
+        if (anc && anc.outline && [].concat(anc.outline).some((c) => mine.includes(c))) {
+          want = anc.id;
+        }
+      }
+      if (want) { out.push({ id: dot.dataset.id, want: want }); }
+    }
+    return out;
+  });
+
+  const misses = [];
+  for (const { id, want } of claims) {
+    const lit = await page.evaluate((dotId) => {
+      const d = document.querySelector(`.map-dot[data-id="${dotId}"]`);
+      const r = d.getBoundingClientRect();
+      d.dispatchEvent(new PointerEvent("pointermove", {
+        bubbles: true, clientX: r.x + r.width / 2, clientY: r.y + r.height / 2 }));
+      return [...document.querySelectorAll(".map-county.is-hover")].map((e) => e.dataset.id);
+    }, id);
+    if (!lit.length || lit.some((l) => l !== want)) {
+      misses.push(id + " wanted " + want + ", lit " + ([...new Set(lit)].join("+") || "nothing"));
+    }
+  }
+  check(`all ${claims.length} placed areas light ground their own branch claims`,
+    misses.length === 0, misses.slice(0, 5).join(" | "));
+}
+
 // --- a selection made elsewhere is reflected on the map
 {
   await clearPicks(page);

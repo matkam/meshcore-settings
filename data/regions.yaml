@@ -873,7 +873,13 @@ places:
       - code: cvsouth
         name: South Valley
         blurb: Hanford down to Bakersfield.
-        outline: ["Kings", "Tulare"]
+        # Kern is claimed here because every place in it is one of these, and an
+        # unclaimed county draws as background — Bakersfield was unreachable on
+        # the map except by its own dot. Worth knowing it is not a clean fit:
+        # Tehachapi and Indian Wells are over the crest and desert rather than
+        # valley, so this outline reaches past what "South Valley" describes. If
+        # the desert operators want their own area, that is the split to make.
+        outline: ["Kings", "Tulare", "Kern"]
         aliases: ["Kings County", "Tulare County"]
         children:
           - code: hanford
