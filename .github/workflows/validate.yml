@@ -1,9 +1,11 @@
 name: Validate region data
 
+# Pull requests only. A same-repo branch used to be validated twice — once for
+# the push and again for the pull_request — and a fork's pushes never reach this
+# repo at all, so pull_request is the trigger that actually covers everyone.
+# main is covered by test.yml and by the build that gates the deploy.
 on:
   pull_request:
-  push:
-    branches-ignore: [main]
 
 jobs:
   validate:
