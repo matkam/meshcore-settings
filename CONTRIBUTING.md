@@ -57,13 +57,14 @@ Then:
 
 ```sh
 npm install              # first time only, for the YAML parser
-npm run build:regions
-npm run validate
+npm run validate:built   # build the JSON from your YAML, then check it
 ```
 
-`build:regions` regenerates [`data/regions.json`](data/regions.json), which is
-what the site actually loads and what anything outside this repo consumes.
-**Commit both files** — `npm run validate` fails if they disagree, and so does CI.
+`data/regions.yaml` is the only file you need to edit.
+[`data/regions.json`](data/regions.json) is built from it — it's what the site
+loads and what anything outside this repo consumes — but CI builds it from your
+YAML, so a PR that changes only the YAML is complete. Committing a rebuilt JSON
+too is welcome and keeps the diff honest; forgetting to is not an error.
 
 `validate` checks code uniqueness, character set, the 160-character serial line
 limit on the generated `region def`, MeshCore's 8-level depth cap, and that
@@ -216,14 +217,12 @@ close the PR, so several branches can be up at once without colliding. Worth the
 extra bookkeeping if you're iterating, or if you want to link a stable URL from
 the upstream PR description.
 
-Both routes run `npm run validate` before publishing, so a `regions.yaml` that
-disagrees with `regions.json` fails the publish rather than shipping a broken
-preview.
+Both routes build the JSON from `regions.yaml` and validate it before
+publishing, so what you preview is the tree your YAML describes.
 
 ## Before you open the PR
 
-- [ ] `data/regions.json` is rebuilt and committed alongside the YAML
-- [ ] `npm run validate` passes
+- [ ] `npm run validate:built` passes
 - [ ] `npm test` passes (`npm install` first — it needs Playwright)
 - [ ] You've checked the names against your local mesh group, not just a map
 - [ ] The alias list covers what people would search for

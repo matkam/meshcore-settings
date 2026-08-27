@@ -37,7 +37,7 @@ jobs:
 
       - name: Validate region data
         if: github.event.action != 'closed'
-        run: npm run validate
+        run: npm run validate:built
 
       - name: Publish preview
         if: github.event.action != 'closed'

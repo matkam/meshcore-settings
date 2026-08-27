@@ -22,13 +22,18 @@ jobs:
       # Firefox and WebKit don't implement, so there is nothing to gain there.
       - run: npx playwright install --with-deps chromium
 
-      - run: npm run validate
+      # Build from the YAML rather than checking the committed JSON — see the
+      # note in validate.yml. The suites read data/regions.json, so this also
+      # means they run against what the contributor actually wrote.
+      - run: npm run validate:built
 
       - run: npm test
 
-      # Worth having when a UI test fails on a machine nobody can look at.
+      # Uploaded whether or not anything failed. The map is data-driven and
+      # forks get no preview deployment, so for most contributors this is the
+      # only way to see what their change looks like before it is merged.
       - uses: actions/upload-artifact@v4
-        if: failure()
+        if: always()
         with:
           name: screenshots
           path: tests/screenshots/

@@ -14,7 +14,10 @@ jobs:
         with:
           node-version: 20
 
-      # validate rebuilds data/regions.json from the YAML to check they agree,
-      # which needs the YAML parser. The site itself still has no dependencies.
+      # Needs the YAML parser. The site itself still has no dependencies.
       - run: npm install --no-audit --no-fund
-      - run: npm run validate
+
+      # Builds the JSON from the YAML and validates that, rather than insisting
+      # the committed JSON already matches. A contributor edits regions.yaml and
+      # nothing else; keeping the two in step is main's job, not theirs.
+      - run: npm run validate:built

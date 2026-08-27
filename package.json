@@ -5,6 +5,7 @@
   "description": "Pick your area in California, get MeshCore repeater settings including region scopes.",
   "scripts": {
     "validate": "node scripts/build-regions.mjs --check && node scripts/validate.mjs",
+    "validate:built": "node scripts/build-regions.mjs && node scripts/validate.mjs",
     "build:regions": "node scripts/build-regions.mjs",
     "build:outlines": "node scripts/build-outlines.mjs",
     "serve": "python3 -m http.server 8000",

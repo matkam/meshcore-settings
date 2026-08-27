@@ -22,8 +22,10 @@ jobs:
         with:
           node-version: 20
 
-      # validate rebuilds data/regions.json from the YAML to check they agree,
-      # which needs the YAML parser. The site itself still has no dependencies.
+      # Needs the YAML parser. The site itself still has no dependencies.
       - run: npm install --no-audit --no-fund
-      - run: npm run validate
+
+      # Build from the YAML before publishing, so what goes live is the tree the
+      # YAML describes whether or not the committed JSON has caught up yet.
+      - run: npm run validate:built
       - run: .github/scripts/publish.sh

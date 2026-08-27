@@ -585,7 +585,8 @@ the file everything reads is JSON:
 ```sh
 npm install              # once, for the YAML parser
 npm run build:regions    # data/regions.yaml -> data/regions.json
-npm run validate         # checks they agree, then checks the tree
+npm run validate:built   # build from the YAML, then check the tree
+npm run validate         # the same checks, but insists the committed JSON matches
 ```
 
 ## Tests
@@ -667,7 +668,8 @@ token, which is not worth a preview.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). Short version: add an entry under the
 right area in `data/regions.yaml`, name the county it sits in, run
-`npm run build:regions` and `npm run validate`, commit both files, open a PR.
+`npm run validate:built`, and open a PR — changing `data/regions.yaml` alone is
+enough, because CI builds the JSON from it.
 
 ## Sources
 
