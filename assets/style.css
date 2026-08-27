@@ -227,6 +227,14 @@ pre:focus-visible {
 
 .pick-row:hover { background: var(--accent-soft); }
 
+/* Another place is already carrying this code, and one node cannot hold both.
+   Dimmed rather than hidden: the row still answers "what is this place called",
+   which is half of what the picker is for. The title says which one is in the
+   way. */
+.pick-row.is-blocked { opacity: 0.45; }
+.pick-row.is-blocked:hover { background: none; }
+.pick-row.is-blocked input { cursor: not-allowed; }
+
 /* The label covers everything except the disclosure, so the whole row is a
    click target for ticking without swallowing the button next to it. */
 .pick-main {
