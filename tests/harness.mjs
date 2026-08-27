@@ -36,10 +36,19 @@ export function shot(name) {
  * and `tick` does both, since ticking still opens what it ticks.
  */
 
+/*
+ * A place is named by its code where that is unambiguous, and by its full path
+ * — "socal/losangeles/southbay" — where it is not. Two places far enough apart
+ * are allowed to share a code, and when both their rows are open a data-code
+ * selector matches two elements; passing the path says which one is meant.
+ */
+const sel = (ref, attr) =>
+  ref.includes("/") ? `[data-id="${ref}"]` : `[data-${attr}="${ref}"]`;
+
 // Open a place without selecting it.
-export async function expand(page, ...codes) {
-  for (const code of codes) {
-    await page.click(`.pick-toggle[data-code="${code}"]`);
+export async function expand(page, ...refs) {
+  for (const ref of refs) {
+    await page.click(`.pick-toggle${sel(ref, "code")}`);
     await page.waitForTimeout(110);
   }
 }
@@ -53,16 +62,16 @@ export async function collapseAll(page) {
   await page.waitForTimeout(150);
 }
 
-export async function tick(page, ...codes) {
-  for (const code of codes) {
-    await page.check(`.picker input[data-code="${code}"]`);
+export async function tick(page, ...refs) {
+  for (const ref of refs) {
+    await page.check(`.picker input${sel(ref, "code")}`);
     await page.waitForTimeout(110);
   }
 }
 
-export async function untick(page, ...codes) {
-  for (const code of codes) {
-    await page.uncheck(`.picker input[data-code="${code}"]`);
+export async function untick(page, ...refs) {
+  for (const ref of refs) {
+    await page.uncheck(`.picker input${sel(ref, "code")}`);
     await page.waitForTimeout(110);
   }
 }
@@ -72,8 +81,8 @@ export function picks(page) {
   return page.$$eval(".picker input:checked", (n) => n.map((x) => x.dataset.code));
 }
 
-export function isTicked(page, code) {
-  return page.$eval(`.picker input[data-code="${code}"]`, (x) => x.checked).catch(() => false);
+export function isTicked(page, ref) {
+  return page.$eval(`.picker input${sel(ref, "code")}`, (x) => x.checked).catch(() => false);
 }
 
 // Ticking adds to what is already there, so a test that wants a fresh selection
@@ -105,17 +114,25 @@ export function regionShape() {
     shapes: outlines.shapes.length,
     rootLine: data.root.map((r) => r.code).join(" \u203a "),
     kids: new Map(),
+    idsByCode: new Map(),
   };
-  (function walk(nodes, depth) {
+  (function walk(nodes, depth, trail) {
     for (const node of nodes ?? []) {
+      const id = trail ? trail + "/" + node.code : node.code;
+      if (!shape.idsByCode.has(node.code)) { shape.idsByCode.set(node.code, []); }
+      shape.idsByCode.get(node.code).push(id);
       shape.places++;
       if (depth === 0) { shape.regions++; } else if (depth === 1) { shape.areas++; } else { shape.locals++; }
       if (node.lat !== undefined && node.lon !== undefined) { shape.dots++; }
       for (const name of [].concat(node.outline ?? [])) { shape.outlines.add(name); }
       shape.kids.set(node.code, (node.children ?? []).length);
-      walk(node.children, depth + 1);
+      walk(node.children, depth + 1, id);
     }
-  })(data.places, 0);
+  })(data.places, 0, null);
   shape.childrenOf = (code) => shape.kids.get(code);
+  // Codes that name more than one place, and the paths that tell them apart.
+  shape.duplicateCodes = () =>
+    [...shape.idsByCode].filter(([, ids]) => ids.length > 1).map(([code]) => code);
+  shape.idsForCode = (code) => (shape.idsByCode.get(code) || []).slice();
   return shape;
 }

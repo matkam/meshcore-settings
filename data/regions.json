@@ -1281,7 +1281,7 @@
               "aliases": ["Pomona", "Claremont", "La Verne", "San Dimas", "Diamond Bar"]
             },
             {
-              "code": "lasouthbay",
+              "code": "southbay",
               "name": "South Bay",
               "county": "Los Angeles",
               "lat": 33.836,

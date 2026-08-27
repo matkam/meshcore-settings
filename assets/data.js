@@ -49,26 +49,40 @@
 
   /* ---------- indexing ----------
    *
-   * Walk once, and give every place the two things the rest of the site asks
-   * for: how deep it sits, and what its ancestors are.
+   * Walk once, and give every place the three things the rest of the site asks
+   * for: an identity, how deep it sits, and what its ancestors are.
    *
-   * `trail` holds ancestor *codes* rather than the places themselves. Codes are
-   * unique across the whole tree, so `byCode` turns one back into a place — and
-   * keeping objects out of it means a place stays a plain acyclic value that
-   * can be handed across a structured clone or a test's page.evaluate().
+   * `id` is the place's path — "socal/losangeles/southbay" — because a *code*
+   * is not an identity. Two places far enough apart that no repeater will ever
+   * carry both are allowed to share a code, so a code can name more than one
+   * place while a path names exactly one.
+   *
+   * `trail` holds ancestor ids for the same reason, and `byId` turns one back
+   * into a place. Keeping ids rather than objects in the trail means a place
+   * stays a plain acyclic value that can be handed across a structured clone or
+   * a test's page.evaluate().
+   *
+   * `byCode` is still here, for the places a person types a code rather than
+   * walks to one: search and the URL hash. It holds the first place with that
+   * code, and `allByCode` holds every one, so a caller that has to care can.
    */
   function decorate(regions, outlines) {
     var nodes = [];
+    var byId = {};
     var byCode = {};
+    var allByCode = {};
 
     (function walk(list, trail, depth) {
       (list || []).forEach(function (node) {
+        node.id = trail.length ? trail[trail.length - 1] + "/" + node.code : node.code;
         node.depth = depth;
         node.trail = trail;
         node.children = node.children || [];
         nodes.push(node);
-        byCode[node.code] = node;
-        walk(node.children, trail.concat([node.code]), depth + 1);
+        byId[node.id] = node;
+        if (!byCode[node.code]) { byCode[node.code] = node; }
+        (allByCode[node.code] = allByCode[node.code] || []).push(node);
+        walk(node.children, trail.concat([node.id]), depth + 1);
       });
     })(regions.places, [], 0);
 
@@ -91,7 +105,12 @@
       root: regions.root || [],
       places: regions.places || [],
       nodes: nodes,
+      byId: byId,
       byCode: byCode,
+
+      // Every place with this code, in tree order. One entry for almost all of
+      // them; more where a name is reused somewhere far enough away.
+      allByCode: function (code) { return (allByCode[code] || []).slice(); },
 
       tags: regions.tags || [],
       tag: function (code) { return tagsByCode[code] || null; },
@@ -99,8 +118,8 @@
       // Every tag this place carries, its own and any inherited from above.
       tagsFor: function (node) {
         var out = [];
-        node.trail.concat([node.code]).forEach(function (code) {
-          var n = byCode[code];
+        node.trail.concat([node.id]).forEach(function (id) {
+          var n = byId[id];
           if (!n || !n.tags) { return; }
           n.tags.forEach(function (t) { if (out.indexOf(t) === -1) { out.push(t); } });
         });
@@ -114,11 +133,12 @@
       // How deep the deepest branch runs, for anything that ranks by specificity.
       depth: nodes.reduce(function (d, n) { return Math.max(d, n.depth); }, 0) + 1,
 
-      // A place, then everything above it, top down.
-      chain: function (code) {
-        var node = byCode[code];
+      // A place, then everything above it, top down. Takes an id — a code would
+      // be ambiguous, which is the whole reason ids exist.
+      chain: function (id) {
+        var node = byId[id];
         if (!node) { return []; }
-        return node.trail.map(function (c) { return byCode[c]; }).concat([node]);
+        return node.trail.map(function (t) { return byId[t]; }).concat([node]);
       },
 
       // What this level is called. A place may override its own with `kind`,

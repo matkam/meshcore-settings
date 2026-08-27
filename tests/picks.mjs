@@ -1,5 +1,7 @@
 import { chromium } from "playwright";
-import { launchOptions, tick, untick, clearPicks, isTicked, picks } from "./harness.mjs";
+import { launchOptions, tick, untick, clearPicks, isTicked, picks, regionShape } from "./harness.mjs";
+
+const shape = regionShape();
 
 const SITE = process.env.SITE || "http://127.0.0.1:8765/";
 const browser = await chromium.launch(launchOptions);
@@ -55,6 +57,35 @@ check("carrying several is explained where they are picked",
   /Carrying 2 places/.test(await page.textContent("#pick-note")),
   await page.textContent("#pick-note"));
 
+/* ---------- a code that names two places ----------
+ *
+ * Two places far enough apart that no repeater will ever carry both may share
+ * a code — "South Bay" is what operators say in the Bay Area and in LA alike.
+ * The site tells them apart by path, so ticking one must leave the other alone
+ * and each must build its own chain. Written against whatever the data holds,
+ * so it stays honest if the duplicate moves or a second one appears.
+ */
+{
+  const dupes = shape.duplicateCodes();
+  if (!dupes.length) {
+    console.log("SKIP no duplicate codes in the data to check");
+  } else {
+    const [a, b] = shape.idsForCode(dupes[0]);
+    // A row exists only once its ancestors are open, so tick down the path.
+    const chainTo = (id) => id.split("/").map((_, i, p) => p.slice(0, i + 1).join("/"));
+    await only(...chainTo(a));
+    check(`ticking ${a} leaves ${b} alone`,
+      (await isTicked(page, a)) && !(await isTicked(page, b)));
+    const first = (await defs())[0];
+    await only(...chainTo(b));
+    const second = (await defs())[0];
+    check("and each builds its own chain", first !== second, first + "  vs  " + second);
+    check("the chain ends in the shared code both times",
+      first.endsWith(" " + dupes[0]) && second.endsWith(" " + dupes[0]),
+      first + "  |  " + second);
+  }
+}
+
 /* ---------- across an area, and across a region ---------- */
 
 await only("centralcoast", "bayarea", "slo", "eastbay", "slonorth", "oakland");
@@ -99,9 +130,9 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
   async function tickAll(level) {
     for (;;) {
       const next = await page.$$eval(`.pick-row.lvl-${level} input:not(:checked)`,
-        (n) => (n.length ? n[0].dataset.code : null));
+        (n) => (n.length ? n[0].dataset.id : null));
       if (!next) { break; }
-      await page.check(`.picker input[data-code="${next}"]`);
+      await page.check(`.picker input[data-id="${next}"]`);
       await page.waitForTimeout(30);
     }
   }
@@ -211,10 +242,12 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
     await page.check(`.picker input[data-code="${code}"]`);
     await page.waitForTimeout(35);
   }
+  // By id: with every region open, two rows can share a code, and a data-code
+  // selector would match both.
   const inner = await page.$$eval(".pick-row.lvl-1 input",
-    (n) => n.slice(0, 26).map((x) => x.dataset.code));
-  for (const code of inner) {
-    await page.check(`.picker input[data-code="${code}"]`);
+    (n) => n.slice(0, 26).map((x) => x.dataset.id));
+  for (const id of inner) {
+    await page.check(`.picker input[data-id="${id}"]`);
     await page.waitForTimeout(20);
   }
   await page.waitForTimeout(300);

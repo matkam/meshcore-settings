@@ -115,7 +115,7 @@ function detectLocation(contact) {
     btn.title = hit.entry.context;
     btn.setAttribute("aria-pressed", "false");
     btn.onclick = () => {
-      window.SettingsState.select(hit.entry.code);
+      window.SettingsState.select(hit.entry.id);
       // The buttons stay: a wrong pick should be correctable without reconnecting.
       for (const b of els.detectChoices.children) {
         b.classList.toggle("chosen", b === btn);

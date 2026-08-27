@@ -143,11 +143,13 @@ window.RegionData.ready(function (DATA) {
 
   // Flat, searchable list of every place, however deep it sits.
   var index = [];
+  var byId = {};
   var byCode = {};
 
   DATA.nodes.forEach(function (node) {
     index.push({
       node: node,
+      id: node.id,
       code: node.code,
       name: node.name,
       depth: node.depth,
@@ -161,8 +163,8 @@ window.RegionData.ready(function (DATA) {
   // last root token: "California region" rather than a blank.
   function contextFor(node) {
     if (node.trail.length) {
-      return node.trail.slice().reverse().map(function (code) {
-        return DATA.byCode[code].name;
+      return node.trail.slice().reverse().map(function (id) {
+        return DATA.byId[id].name;
       }).join(" · ");
     }
     var top = ROOT.length ? ROOT[ROOT.length - 1].name + " " : "";
@@ -171,8 +173,26 @@ window.RegionData.ready(function (DATA) {
 
   index.forEach(function (e) {
     e.haystack = [e.name, e.code, e.context].concat(e.terms).join(" ").toLowerCase();
-    byCode[e.code] = e;
+    byId[e.id] = e;
+    // First one wins: a bare code is how a person refers to a place, and where
+    // two share one the nearer-to-hand reading is the shallower, earlier place.
+    // Anything that must name a specific place uses the id.
+    if (!byCode[e.code]) { byCode[e.code] = e; }
   });
+
+  // An entry from either spelling: a full path, or a bare code for the common
+  // case where nothing else has that code.
+  function entryFor(ref) {
+    if (!ref) { return null; }
+    return byId[ref] || byCode[ref] || null;
+  }
+
+  // How a place is written into a link. The code, which is what someone would
+  // type and what every existing link uses — unless it names more than one
+  // place, where only the path says which was meant.
+  function refFor(entry) {
+    return DATA.allByCode(entry.code).length > 1 ? entry.id : entry.code;
+  }
 
   /* ---------- selection state ---------- */
 
@@ -218,8 +238,8 @@ window.RegionData.ready(function (DATA) {
       return hits.filter(function (h) { return h.km <= limit; }).slice(0, count || 3);
     },
 
-    select: function (code) {
-      var entry = byCode[code];
+    select: function (ref) {
+      var entry = entryFor(ref);
       if (!entry) { return false; }
       els.search.value = entry.name;
       selectEntry(entry);
@@ -236,11 +256,13 @@ window.RegionData.ready(function (DATA) {
     firmwareTier: function () { return els.fw.value; },
 
     // Everything currently ticked, so the map can mark all of it rather than
-    // reaching into the picker's markup. Codes only — the map looks the places
-    // themselves up in RegionData, which keeps this free of anything that
-    // would have to change when the tree gains a level.
+    // reaching into the picker's markup. Identifiers only — the map looks the
+    // places themselves up in RegionData, which keeps this free of anything
+    // that would have to change when the tree gains a level.
     picked: function () {
-      return chosen().map(function (e) { return { code: e.code, depth: e.depth }; });
+      return chosen().map(function (e) {
+        return { id: e.id, code: e.code, depth: e.depth };
+      });
     }
   };
 
@@ -343,12 +365,12 @@ window.RegionData.ready(function (DATA) {
     entries.forEach(function (e) {
       // The levels above have to be ticked too, or the chain would be missing
       // its middle, and opened, or the row would exist nowhere on screen.
-      e.node.trail.forEach(function (code) {
-        picked[code] = true;
-        expanded[code] = true;
+      e.node.trail.forEach(function (id) {
+        picked[id] = true;
+        expanded[id] = true;
       });
-      picked[e.code] = true;
-      if (e.node.children.length) { expanded[e.code] = true; }
+      picked[e.id] = true;
+      if (e.node.children.length) { expanded[e.id] = true; }
     });
 
     renderPicker();
@@ -356,7 +378,7 @@ window.RegionData.ready(function (DATA) {
     render();
 
     if (!opts || !opts.keepHash) {
-      var hash = "#" + entries.map(function (e) { return e.code; }).join(",");
+      var hash = "#" + entries.map(refFor).join(",");
       if (location.hash !== hash) { history.replaceState(null, "", hash); }
     }
   }
@@ -387,8 +409,10 @@ window.RegionData.ready(function (DATA) {
   var picked = {};     // code -> true, what the repeater will carry
   var expanded = {};   // code -> true, purely what is on screen
 
-  function isPicked(code) { return picked[code] === true; }
-  function isExpanded(code) { return expanded[code] === true; }
+  // Keyed by id, not code: two places may share a code, and ticking one of them
+  // must not tick the other.
+  function isPicked(id) { return picked[id] === true; }
+  function isExpanded(id) { return expanded[id] === true; }
 
   // Places carry different kinds of description at different levels: a region has
   // a blurb, a local area has the towns inside it, a county has neither and needs
@@ -428,7 +452,7 @@ window.RegionData.ready(function (DATA) {
   }
 
   function chosen() {
-    return index.filter(function (e) { return isPicked(e.code); });
+    return index.filter(function (e) { return isPicked(e.id); });
   }
 
   function row(entry) {
@@ -446,19 +470,20 @@ window.RegionData.ready(function (DATA) {
 
     var box = document.createElement("input");
     box.type = "checkbox";
-    box.checked = isPicked(entry.code);
+    box.checked = isPicked(entry.id);
     box.dataset.code = entry.code;
+    box.dataset.id = entry.id;
     box.addEventListener("change", function () {
       if (box.checked) {
-        picked[entry.code] = true;
+        picked[entry.id] = true;
         // Choosing something is also a statement of interest in what is inside
         // it, and this is the cascade the tree has always had.
-        expanded[entry.code] = true;
+        expanded[entry.id] = true;
       } else {
-        delete picked[entry.code];
+        delete picked[entry.id];
         // Whatever sat under it goes too, since it is no longer reachable.
         index.forEach(function (e) {
-          if (e.node.trail.indexOf(entry.code) !== -1) { delete picked[e.code]; }
+          if (e.node.trail.indexOf(entry.id) !== -1) { delete picked[e.id]; }
         });
         // Note it stays open: unticking is not a reason to hide what you were
         // just looking at.
@@ -494,18 +519,19 @@ window.RegionData.ready(function (DATA) {
     var btn = el("button", "pick-toggle");
     btn.type = "button";
     btn.dataset.code = place.code;
-    btn.setAttribute("aria-expanded", String(isExpanded(place.code)));
+    btn.dataset.id = place.id;
+    btn.setAttribute("aria-expanded", String(isExpanded(place.id)));
     // The count has nowhere to go visually — the description has that space —
     // but it is exactly what someone deciding whether to open this wants, so it
     // goes to anyone listening rather than nobody.
     btn.setAttribute("aria-label",
-      (isExpanded(place.code) ? "Hide the " : "Show the ") +
+      (isExpanded(place.id) ? "Hide the " : "Show the ") +
       countsFrom(place.children, place.depth + 1, " and ") + " in " + place.name);
     btn.addEventListener("click", function () {
-      if (isExpanded(place.code)) {
-        delete expanded[place.code];
+      if (isExpanded(place.id)) {
+        delete expanded[place.id];
       } else {
-        expanded[place.code] = true;
+        expanded[place.id] = true;
       }
       renderPicker();
     });
@@ -535,8 +561,8 @@ window.RegionData.ready(function (DATA) {
   function branch(places) {
     var frag = document.createDocumentFragment();
     places.forEach(function (place) {
-      frag.appendChild(row(byCode[place.code]));
-      if (!isExpanded(place.code) || !place.children.length) { return; }
+      frag.appendChild(row(byId[place.id]));
+      if (!isExpanded(place.id) || !place.children.length) { return; }
       var kids = el("div", "pick-children");
       kids.appendChild(branch(place.children));
       frag.appendChild(kids);
@@ -547,7 +573,7 @@ window.RegionData.ready(function (DATA) {
   /* ---------- expand all ---------- */
 
   function allOpen() {
-    return openable().every(function (node) { return isExpanded(node.code); });
+    return openable().every(function (node) { return isExpanded(node.id); });
   }
 
   function relabelExpand() {
@@ -558,7 +584,7 @@ window.RegionData.ready(function (DATA) {
     if (allOpen()) {
       expanded = {};
     } else {
-      openable().forEach(function (node) { expanded[node.code] = true; });
+      openable().forEach(function (node) { expanded[node.id] = true; });
     }
     renderPicker();
   });
@@ -629,7 +655,7 @@ window.RegionData.ready(function (DATA) {
     var picks = chosen();
     current = picks[0] || null;
     render();
-    var hash = picks.length ? "#" + picks.map(function (e) { return e.code; }).join(",") : "";
+    var hash = picks.length ? "#" + picks.map(refFor).join(",") : "";
     if (hash && location.hash !== hash) { history.replaceState(null, "", hash); }
   }
 
@@ -774,11 +800,13 @@ window.RegionData.ready(function (DATA) {
 
   /* ---------- command generation ---------- */
 
+  // Resolved by id, emitted as codes: the id is how this site tells two places
+  // apart, while the code is the name the repeater actually carries.
   function chainOf(entry) {
     var chain = ROOT.map(function (r) {
       return { code: r.code, label: r.name };
     });
-    return chain.concat(DATA.chain(entry.code).map(function (node) {
+    return chain.concat(DATA.chain(entry.id).map(function (node) {
       return { code: node.code, label: node.name };
     }));
   }
@@ -899,7 +927,7 @@ window.RegionData.ready(function (DATA) {
     var seen = [];
     chains.forEach(function (ch) {
       ch.forEach(function (t) {
-        var node = DATA.byCode[t.code];
+        var node = t.id ? DATA.byId[t.id] : DATA.byCode[t.code];
         if (!node) { return; }
         DATA.tagsFor(node).forEach(function (code) {
           if (seen.indexOf(code) === -1) { seen.push(code); }
@@ -1358,7 +1386,7 @@ window.RegionData.ready(function (DATA) {
   function fromHash() {
     return decodeURIComponent(location.hash.replace(/^#/, ""))
       .split(",")
-      .map(function (c) { return byCode[c.trim()]; })
+      .map(function (c) { return entryFor(c.trim()); })
       .filter(Boolean);
   }
 
