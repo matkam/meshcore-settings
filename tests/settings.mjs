@@ -24,16 +24,16 @@ const lines = async () => (await cmds()).split("\n");
 
 check("loop detection defaults to moderate", (await page.inputValue("#opt-loop")) === "moderate",
   await page.inputValue("#opt-loop"));
-check("flood advert interval defaults to 24", (await page.inputValue("#opt-flood")) === "24",
+check("flood advert interval defaults to 47", (await page.inputValue("#opt-flood")) === "47",
   await page.inputValue("#opt-flood"));
 check("both appear in the commands",
   (await lines()).includes("set loop.detect moderate") &&
-  (await lines()).includes("set flood.advert.interval 24"), await cmds());
+  (await lines()).includes("set flood.advert.interval 47"), await cmds());
 
 // They belong with the other set commands, before anything touches regions.
 {
   const l = await lines();
-  const lastSet = Math.max(l.indexOf("set loop.detect moderate"), l.indexOf("set flood.advert.interval 24"));
+  const lastSet = Math.max(l.indexOf("set loop.detect moderate"), l.indexOf("set flood.advert.interval 47"));
   const firstRegion = l.findIndex((x) => x.startsWith("region "));
   check("new settings come before the region block", lastSet < firstRegion, JSON.stringify(l));
 }
@@ -64,7 +64,7 @@ await page.fill("#opt-flood", "");
 check("a blank interval sends nothing", !(await cmds()).includes("flood.advert.interval"), await cmds());
 check("blank is explained as leaving it alone",
   /left alone/.test(await page.textContent("#flood-hint")), await page.textContent("#flood-hint"));
-await page.fill("#opt-flood", "24");
+await page.fill("#opt-flood", "47");
 
 // Version gating.
 // loop.detect landed in 1.14, the same release as path.hash.mode.
@@ -80,8 +80,49 @@ check("the loop control is disabled there", await page.isDisabled("#opt-loop"));
 check("and names the version that added it",
   /firmware 1\.14/.test(await page.textContent("#loop-hint")), await page.textContent("#loop-hint"));
 check("flood interval still sent on the oldest tier",
-  (await lines()).includes("set flood.advert.interval 24"), await cmds());
+  (await lines()).includes("set flood.advert.interval 47"), await cmds());
+// The firmware's own default changed in 1.16, from 12 hours to 47, so the hint
+// has to quote the one belonging to the version selected.
+check("the older tiers' hint quotes their 12-hour default",
+  /default is 12 hours/.test(await page.textContent("#flood-hint")),
+  await page.textContent("#flood-hint"));
 await page.selectOption("#opt-fw", "116");
+await page.waitForTimeout(50);
+check("1.16 raised it to 47, and the hint follows",
+  /default is 47 hours/.test(await page.textContent("#flood-hint")),
+  await page.textContent("#flood-hint"));
+
+/* ---------- duty cycle: off unless asked for ---------- */
+{
+  check("the duty cycle box starts empty", (await page.inputValue("#opt-duty")) === "",
+    await page.inputValue("#opt-duty"));
+  check("so no duty cycle command is sent", !(await cmds()).includes("dutycycle"), await cmds());
+  check("and none is read back either", !/get dutycycle/.test(await page.textContent("#verify-block")),
+    await page.textContent("#verify-block"));
+  check("nor explained", !/dutycycle/.test(await page.textContent("#explain")));
+  check("blank says the repeater keeps what it has",
+    /Blank/.test(await page.textContent("#duty-hint")), await page.textContent("#duty-hint"));
+
+  await page.fill("#opt-duty", "100");
+  await page.waitForTimeout(50);
+  const l = await lines();
+  check("typing one sends it", l.includes("set dutycycle 100"), await cmds());
+  check("it leads the set commands", l.indexOf("set dutycycle 100") === 0, JSON.stringify(l));
+  check("and is read back", /get dutycycle/.test(await page.textContent("#verify-block")),
+    await page.textContent("#verify-block"));
+
+  // Pre-1.15 firmware takes the same percentage as an airtime factor.
+  await page.selectOption("#opt-fw", "110");
+  await page.waitForTimeout(50);
+  check("the oldest tier sends set af instead", (await lines()).includes("set af 0"), await cmds());
+  check("read back as get af", /get af/.test(await page.textContent("#verify-block")),
+    await page.textContent("#verify-block"));
+  await page.fill("#opt-duty", "");
+  await page.waitForTimeout(50);
+  check("clearing it drops set af too", !(await cmds()).includes("set af"), await cmds());
+  await page.selectOption("#opt-fw", "116");
+  await page.waitForTimeout(50);
+}
 
 /* ---------- owner info ---------- */
 {
@@ -241,7 +282,7 @@ check("copy copies the edited commands",
   check("unset settings are not read back",
     !/loop\.detect/.test(verify2) && !/flood\.advert/.test(verify2), verify2);
   await page.selectOption("#opt-loop", "moderate");
-  await page.fill("#opt-flood", "24");
+  await page.fill("#opt-flood", "47");
 }
 
 check("no JS errors", errs.length === 0, errs.join("; "));
