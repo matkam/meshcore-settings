@@ -22,21 +22,21 @@ const cmds = async () => (await page.textContent("#commands")).trim();
 
 // 1.16+ default
 check("1.16 default", await cmds(), [
-  "set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
+  "set path.hash.mode 1", "set flood.advert.interval 47", "set loop.detect moderate",
   "region def us west california centralcoast slo slonorth", "region save"].join("\n"));
 
-// 1.15: region put/allowf, dutycycle + hash still present
+// 1.15: region put/allowf, hash still present
 await page.selectOption("#opt-fw", "115");
 check("1.15 (no allowf)", await cmds(), [
-  "set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
+  "set path.hash.mode 1", "set flood.advert.interval 47", "set loop.detect moderate",
   "region put us", "region put west us", "region put california west", "region put centralcoast california",
   "region put slo centralcoast", "region put slonorth slo",
   "region save"].join("\n"));
 
-// 1.14: set af, hash still present
+// 1.14: hash still present, and the duty cycle would use set af if one were asked for
 await page.selectOption("#opt-fw", "114");
 check("1.14", await cmds(), [
-  "set af 0", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
+  "set path.hash.mode 1", "set flood.advert.interval 47", "set loop.detect moderate",
   "region put us", "region allowf us",
   "region put west us", "region allowf west",
   "region put california west", "region allowf california",
@@ -48,7 +48,7 @@ check("1.14", await cmds(), [
 // 1.10-1.13: exactly the user's example
 await page.selectOption("#opt-fw", "110");
 check("1.10-1.13 matches user's example", await cmds(), [
-  "set af 0", "set flood.advert.interval 24",
+  "set flood.advert.interval 47",
   "region put us", "region allowf us",
   "region put west us", "region allowf west",
   "region put california west", "region allowf california",
@@ -71,7 +71,10 @@ await page.fill("#opt-duty", "25");
 check("af from 25%", (await cmds()).split("\n")[0], "set af 3");
 await page.fill("#opt-duty", "10");
 check("af from 10%", (await cmds()).split("\n")[0], "set af 9");
-await page.fill("#opt-duty", "100");
+// Blank is the default: no duty cycle command on this tier either.
+await page.fill("#opt-duty", "");
+check("a blank duty cycle sends no set af", (await cmds()).split("\n")[0],
+  "set flood.advert.interval 47");
 
 // home/default still work on old firmware
 await page.check("#opt-home");
@@ -83,7 +86,7 @@ await page.uncheck("#opt-home");
 // county-level chain on old firmware (4 tokens)
 await untick(page, "slonorth");
 check("county-level on 1.10", await cmds(), [
-  "set af 0", "set flood.advert.interval 24",
+  "set flood.advert.interval 47",
   "region put us", "region allowf us",
   "region put west us", "region allowf west",
   "region put california west", "region allowf california",
@@ -94,7 +97,7 @@ check("county-level on 1.10", await cmds(), [
 // switching back restores region def
 await page.selectOption("#opt-fw", "116");
 check("back to 1.16", await cmds(), [
-  "set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
+  "set path.hash.mode 1", "set flood.advert.interval 47", "set loop.detect moderate",
   "region def us west california centralcoast slo", "region save"].join("\n"));
 console.log("hash re-enabled:", !(await page.isDisabled("#opt-hash")));
 
@@ -111,7 +114,7 @@ await page.screenshot({ path: shot("fw-old.png"), clip: { x: 0, y: 180, width: 1
 await page.goto(SITE + "#sfv", { waitUntil: "networkidle" });
 await page.selectOption("#opt-fw", "110");
 check("SoCal nesting expands the put/allowf chain on 1.10", await cmds(), [
-  "set af 0", "set flood.advert.interval 24",
+  "set flood.advert.interval 47",
   "region put us", "region allowf us",
   "region put west us", "region allowf west",
   "region put california west", "region allowf california",
@@ -121,7 +124,7 @@ check("SoCal nesting expands the put/allowf chain on 1.10", await cmds(), [
   "region save"].join("\n"));
 await page.selectOption("#opt-fw", "116");
 check("and the same nesting on 1.16 via region def", await cmds(), [
-  "set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
+  "set path.hash.mode 1", "set flood.advert.interval 47", "set loop.detect moderate",
   "region def us west california socal losangeles sfv", "region save"].join("\n"));
 await page.goto(SITE + "#slonorth", { waitUntil: "networkidle" });
 

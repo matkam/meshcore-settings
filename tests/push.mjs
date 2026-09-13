@@ -212,7 +212,7 @@ console.log("  device saw:", JSON.stringify(sim, null, 0));
 const sentCmds = sim.filter((l) => l.startsWith("cli:")).map((l) => l.slice(4)).filter((c) => c !== "ver");
 check("sent exactly the generated commands + verification",
   JSON.stringify(sentCmds) === JSON.stringify([
-    "set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
+    "set path.hash.mode 1", "set flood.advert.interval 47", "set loop.detect moderate",
     "region def us west california centralcoast slo slonorth", "region save", "region get slonorth"]),
   JSON.stringify(sentCmds));
 
@@ -235,7 +235,7 @@ await page.waitForFunction(
 const afterFail = await page.evaluate(() => window.__sim.log.filter((l) => l.startsWith("cli:")).map((l) => l.slice(4)).filter((c) => c !== "ver"));
 check("stops at the failing command, sends nothing after",
   JSON.stringify(afterFail) === JSON.stringify([
-    "set dutycycle 100", "set path.hash.mode 1", "set flood.advert.interval 24", "set loop.detect moderate",
+    "set path.hash.mode 1", "set flood.advert.interval 47", "set loop.detect moderate",
     "region def us west california centralcoast slo slonorth"]),
   JSON.stringify(afterFail));
 

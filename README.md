@@ -1,17 +1,16 @@
 # California MeshCore Repeater Settings
 
 A static site that turns "where is your repeater?" into the settings you paste
-into its console — duty cycle, advert path hash mode, flood advert interval,
-loop detection, and the region scope chain.
+into its console — advert path hash mode, flood advert interval, loop detection,
+the region scope chain, and a duty cycle cap if you ask for one.
 
 Pick North County SLO, for example, and you get:
 
 ```
-set dutycycle 100
 set path.hash.mode 1
-set flood.advert.interval 24
+set flood.advert.interval 47
 set loop.detect moderate
-region def west california centralcoast slo slonorth
+region def us west california centralcoast slo slonorth
 region save
 ```
 
@@ -66,8 +65,10 @@ scoped traffic.
 Same tree, different syntax. On 1.10–1.13 that same North County example becomes:
 
 ```
-set af 0
-region put west
+set flood.advert.interval 47
+region put us
+region allowf us
+region put west us
 region allowf west
 region put california west
 region allowf california
@@ -80,10 +81,11 @@ region allowf slonorth
 region save
 ```
 
-The duty cycle field stays in percent whichever version you pick — on pre-1.15
-firmware it's converted to the nearest airtime factor, since `set af` only offers
-1/(1+af) steps (100% → `af 0`, 50% → `af 1`, 25% → `af 3`). Check your version on
-the node with `ver`.
+The duty cycle box is blank by default, so neither command is sent and the node
+keeps whatever it was flashed with. Fill it in and the field stays in percent
+whichever version you pick — on pre-1.15 firmware it's converted to the nearest
+airtime factor, since `set af` only offers 1/(1+af) steps (100% → `af 0`, 50% →
+`af 1`, 25% → `af 3`). Check your version on the node with `ver`.
 
 Every area has a shareable deep link — [`#slonorth`](https://matkam.github.io/meshcore-settings/#slonorth)
 opens the page with North County already selected, which is handy for
@@ -152,8 +154,8 @@ level and the shapes carried on working.
 
 ## The other settings
 
-These all live under **Options**. The two intervals are on by default; owner info
-is blank until you type something.
+These all live under **Options**. The flood advert interval and loop detection are
+sent by default; the duty cycle and owner info are blank until you fill them in.
 
 **Owner info** — `set owner.info <text>`, added in firmware 1.12. A free-text box:
 put whatever lets a neighbour reach you about the node — an email address, a Discord
@@ -164,13 +166,22 @@ and no command is sent, which leaves whatever the repeater already has alone —
 is deliberately no way here to send an empty value and wipe it. The box caps at 120
 characters so `set owner.info <text>` stays inside the 160-character serial line.
 
-**Flood advert interval** — `set flood.advert.interval 24`. How often the
+**Duty cycle** — `set dutycycle <percent>` on 1.15+, `set af <factor>` before it.
+Caps how much of the air the repeater may occupy. The box is empty by default, so
+no command is sent and the node keeps its own setting — the firmware default is
+50%. The US 902–928 MHz ISM band has no duty cycle restriction, so operators who
+do want to change it usually set 100; type it in and the right command for your
+version appears.
+
+**Flood advert interval** — `set flood.advert.interval 47`. How often the
 repeater floods an advert to the whole mesh so distant nodes can discover it and
-build a path. Every repeater rebroadcasts these, so the cost is paid mesh-wide;
-the firmware's own default is 12 hours, and 24 halves that traffic while keeping
-the node discoverable. The documented range is **3–168 hours**; the parser also
-accepts **0 to switch flood adverts off**, and rejects 1 and 2 outright. Leave
-the box empty and the command isn't sent at all, which is different from sending 0.
+build a path. Every repeater rebroadcasts these, so the cost is paid mesh-wide.
+47 hours is what the repeater firmware itself defaults to from 1.16 on — it was
+12 until [that release raised it](https://github.com/meshcore-dev/MeshCore/commit/40180b8),
+and the hint under the box quotes whichever applies to the version you picked.
+The documented range is **3–168 hours**; the parser also accepts **0 to switch
+flood adverts off**, and rejects 1 and 2 outright. Leave the box empty and the
+command isn't sent at all, which is different from sending 0.
 
 **Loop detection** — `set loop.detect moderate`, added in firmware 1.14. Rejects
 a flood packet that already carries this repeater's own id in its path, which is
@@ -614,7 +625,7 @@ run against every PR, and screenshots are uploaded when something fails.
 | `flow` | Landing on the page cold and working through it |
 | `push` | Sending over the air, stopping at a failure, resuming |
 | `map` | Drawing, hover, picking at every level, zoom and pan |
-| `settings` | Loop detection, flood advert interval, editing the commands |
+| `settings` | Loop detection, flood advert interval, duty cycle, owner info, editing the commands |
 | `picks` | Multiple selections, branch joining, shared-ancestry dedup |
 
 `tests/sim.mjs` is the fake device: it answers the companion protocol over a

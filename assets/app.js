@@ -101,8 +101,11 @@ window.RegionData.ready(function (DATA) {
       hashMode: v >= 114,
       regionList: v >= 112,
       // Long-standing repeater setting, present across every version this site
-      // offers.
+      // offers. What it defaults to did change, though: the repeater firmware
+      // shipped 12 hours until 1.16 raised it to 47 (MeshCore commit 40180b8,
+      // examples/simple_repeater/MyMesh.cpp), so the hints quote the right one.
       floodAdvert: true,
+      floodAdvertDefault: v >= 116 ? 47 : 12,
       // Same release as path.hash.mode, and not by coincidence: loop detection
       // counts how often this repeater's own hash appears in a packet's path,
       // and multibyte path hashes landed in the same version.
@@ -849,13 +852,20 @@ window.RegionData.ready(function (DATA) {
     }));
   }
 
+  // A duty cycle cap the operator asked for, or null for "don't touch it" — the
+  // same blank-means-leave-alone rule the flood interval and owner info follow.
+  // The firmware's own default (50%) is a deliberate choice by whoever flashed
+  // the node, and overwriting it unasked is not this page's business.
   function dutyValue() {
+    if (els.duty.value.trim() === "") { return null; }
     var v = parseInt(els.duty.value, 10);
-    return isNaN(v) ? 1 : clamp(v, 1, 100);
+    return isNaN(v) ? null : clamp(v, 1, 100);
   }
 
   // Older firmware sets duty cycle indirectly: after each transmission the node
   // stays silent for airtime * af, giving a long-term duty of about 1/(1+af).
+  // Only called once dutyValue() is known to be set — a blank box sends no duty
+  // cycle command at all, on any firmware.
   function afValue() {
     return clamp(Math.round(100 / dutyValue() - 1), 0, 9);
   }
@@ -992,7 +1002,9 @@ window.RegionData.ready(function (DATA) {
 
     var lines = [];
 
-    lines.push(c.dutycycle ? "set dutycycle " + dutyValue() : "set af " + afValue());
+    if (dutyValue() !== null) {
+      lines.push(c.dutycycle ? "set dutycycle " + dutyValue() : "set af " + afValue());
+    }
     if (c.hashMode) { lines.push("set path.hash.mode " + els.hash.value); }
     if (c.floodAdvert && floodValue() !== null) {
       lines.push("set flood.advert.interval " + floodValue());
@@ -1112,7 +1124,13 @@ window.RegionData.ready(function (DATA) {
     els.fwHint.textContent = FW_HINTS[c.version] || "";
 
     els.duty.disabled = false;
-    if (c.dutycycle) {
+    if (dutyValue() === null) {
+      els.dutyHint.textContent =
+        "Blank, so nothing is sent and the repeater keeps what it has — the firmware's own " +
+        "default is 50%. The US 902–928 MHz ISM band has no duty cycle restriction, so " +
+        "operators who do raise it usually put 100 here" +
+        (c.dutycycle ? "." : ", which this firmware applies as set af 0.");
+    } else if (c.dutycycle) {
       els.dutyHint.textContent =
         "The US 902–928 MHz ISM band has no duty cycle restriction, so 100 (no limit) is " +
         "the normal California setting. Default is 50.";
@@ -1148,9 +1166,11 @@ window.RegionData.ready(function (DATA) {
         : (flood < 3 || flood > 168)
           ? "The firmware only accepts 3–168 hours, or 0 to turn flood adverts off. " +
             flood + " will be rejected."
-          : "How often the repeater floods an advert to the whole mesh. The firmware's own " +
-            "default is 12 hours and it accepts 3–168; 24 halves that traffic while still " +
-            "keeping the node discoverable.";
+          : "How often the repeater floods an advert to the whole mesh. Every repeater " +
+            "rebroadcasts these, so a longer interval costs the whole mesh less traffic " +
+            "and only slows discovery. This firmware's own default is " +
+            c.floodAdvertDefault + " hours, and it accepts 3–168." +
+            (flood === c.floodAdvertDefault ? " " + flood + " is that default." : "");
 
     renderOwnerHint(c);
   }
@@ -1243,7 +1263,7 @@ window.RegionData.ready(function (DATA) {
     built.chains.forEach(function (ch) {
       lines.push("region get " + ch[ch.length - 1].code);
     });
-    lines.push(built.caps.dutycycle ? "get dutycycle" : "get af");
+    if (dutyValue() !== null) { lines.push(built.caps.dutycycle ? "get dutycycle" : "get af"); }
     if (built.caps.hashMode) { lines.push("get path.hash.mode"); }
     if (built.caps.floodAdvert && floodValue() !== null) { lines.push("get flood.advert.interval"); }
     if (built.caps.loopDetect && els.loop.value) { lines.push("get loop.detect"); }
@@ -1272,17 +1292,19 @@ window.RegionData.ready(function (DATA) {
     var chainCodes = built.chain.map(function (c) { return c.code; });
     var items = [];
 
-    if (built.caps.dutycycle) {
-      items.push(["set dutycycle " + dutyValue(),
-        dutyValue() === 100
-          ? "Removes the transmit duty cycle cap. The US 902–928 MHz ISM band has no duty cycle limit, unlike EU 868 MHz. Default is 50."
-          : "Caps transmit airtime at " + dutyValue() + "%. Default is 50."]);
-    } else {
-      items.push(["set af " + afValue(),
-        afValue() === 0
-          ? "Airtime factor 0 — no enforced silent period after transmitting, so no duty cycle limit. This is the pre-1.15 equivalent of set dutycycle 100."
-          : "Airtime factor " + afValue() + " — after each transmission the node stays silent for " +
-            afValue() + "× the airtime, giving roughly a " + afDuty() + "% duty cycle."]);
+    if (dutyValue() !== null) {
+      if (built.caps.dutycycle) {
+        items.push(["set dutycycle " + dutyValue(),
+          dutyValue() === 100
+            ? "Removes the transmit duty cycle cap. The US 902–928 MHz ISM band has no duty cycle limit, unlike EU 868 MHz. Default is 50."
+            : "Caps transmit airtime at " + dutyValue() + "%. Default is 50."]);
+      } else {
+        items.push(["set af " + afValue(),
+          afValue() === 0
+            ? "Airtime factor 0 — no enforced silent period after transmitting, so no duty cycle limit. This is the pre-1.15 equivalent of set dutycycle 100."
+            : "Airtime factor " + afValue() + " — after each transmission the node stays silent for " +
+              afValue() + "× the airtime, giving roughly a " + afDuty() + "% duty cycle."]);
+      }
     }
 
     if (built.caps.hashMode) {
@@ -1296,7 +1318,8 @@ window.RegionData.ready(function (DATA) {
           ? "Stops the repeater flooding adverts to the whole mesh. It still answers and still repeats, but nothing outside its immediate neighbours learns it exists on its own."
           : "Floods an advert to the whole mesh every " + floodValue() + " hours, so distant nodes can " +
             "discover it and build a path. Every repeater rebroadcasts these, so the cost is paid mesh-wide. " +
-            "The firmware defaults to 12 hours and accepts 3–168."]);
+            "The firmware defaults to " + built.caps.floodAdvertDefault +
+            " hours and accepts 3–168."]);
     }
 
     if (built.caps.loopDetect && els.loop.value) {
