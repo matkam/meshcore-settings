@@ -15,9 +15,9 @@
   <div class="wrap">
     <h1>California MeshCore Repeater Settings</h1>
     <p class="tagline">
-      Duty cycle, path hash mode, flood advert interval, loop detection and region
-      scopes for your repeater. Connect it and the settings are worked out for you,
-      or pick your area and copy them by hand.
+      Path hash mode, flood advert interval, loop detection and region scopes for
+      your repeater — plus a duty cycle cap if you want one. Connect it and the
+      settings are worked out for you, or pick your area and copy them by hand.
     </p>
   </div>
 </header>
@@ -190,7 +190,7 @@
         </div>
         <div class="field">
           <label for="opt-duty">Duty cycle limit (%)</label>
-          <input id="opt-duty" type="number" min="1" max="100" step="1" value="100">
+          <input id="opt-duty" type="number" min="1" max="100" step="1" placeholder="Leave blank (don't send)">
           <p class="hint" id="duty-hint"></p>
         </div>
         <div class="field">
@@ -215,7 +215,7 @@
         </div>
         <div class="field">
           <label for="opt-flood">Flood advert interval (hours)</label>
-          <input id="opt-flood" type="number" min="0" max="168" step="1" value="24">
+          <input id="opt-flood" type="number" min="0" max="168" step="1" value="47">
           <p class="hint" id="flood-hint"></p>
         </div>
         <div class="field checkbox">
