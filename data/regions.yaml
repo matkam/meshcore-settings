@@ -64,7 +64,7 @@
 #             clear of the dots around it.
 #   aliases   Optional search terms — town names, nicknames. They never appear
 #             in the generated commands; they exist so someone can type
-#             "Paso Robles" and land on `pasorobles`.
+#             "Paso Robles" and land on `slonorth`.
 #   tags      Optional. Codes from the `tags` list above, carried by this place
 #             and everything under it, as a second short chain from the root.
 #   children  Optional. More places, same shape.
@@ -72,15 +72,21 @@
 # ---------------------------------------------------------------------------
 # Why the tree looks like this
 #
-# The levels follow communities and RF propagation rather than administrative
-# lines. County boundaries are ignored where they cut through a mesh: Lake
-# Tahoe is one place across three counties, the Mojave gathers the high desert
-# out of four, and Ventura County is split at the Conejo grade because its
-# east half talks to Los Angeles and its west half talks up the coast.
+# A place is a community first: somewhere people name and identify with.
+# Three things shape where its edges fall, and none of them overrides that.
 #
-# Depth follows how big the local community is. Sparse country needs three
-# levels to reach something meaningful; a metro where the county already is
-# the mesh needs two. Both are correct, and `region def` does not care.
+#   Political boundaries. County and city lines usually match communities, so
+#   they are the usual edge. Where they don't, the community wins: Lake Tahoe
+#   is one place across three counties.
+#   RF propagation. A ridge can make two nearby communities separate meshes;
+#   flat open ground is a reason not to cut one community into pieces.
+#   Mesh density. A place needs repeaters to carry its scope. Plenty of them
+#   can justify a split, along community lines. Thin coverage is a reason not
+#   to split further, not on its own a reason to fold one town into another.
+#
+# Depth grows down. A place starts shallow and gains children only once it has
+# the repeaters to carry them, split along community lines. Adding children
+# later breaks nothing; taking a level away leaves dead names on hardware.
 # ---------------------------------------------------------------------------
 
 # Bumped only when the shape above changes in a way that breaks readers.
@@ -91,7 +97,7 @@ description: MeshCore repeater region scopes for California, as a tree of nested
 # Quoted on purpose: unquoted, YAML resolves this to a timestamp and a parser
 # hands back a date object, where regions.json always has a string. Keep the
 # quotes so both files mean the same thing to whoever reads them.
-updated: "2026-08-03"
+updated: "2026-10-24"
 license: MIT
 source: https://github.com/matkam/meshcore-settings
 
@@ -365,9 +371,9 @@ places:
     children:
       - code: goldcountry
         name: Gold Country
-        blurb: "The Highway 49 corridor, Auburn down to Mariposa."
-        outline: ["Amador", "Calaveras", "Mariposa", "Sierra", "Tuolumne"]
-        aliases: ["Sierra County", "Amador County", "Calaveras County", "Tuolumne County", "Mariposa County"]
+        blurb: "The Highway 49 corridor, Placerville down to Mariposa."
+        outline: ["Amador", "Calaveras", "Mariposa", "Tuolumne"]
+        aliases: ["Amador County", "Calaveras County", "Tuolumne County", "Mariposa County"]
         children:
           - code: placerville
             name: Placerville
@@ -405,28 +411,17 @@ places:
             lat: 37.485
             lon: -119.966
             aliases: ["Mariposa", "Yosemite Valley", "El Portal", "Coulterville"]
+      # One place: the lake basin is one bowl, and Truckee is part of the same
+      # community (one school district, one hospital, one airport) though it
+      # sits just outside the rim.
       - code: tahoe
         name: Lake Tahoe
-        blurb: "The lake basin — one bowl, three counties."
-        children:
-          - code: truckee
-            name: Truckee
-            county: Nevada
-            lat: 39.328
-            lon: -120.183
-            aliases: ["Truckee", "Donner", "Soda Springs"]
-          - code: tahoecity
-            name: North Lake Tahoe
-            county: Placer
-            lat: 39.167
-            lon: -120.144
-            aliases: ["Tahoe City", "Kings Beach", "Tahoe Vista", "Olympic Valley", "Northstar"]
-          - code: southlaketahoe
-            name: South Lake Tahoe
-            county: El Dorado
-            lat: 38.933
-            lon: -119.977
-            aliases: ["South Lake Tahoe", "Meyers", "Tahoma"]
+        blurb: "The lake basin and Truckee — one community, three counties."
+        county: ["Placer", "El Dorado", "Nevada"]
+        lat: 39.167
+        lon: -120.144
+        aliases: ["Truckee", "Donner", "Soda Springs", "Tahoe City", "Kings Beach", "Tahoe Vista", "Olympic Valley",
+          "Northstar", "South Lake Tahoe", "Meyers", "Tahoma"]
       - code: eastsierra
         name: Eastern Sierra
         blurb: The US-395 corridor east of the crest.
@@ -469,24 +464,19 @@ places:
     short: BAY AREA
     nudge: [-52, 6]
     children:
+      # One place, not an east and a west half: the city is one community and
+      # one county, and the halves were compass lines rather than places anyone
+      # names. It has the repeaters to carry a split, so if one is wanted, draw
+      # it along neighbourhoods people actually use.
       - code: sf
         name: San Francisco
         blurb: The city and county.
         outline: ["San Francisco"]
-        aliases: ["San Francisco"]
-        children:
-          - code: eastsf
-            name: East SF
-            county: San Francisco
-            lat: 37.779
-            lon: -122.409
-            aliases: ["Downtown", "SoMa", "Mission", "Potrero Hill", "Bayview", "North Beach"]
-          - code: westsf
-            name: West SF
-            county: San Francisco
-            lat: 37.76
-            lon: -122.482
-            aliases: ["Sunset", "Richmond", "Golden Gate Park", "Twin Peaks", "Ingleside"]
+        county: San Francisco
+        lat: 37.774
+        lon: -122.442
+        aliases: ["San Francisco", "Downtown", "SoMa", "Mission", "Potrero Hill", "Bayview", "North Beach",
+          "Sunset", "Richmond", "Golden Gate Park", "Twin Peaks", "Ingleside"]
       - code: northbay
         name: North Bay
         blurb: "Marin, Sonoma, Napa and Solano."
@@ -542,17 +532,11 @@ places:
             lon: -122.458
             aliases: ["Sonoma", "Glen Ellen", "Kenwood"]
           - code: napa
-            name: Napa City
+            name: Napa Valley
             county: Napa
             lat: 38.297
             lon: -122.287
-            aliases: ["Napa", "American Canyon", "Yountville"]
-          - code: sthelena
-            name: Upvalley
-            county: Napa
-            lat: 38.505
-            lon: -122.47
-            aliases: ["St. Helena", "Calistoga", "Angwin"]
+            aliases: ["Napa", "American Canyon", "Yountville", "St. Helena", "Calistoga", "Angwin", "Upvalley"]
           - code: fairfield
             name: Fairfield / Vacaville
             county: Solano
@@ -783,165 +767,151 @@ places:
     name: Central Valley
     blurb: Stockton down to Bakersfield — the stretch Central Valley Mesh covers.
     short: C VALLEY
+    # Towns sit directly under the region, as North California's do. There was
+    # a North / Mid / South Valley level here, but those were compass thirds
+    # rather than communities ("North Valley" means Chico and Redding to most
+    # Californians), and at 12, 33 and 34 repeaters none could carry a scope of
+    # its own. If the valley operators group themselves, add that back.
+    #
+    # Kern is claimed here because every place in it is one of these, and an
+    # unclaimed county draws as background. Not a clean fit: Tehachapi and
+    # Indian Wells are over the crest and desert rather than valley.
+    outline: ["San Joaquin", "Stanislaus", "Merced", "Madera", "Fresno", "Kings", "Tulare", "Kern"]
     aliases: ["Kern County", "Kings County", "Tulare County", "Fresno County", "Madera County", "Merced County", "Stanislaus County", "San Joaquin County"]
     nudge: [10, 22]
     children:
-      - code: cvnorth
-        name: North Valley
-        blurb: "Stockton, Modesto and the northern valley floor."
-        outline: ["San Joaquin", "Stanislaus"]
-        aliases: ["San Joaquin County", "Stanislaus County"]
-        children:
-          - code: stockton
-            name: Stockton
-            county: San Joaquin
-            lat: 37.958
-            lon: -121.291
-            aliases: ["Stockton", "Lincoln Village", "Morada"]
-          - code: lodi
-            name: Lodi
-            county: San Joaquin
-            lat: 38.13
-            lon: -121.272
-            aliases: ["Lodi", "Galt Junction", "Woodbridge", "Lockeford"]
-          - code: tracy
-            name: Tracy / Manteca
-            county: San Joaquin
-            lat: 37.74
-            lon: -121.426
-            aliases: ["Tracy", "Manteca", "Lathrop", "Ripon", "Escalon"]
-          - code: modesto
-            name: Modesto
-            county: Stanislaus
-            lat: 37.639
-            lon: -120.997
-            aliases: ["Modesto", "Ceres", "Riverbank", "Oakdale", "Salida"]
-          - code: turlock
-            name: Turlock
-            county: Stanislaus
-            lat: 37.495
-            lon: -120.847
-            aliases: ["Turlock", "Patterson", "Newman", "Hughson", "Denair"]
-      - code: cvmid
-        name: Mid Valley
-        blurb: Merced through Fresno.
-        outline: ["Fresno", "Madera", "Merced"]
-        aliases: ["Merced County", "Madera County", "Fresno County"]
-        children:
-          - code: merced
-            name: Merced
-            county: Merced
-            lat: 37.302
-            lon: -120.483
-            aliases: ["Merced", "Atwater", "Livingston", "Winton"]
-          - code: losbanos
-            name: Los Banos
-            county: Merced
-            lat: 37.058
-            lon: -120.85
-            aliases: ["Los Banos", "Dos Palos", "Gustine", "Santa Nella"]
-          - code: madera
-            name: Madera
-            county: Madera
-            lat: 36.961
-            lon: -120.061
-            aliases: ["Madera", "Chowchilla", "Madera Ranchos"]
-          - code: oakhurst
-            name: Oakhurst / Coarsegold
-            county: Madera
-            lat: 37.328
-            lon: -119.649
-            aliases: ["Oakhurst", "Coarsegold", "Bass Lake", "North Fork"]
-          - code: fresno
-            name: Fresno / Clovis
-            county: Fresno
-            lat: 36.746
-            lon: -119.772
-            aliases: ["Fresno", "Clovis", "Fowler", "Kerman"]
-          - code: sanger
-            name: Sanger / Reedley
-            county: Fresno
-            lat: 36.708
-            lon: -119.556
-            aliases: ["Sanger", "Reedley", "Selma", "Dinuba Junction", "Shaver Lake"]
-          - code: coalinga
-            name: Coalinga / Firebaugh
-            county: Fresno
-            lat: 36.14
-            lon: -120.36
-            aliases: ["Coalinga", "Firebaugh", "Mendota", "Huron", "San Joaquin"]
-      - code: cvsouth
-        name: South Valley
-        blurb: Hanford down to Bakersfield.
-        # Kern is claimed here because every place in it is one of these, and an
-        # unclaimed county draws as background — Bakersfield was unreachable on
-        # the map except by its own dot. Worth knowing it is not a clean fit:
-        # Tehachapi and Indian Wells are over the crest and desert rather than
-        # valley, so this outline reaches past what "South Valley" describes. If
-        # the desert operators want their own area, that is the split to make.
-        outline: ["Kings", "Tulare", "Kern"]
-        aliases: ["Kings County", "Tulare County"]
-        children:
-          - code: hanford
-            name: Kings County
-            county: Kings
-            lat: 36.327
-            lon: -119.646
-            aliases: ["Hanford", "Lemoore", "Corcoran", "Avenal"]
-          - code: visalia
-            name: Visalia
-            county: Tulare
-            lat: 36.33
-            lon: -119.292
-            aliases: ["Visalia", "Exeter", "Farmersville", "Goshen"]
-          - code: tulare
-            name: Tulare City
-            county: Tulare
-            lat: 36.208
-            lon: -119.347
-            aliases: ["Tulare", "Dinuba", "Woodlake", "Lindsay"]
-          - code: porterville
-            name: Porterville
-            county: Tulare
-            lat: 36.065
-            lon: -119.017
-            aliases: ["Porterville", "Terra Bella", "Springville"]
-          - code: threerivers
-            name: "Sequoia & Kings Canyon"
-            county: Tulare
-            lat: 36.439
-            lon: -118.906
-            aliases: ["Three Rivers", "Sequoia", "Kings Canyon", "Mineral King"]
-          - code: bakersfield
-            name: Bakersfield
-            county: Kern
-            lat: 35.373
-            lon: -119.019
-            aliases: ["Bakersfield", "Oildale", "Rosedale", "Lamont", "Arvin"]
-          - code: delano
-            name: Delano / Wasco
-            county: Kern
-            lat: 35.769
-            lon: -119.247
-            aliases: ["Delano", "Wasco", "Shafter", "McFarland", "Taft"]
-          - code: lakeisabella
-            name: Kern River Valley
-            county: Kern
-            lat: 35.628
-            lon: -118.474
-            aliases: ["Lake Isabella", "Kernville", "Wofford Heights", "Bodfish"]
-          - code: tehachapi
-            name: Tehachapi / Mojave
-            county: Kern
-            lat: 35.132
-            lon: -118.449
-            aliases: ["Tehachapi", "Mojave", "California City", "Frazier Park", "Lebec"]
-          - code: ridgecrest
-            name: Indian Wells Valley
-            county: Kern
-            lat: 35.622
-            lon: -117.671
-            aliases: ["Ridgecrest", "Inyokern", "China Lake", "Trona"]
+      - code: stockton
+        name: Stockton
+        county: San Joaquin
+        lat: 37.958
+        lon: -121.291
+        aliases: ["Stockton", "Lincoln Village", "Morada"]
+      - code: lodi
+        name: Lodi
+        county: San Joaquin
+        lat: 38.13
+        lon: -121.272
+        aliases: ["Lodi", "Woodbridge", "Lockeford"]
+      - code: tracy
+        name: Tracy / Manteca
+        county: San Joaquin
+        lat: 37.74
+        lon: -121.426
+        aliases: ["Tracy", "Manteca", "Lathrop", "Ripon", "Escalon"]
+      - code: modesto
+        name: Modesto
+        county: Stanislaus
+        lat: 37.639
+        lon: -120.997
+        aliases: ["Modesto", "Ceres", "Riverbank", "Oakdale", "Salida"]
+      - code: turlock
+        name: Turlock
+        county: Stanislaus
+        lat: 37.495
+        lon: -120.847
+        aliases: ["Turlock", "Patterson", "Newman", "Hughson", "Denair"]
+      - code: merced
+        name: Merced
+        county: Merced
+        lat: 37.302
+        lon: -120.483
+        aliases: ["Merced", "Atwater", "Livingston", "Winton"]
+      - code: losbanos
+        name: Los Banos
+        county: Merced
+        lat: 37.058
+        lon: -120.85
+        aliases: ["Los Banos", "Dos Palos", "Gustine", "Santa Nella"]
+      - code: madera
+        name: Madera
+        county: Madera
+        lat: 36.961
+        lon: -120.061
+        aliases: ["Madera", "Chowchilla", "Madera Ranchos"]
+      - code: oakhurst
+        name: Oakhurst / Coarsegold
+        county: Madera
+        lat: 37.328
+        lon: -119.649
+        aliases: ["Oakhurst", "Coarsegold", "Bass Lake", "North Fork"]
+      - code: fresno
+        name: Fresno / Clovis
+        county: Fresno
+        lat: 36.746
+        lon: -119.772
+        aliases: ["Fresno", "Clovis", "Fowler", "Kerman"]
+      - code: sanger
+        name: Sanger / Reedley
+        county: Fresno
+        lat: 36.708
+        lon: -119.556
+        aliases: ["Sanger", "Reedley", "Selma", "Shaver Lake"]
+      - code: coalinga
+        name: Coalinga / Firebaugh
+        county: Fresno
+        lat: 36.14
+        lon: -120.36
+        aliases: ["Coalinga", "Firebaugh", "Mendota", "Huron", "San Joaquin"]
+      - code: hanford
+        name: Kings County
+        county: Kings
+        lat: 36.327
+        lon: -119.646
+        aliases: ["Hanford", "Lemoore", "Corcoran", "Avenal"]
+      - code: visalia
+        name: Visalia
+        county: Tulare
+        lat: 36.33
+        lon: -119.292
+        aliases: ["Visalia", "Exeter", "Farmersville", "Goshen"]
+      - code: tulare
+        name: Tulare City
+        county: Tulare
+        lat: 36.208
+        lon: -119.347
+        aliases: ["Tulare", "Dinuba", "Woodlake", "Lindsay"]
+      - code: porterville
+        name: Porterville
+        county: Tulare
+        lat: 36.065
+        lon: -119.017
+        aliases: ["Porterville", "Terra Bella", "Springville"]
+      - code: threerivers
+        name: "Sequoia & Kings Canyon"
+        county: Tulare
+        lat: 36.439
+        lon: -118.906
+        aliases: ["Three Rivers", "Sequoia", "Kings Canyon", "Mineral King"]
+      - code: bakersfield
+        name: Bakersfield
+        county: Kern
+        lat: 35.373
+        lon: -119.019
+        aliases: ["Bakersfield", "Oildale", "Rosedale", "Lamont", "Arvin", "Taft"]
+      - code: delano
+        name: Delano / Wasco
+        county: Kern
+        lat: 35.769
+        lon: -119.247
+        aliases: ["Delano", "Wasco", "Shafter", "McFarland"]
+      - code: lakeisabella
+        name: Kern River Valley
+        county: Kern
+        lat: 35.628
+        lon: -118.474
+        aliases: ["Lake Isabella", "Kernville", "Wofford Heights", "Bodfish"]
+      - code: tehachapi
+        name: Tehachapi / Mojave
+        county: Kern
+        lat: 35.132
+        lon: -118.449
+        aliases: ["Tehachapi", "Mojave", "California City", "Frazier Park", "Lebec"]
+      - code: ridgecrest
+        name: Indian Wells Valley
+        county: Kern
+        lat: 35.622
+        lon: -117.671
+        aliases: ["Ridgecrest", "Inyokern", "China Lake", "Trona"]
   - code: socal
     name: Southern California
     blurb: The eight southern counties.
@@ -1245,36 +1215,19 @@ places:
             lat: 33.61
             lon: -114.596
             aliases: ["Blythe", "Ripley", "Desert Center"]
+      # One place: people say "the Imperial Valley" for the whole valley floor,
+      # it is one county on flat ground, and 4 repeaters could not carry four
+      # scopes.
       - code: imperial
         name: Imperial County
-        blurb: The Imperial Valley.
+        blurb: The Imperial Valley and the lower Colorado River.
         outline: ["Imperial"]
-        aliases: ["Imperial County"]
-        children:
-          - code: imperialvalley
-            name: Imperial Valley
-            county: Imperial
-            lat: 32.792
-            lon: -115.563
-            aliases: ["El Centro", "Imperial", "Holtville", "Seeley"]
-          - code: northimperial
-            name: North Imperial
-            county: Imperial
-            lat: 32.979
-            lon: -115.53
-            aliases: ["Brawley", "Westmorland", "Calipatria", "Niland", "Salton Sea"]
-          - code: imperialborder
-            name: Imperial Border
-            county: Imperial
-            lat: 32.679
-            lon: -115.499
-            aliases: ["Calexico", "Heber"]
-          - code: lowercolorado
-            name: Lower Colorado
-            county: Imperial
-            lat: 32.739
-            lon: -114.622
-            aliases: ["Winterhaven", "Bard", "Felicity", "Ogilby"]
+        county: Imperial
+        lat: 32.792
+        lon: -115.563
+        aliases: ["Imperial County", "Imperial Valley", "El Centro", "Imperial", "Holtville", "Seeley", "Brawley",
+          "Westmorland", "Calipatria", "Niland", "Salton Sea", "Calexico", "Heber", "Winterhaven", "Bard",
+          "Felicity", "Ogilby"]
       - code: sandiego
         name: San Diego County
         blurb: San Diego County.

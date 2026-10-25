@@ -3,7 +3,7 @@
   "format": 2,
   "name": "California",
   "description": "MeshCore repeater region scopes for California, as a tree of nested places.",
-  "updated": "2026-08-03",
+  "updated": "2026-10-24",
   "license": "MIT",
   "source": "https://github.com/matkam/meshcore-settings",
   "limits": {
@@ -348,9 +348,9 @@
         {
           "code": "goldcountry",
           "name": "Gold Country",
-          "blurb": "The Highway 49 corridor, Auburn down to Mariposa.",
-          "outline": ["Amador", "Calaveras", "Mariposa", "Sierra", "Tuolumne"],
-          "aliases": ["Sierra County", "Amador County", "Calaveras County", "Tuolumne County", "Mariposa County"],
+          "blurb": "The Highway 49 corridor, Placerville down to Mariposa.",
+          "outline": ["Amador", "Calaveras", "Mariposa", "Tuolumne"],
+          "aliases": ["Amador County", "Calaveras County", "Tuolumne County", "Mariposa County"],
           "children": [
             {
               "code": "placerville",
@@ -405,33 +405,11 @@
         {
           "code": "tahoe",
           "name": "Lake Tahoe",
-          "blurb": "The lake basin — one bowl, three counties.",
-          "children": [
-            {
-              "code": "truckee",
-              "name": "Truckee",
-              "county": "Nevada",
-              "lat": 39.328,
-              "lon": -120.183,
-              "aliases": ["Truckee", "Donner", "Soda Springs"]
-            },
-            {
-              "code": "tahoecity",
-              "name": "North Lake Tahoe",
-              "county": "Placer",
-              "lat": 39.167,
-              "lon": -120.144,
-              "aliases": ["Tahoe City", "Kings Beach", "Tahoe Vista", "Olympic Valley", "Northstar"]
-            },
-            {
-              "code": "southlaketahoe",
-              "name": "South Lake Tahoe",
-              "county": "El Dorado",
-              "lat": 38.933,
-              "lon": -119.977,
-              "aliases": ["South Lake Tahoe", "Meyers", "Tahoma"]
-            }
-          ]
+          "blurb": "The lake basin and Truckee — one community, three counties.",
+          "county": ["Placer", "El Dorado", "Nevada"],
+          "lat": 39.167,
+          "lon": -120.144,
+          "aliases": ["Truckee", "Donner", "Soda Springs", "Tahoe City", "Kings Beach", "Tahoe Vista", "Olympic Valley", "Northstar", "South Lake Tahoe", "Meyers", "Tahoma"]
         },
         {
           "code": "eastsierra",
@@ -496,25 +474,10 @@
           "name": "San Francisco",
           "blurb": "The city and county.",
           "outline": ["San Francisco"],
-          "aliases": ["San Francisco"],
-          "children": [
-            {
-              "code": "eastsf",
-              "name": "East SF",
-              "county": "San Francisco",
-              "lat": 37.779,
-              "lon": -122.409,
-              "aliases": ["Downtown", "SoMa", "Mission", "Potrero Hill", "Bayview", "North Beach"]
-            },
-            {
-              "code": "westsf",
-              "name": "West SF",
-              "county": "San Francisco",
-              "lat": 37.76,
-              "lon": -122.482,
-              "aliases": ["Sunset", "Richmond", "Golden Gate Park", "Twin Peaks", "Ingleside"]
-            }
-          ]
+          "county": "San Francisco",
+          "lat": 37.774,
+          "lon": -122.442,
+          "aliases": ["San Francisco", "Downtown", "SoMa", "Mission", "Potrero Hill", "Bayview", "North Beach", "Sunset", "Richmond", "Golden Gate Park", "Twin Peaks", "Ingleside"]
         },
         {
           "code": "northbay",
@@ -589,19 +552,11 @@
             },
             {
               "code": "napa",
-              "name": "Napa City",
+              "name": "Napa Valley",
               "county": "Napa",
               "lat": 38.297,
               "lon": -122.287,
-              "aliases": ["Napa", "American Canyon", "Yountville"]
-            },
-            {
-              "code": "sthelena",
-              "name": "Upvalley",
-              "county": "Napa",
-              "lat": 38.505,
-              "lon": -122.47,
-              "aliases": ["St. Helena", "Calistoga", "Angwin"]
+              "aliases": ["Napa", "American Canyon", "Yountville", "St. Helena", "Calistoga", "Angwin", "Upvalley"]
             },
             {
               "code": "fairfield",
@@ -917,211 +872,185 @@
       "name": "Central Valley",
       "blurb": "Stockton down to Bakersfield — the stretch Central Valley Mesh covers.",
       "short": "C VALLEY",
+      "outline": ["San Joaquin", "Stanislaus", "Merced", "Madera", "Fresno", "Kings", "Tulare", "Kern"],
       "nudge": [10, 22],
       "aliases": ["Kern County", "Kings County", "Tulare County", "Fresno County", "Madera County", "Merced County", "Stanislaus County", "San Joaquin County"],
       "children": [
         {
-          "code": "cvnorth",
-          "name": "North Valley",
-          "blurb": "Stockton, Modesto and the northern valley floor.",
-          "outline": ["San Joaquin", "Stanislaus"],
-          "aliases": ["San Joaquin County", "Stanislaus County"],
-          "children": [
-            {
-              "code": "stockton",
-              "name": "Stockton",
-              "county": "San Joaquin",
-              "lat": 37.958,
-              "lon": -121.291,
-              "aliases": ["Stockton", "Lincoln Village", "Morada"]
-            },
-            {
-              "code": "lodi",
-              "name": "Lodi",
-              "county": "San Joaquin",
-              "lat": 38.13,
-              "lon": -121.272,
-              "aliases": ["Lodi", "Galt Junction", "Woodbridge", "Lockeford"]
-            },
-            {
-              "code": "tracy",
-              "name": "Tracy / Manteca",
-              "county": "San Joaquin",
-              "lat": 37.74,
-              "lon": -121.426,
-              "aliases": ["Tracy", "Manteca", "Lathrop", "Ripon", "Escalon"]
-            },
-            {
-              "code": "modesto",
-              "name": "Modesto",
-              "county": "Stanislaus",
-              "lat": 37.639,
-              "lon": -120.997,
-              "aliases": ["Modesto", "Ceres", "Riverbank", "Oakdale", "Salida"]
-            },
-            {
-              "code": "turlock",
-              "name": "Turlock",
-              "county": "Stanislaus",
-              "lat": 37.495,
-              "lon": -120.847,
-              "aliases": ["Turlock", "Patterson", "Newman", "Hughson", "Denair"]
-            }
-          ]
+          "code": "stockton",
+          "name": "Stockton",
+          "county": "San Joaquin",
+          "lat": 37.958,
+          "lon": -121.291,
+          "aliases": ["Stockton", "Lincoln Village", "Morada"]
         },
         {
-          "code": "cvmid",
-          "name": "Mid Valley",
-          "blurb": "Merced through Fresno.",
-          "outline": ["Fresno", "Madera", "Merced"],
-          "aliases": ["Merced County", "Madera County", "Fresno County"],
-          "children": [
-            {
-              "code": "merced",
-              "name": "Merced",
-              "county": "Merced",
-              "lat": 37.302,
-              "lon": -120.483,
-              "aliases": ["Merced", "Atwater", "Livingston", "Winton"]
-            },
-            {
-              "code": "losbanos",
-              "name": "Los Banos",
-              "county": "Merced",
-              "lat": 37.058,
-              "lon": -120.85,
-              "aliases": ["Los Banos", "Dos Palos", "Gustine", "Santa Nella"]
-            },
-            {
-              "code": "madera",
-              "name": "Madera",
-              "county": "Madera",
-              "lat": 36.961,
-              "lon": -120.061,
-              "aliases": ["Madera", "Chowchilla", "Madera Ranchos"]
-            },
-            {
-              "code": "oakhurst",
-              "name": "Oakhurst / Coarsegold",
-              "county": "Madera",
-              "lat": 37.328,
-              "lon": -119.649,
-              "aliases": ["Oakhurst", "Coarsegold", "Bass Lake", "North Fork"]
-            },
-            {
-              "code": "fresno",
-              "name": "Fresno / Clovis",
-              "county": "Fresno",
-              "lat": 36.746,
-              "lon": -119.772,
-              "aliases": ["Fresno", "Clovis", "Fowler", "Kerman"]
-            },
-            {
-              "code": "sanger",
-              "name": "Sanger / Reedley",
-              "county": "Fresno",
-              "lat": 36.708,
-              "lon": -119.556,
-              "aliases": ["Sanger", "Reedley", "Selma", "Dinuba Junction", "Shaver Lake"]
-            },
-            {
-              "code": "coalinga",
-              "name": "Coalinga / Firebaugh",
-              "county": "Fresno",
-              "lat": 36.14,
-              "lon": -120.36,
-              "aliases": ["Coalinga", "Firebaugh", "Mendota", "Huron", "San Joaquin"]
-            }
-          ]
+          "code": "lodi",
+          "name": "Lodi",
+          "county": "San Joaquin",
+          "lat": 38.13,
+          "lon": -121.272,
+          "aliases": ["Lodi", "Woodbridge", "Lockeford"]
         },
         {
-          "code": "cvsouth",
-          "name": "South Valley",
-          "blurb": "Hanford down to Bakersfield.",
-          "outline": ["Kings", "Tulare", "Kern"],
-          "aliases": ["Kings County", "Tulare County"],
-          "children": [
-            {
-              "code": "hanford",
-              "name": "Kings County",
-              "county": "Kings",
-              "lat": 36.327,
-              "lon": -119.646,
-              "aliases": ["Hanford", "Lemoore", "Corcoran", "Avenal"]
-            },
-            {
-              "code": "visalia",
-              "name": "Visalia",
-              "county": "Tulare",
-              "lat": 36.33,
-              "lon": -119.292,
-              "aliases": ["Visalia", "Exeter", "Farmersville", "Goshen"]
-            },
-            {
-              "code": "tulare",
-              "name": "Tulare City",
-              "county": "Tulare",
-              "lat": 36.208,
-              "lon": -119.347,
-              "aliases": ["Tulare", "Dinuba", "Woodlake", "Lindsay"]
-            },
-            {
-              "code": "porterville",
-              "name": "Porterville",
-              "county": "Tulare",
-              "lat": 36.065,
-              "lon": -119.017,
-              "aliases": ["Porterville", "Terra Bella", "Springville"]
-            },
-            {
-              "code": "threerivers",
-              "name": "Sequoia & Kings Canyon",
-              "county": "Tulare",
-              "lat": 36.439,
-              "lon": -118.906,
-              "aliases": ["Three Rivers", "Sequoia", "Kings Canyon", "Mineral King"]
-            },
-            {
-              "code": "bakersfield",
-              "name": "Bakersfield",
-              "county": "Kern",
-              "lat": 35.373,
-              "lon": -119.019,
-              "aliases": ["Bakersfield", "Oildale", "Rosedale", "Lamont", "Arvin"]
-            },
-            {
-              "code": "delano",
-              "name": "Delano / Wasco",
-              "county": "Kern",
-              "lat": 35.769,
-              "lon": -119.247,
-              "aliases": ["Delano", "Wasco", "Shafter", "McFarland", "Taft"]
-            },
-            {
-              "code": "lakeisabella",
-              "name": "Kern River Valley",
-              "county": "Kern",
-              "lat": 35.628,
-              "lon": -118.474,
-              "aliases": ["Lake Isabella", "Kernville", "Wofford Heights", "Bodfish"]
-            },
-            {
-              "code": "tehachapi",
-              "name": "Tehachapi / Mojave",
-              "county": "Kern",
-              "lat": 35.132,
-              "lon": -118.449,
-              "aliases": ["Tehachapi", "Mojave", "California City", "Frazier Park", "Lebec"]
-            },
-            {
-              "code": "ridgecrest",
-              "name": "Indian Wells Valley",
-              "county": "Kern",
-              "lat": 35.622,
-              "lon": -117.671,
-              "aliases": ["Ridgecrest", "Inyokern", "China Lake", "Trona"]
-            }
-          ]
+          "code": "tracy",
+          "name": "Tracy / Manteca",
+          "county": "San Joaquin",
+          "lat": 37.74,
+          "lon": -121.426,
+          "aliases": ["Tracy", "Manteca", "Lathrop", "Ripon", "Escalon"]
+        },
+        {
+          "code": "modesto",
+          "name": "Modesto",
+          "county": "Stanislaus",
+          "lat": 37.639,
+          "lon": -120.997,
+          "aliases": ["Modesto", "Ceres", "Riverbank", "Oakdale", "Salida"]
+        },
+        {
+          "code": "turlock",
+          "name": "Turlock",
+          "county": "Stanislaus",
+          "lat": 37.495,
+          "lon": -120.847,
+          "aliases": ["Turlock", "Patterson", "Newman", "Hughson", "Denair"]
+        },
+        {
+          "code": "merced",
+          "name": "Merced",
+          "county": "Merced",
+          "lat": 37.302,
+          "lon": -120.483,
+          "aliases": ["Merced", "Atwater", "Livingston", "Winton"]
+        },
+        {
+          "code": "losbanos",
+          "name": "Los Banos",
+          "county": "Merced",
+          "lat": 37.058,
+          "lon": -120.85,
+          "aliases": ["Los Banos", "Dos Palos", "Gustine", "Santa Nella"]
+        },
+        {
+          "code": "madera",
+          "name": "Madera",
+          "county": "Madera",
+          "lat": 36.961,
+          "lon": -120.061,
+          "aliases": ["Madera", "Chowchilla", "Madera Ranchos"]
+        },
+        {
+          "code": "oakhurst",
+          "name": "Oakhurst / Coarsegold",
+          "county": "Madera",
+          "lat": 37.328,
+          "lon": -119.649,
+          "aliases": ["Oakhurst", "Coarsegold", "Bass Lake", "North Fork"]
+        },
+        {
+          "code": "fresno",
+          "name": "Fresno / Clovis",
+          "county": "Fresno",
+          "lat": 36.746,
+          "lon": -119.772,
+          "aliases": ["Fresno", "Clovis", "Fowler", "Kerman"]
+        },
+        {
+          "code": "sanger",
+          "name": "Sanger / Reedley",
+          "county": "Fresno",
+          "lat": 36.708,
+          "lon": -119.556,
+          "aliases": ["Sanger", "Reedley", "Selma", "Shaver Lake"]
+        },
+        {
+          "code": "coalinga",
+          "name": "Coalinga / Firebaugh",
+          "county": "Fresno",
+          "lat": 36.14,
+          "lon": -120.36,
+          "aliases": ["Coalinga", "Firebaugh", "Mendota", "Huron", "San Joaquin"]
+        },
+        {
+          "code": "hanford",
+          "name": "Kings County",
+          "county": "Kings",
+          "lat": 36.327,
+          "lon": -119.646,
+          "aliases": ["Hanford", "Lemoore", "Corcoran", "Avenal"]
+        },
+        {
+          "code": "visalia",
+          "name": "Visalia",
+          "county": "Tulare",
+          "lat": 36.33,
+          "lon": -119.292,
+          "aliases": ["Visalia", "Exeter", "Farmersville", "Goshen"]
+        },
+        {
+          "code": "tulare",
+          "name": "Tulare City",
+          "county": "Tulare",
+          "lat": 36.208,
+          "lon": -119.347,
+          "aliases": ["Tulare", "Dinuba", "Woodlake", "Lindsay"]
+        },
+        {
+          "code": "porterville",
+          "name": "Porterville",
+          "county": "Tulare",
+          "lat": 36.065,
+          "lon": -119.017,
+          "aliases": ["Porterville", "Terra Bella", "Springville"]
+        },
+        {
+          "code": "threerivers",
+          "name": "Sequoia & Kings Canyon",
+          "county": "Tulare",
+          "lat": 36.439,
+          "lon": -118.906,
+          "aliases": ["Three Rivers", "Sequoia", "Kings Canyon", "Mineral King"]
+        },
+        {
+          "code": "bakersfield",
+          "name": "Bakersfield",
+          "county": "Kern",
+          "lat": 35.373,
+          "lon": -119.019,
+          "aliases": ["Bakersfield", "Oildale", "Rosedale", "Lamont", "Arvin", "Taft"]
+        },
+        {
+          "code": "delano",
+          "name": "Delano / Wasco",
+          "county": "Kern",
+          "lat": 35.769,
+          "lon": -119.247,
+          "aliases": ["Delano", "Wasco", "Shafter", "McFarland"]
+        },
+        {
+          "code": "lakeisabella",
+          "name": "Kern River Valley",
+          "county": "Kern",
+          "lat": 35.628,
+          "lon": -118.474,
+          "aliases": ["Lake Isabella", "Kernville", "Wofford Heights", "Bodfish"]
+        },
+        {
+          "code": "tehachapi",
+          "name": "Tehachapi / Mojave",
+          "county": "Kern",
+          "lat": 35.132,
+          "lon": -118.449,
+          "aliases": ["Tehachapi", "Mojave", "California City", "Frazier Park", "Lebec"]
+        },
+        {
+          "code": "ridgecrest",
+          "name": "Indian Wells Valley",
+          "county": "Kern",
+          "lat": 35.622,
+          "lon": -117.671,
+          "aliases": ["Ridgecrest", "Inyokern", "China Lake", "Trona"]
         }
       ]
     },
@@ -1525,43 +1454,12 @@
         {
           "code": "imperial",
           "name": "Imperial County",
-          "blurb": "The Imperial Valley.",
+          "blurb": "The Imperial Valley and the lower Colorado River.",
           "outline": ["Imperial"],
-          "aliases": ["Imperial County"],
-          "children": [
-            {
-              "code": "imperialvalley",
-              "name": "Imperial Valley",
-              "county": "Imperial",
-              "lat": 32.792,
-              "lon": -115.563,
-              "aliases": ["El Centro", "Imperial", "Holtville", "Seeley"]
-            },
-            {
-              "code": "northimperial",
-              "name": "North Imperial",
-              "county": "Imperial",
-              "lat": 32.979,
-              "lon": -115.53,
-              "aliases": ["Brawley", "Westmorland", "Calipatria", "Niland", "Salton Sea"]
-            },
-            {
-              "code": "imperialborder",
-              "name": "Imperial Border",
-              "county": "Imperial",
-              "lat": 32.679,
-              "lon": -115.499,
-              "aliases": ["Calexico", "Heber"]
-            },
-            {
-              "code": "lowercolorado",
-              "name": "Lower Colorado",
-              "county": "Imperial",
-              "lat": 32.739,
-              "lon": -114.622,
-              "aliases": ["Winterhaven", "Bard", "Felicity", "Ogilby"]
-            }
-          ]
+          "county": "Imperial",
+          "lat": 32.792,
+          "lon": -115.563,
+          "aliases": ["Imperial County", "Imperial Valley", "El Centro", "Imperial", "Holtville", "Seeley", "Brawley", "Westmorland", "Calipatria", "Niland", "Salton Sea", "Calexico", "Heber", "Winterhaven", "Bard", "Felicity", "Ogilby"]
         },
         {
           "code": "sandiego",

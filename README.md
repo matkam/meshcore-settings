@@ -116,10 +116,10 @@ Two deliberate limits on what it claims:
 
 - **County lines are real; area boundaries are not drawn.** The county outlines
   are Census TIGER boundaries, and a place claims every one it wholly contains —
-  the North Bay claims Marin, Sonoma, Napa and Solano. Where a place cuts across a
-  county line nobody claims that shape, so Lake Tahoe, the Mojave and Los Angeles
-  draw as dots on plain background. That is deliberate: tinting three whole
-  counties for the Tahoe basin would claim an extent the mesh doesn't have.
+  the North Bay claims Marin, Sonoma, Napa and Solano. A place that cuts across
+  county lines claims none of them, so Lake Tahoe draws as a dot on counties
+  that belong to its neighbours. That is deliberate: tinting three whole counties
+  for the Tahoe basin would claim an extent the mesh doesn't have.
 - **There is no colour per region.** Categorical fills on a map this size
   fail colour-blind separation, and they would compete with the one thing colour
   should mean here: what *you* have selected. Region identity comes from labels
@@ -282,34 +282,52 @@ A chain of names, matching how `region def` is walked — each token becomes a c
 of the one before it:
 
 ```
-west     →  california  →  centralcoast   →  slo         →  slonorth
-US West     California     Central Coast     SLO County     North County (Paso Robles, Atascadero)
+us     →  west     →  california  →  centralcoast   →  slo         →  slonorth
+US        US West     California     Central Coast     SLO County     North County (Paso Robles, Atascadero)
 ```
 
-California is split into 13 regions covering all 58 counties, with 161 local areas
-under them, and you can generate settings at any level: pick a region for a
-region-wide chain, an area for an area-wide one, or a local area for the full
-chain.
+California is split into 7 regions covering all 58 counties, with 158 places at
+the bottom of the tree, and you can generate settings at any level: pick a region
+for a region-wide chain, an area for an area-wide one, or a local area for the
+full chain.
 
-**The levels follow communities and RF propagation, not administrative lines.**
-County boundaries are ignored wherever they cut through a mesh — Lake Tahoe is one
-place across three counties, the Mojave gathers the high desert out of four, and
-Ventura County is split at the Conejo grade because its east half talks to Los
-Angeles and its west half talks up the coast. Counties survive as a `county` field
-on each local area, which never appears in a generated chain: it gives the
-validator its point-in-boundary check and makes the county name searchable.
+**A place is a community first.** Every place should be somewhere people name and
+identify with. Three things shape where its edges fall, and none of them
+overrides the community:
 
-**Depth varies by branch, deliberately.** Sparse country needs three levels to
-reach something meaningful, so the North Coast lists its towns directly under the
-region. A metro where the county already *is* the mesh needs two, so Los Angeles,
-Orange County and San Diego hold their local areas with nothing in between. Both
-are correct and `region def` does not care — 67 of the 161 places sit on a
-four-token chain rather than five, which is a region-table entry back on every
+- **Political boundaries.** County and city lines usually line up with
+  communities, so they are the usual edge. Where they don't, the community wins:
+  Lake Tahoe is one place across three counties, and Yuba City and Marysville are
+  one place across a county line and a river.
+- **RF propagation.** A ridge can make two communities a few kilometres apart
+  separate meshes — the San Lorenzo Valley sits in a canyon above Santa Cruz.
+  Flat ground with no barrier is a reason not to split one community into pieces.
+- **Mesh density.** A place needs repeaters to carry its scope. Plenty of
+  repeaters can justify splitting a place, and that split should follow
+  communities too. Thin coverage is a reason not to split further, not on its own
+  a reason to fold one town into another.
+
+San Francisco shows how that plays out. It has the repeaters for a split, but the
+east and west halves it once had were compass lines, not communities, so it is
+one place.
+
+Counties also survive as a `county` field on each local area, which never appears
+in a generated chain: it gives the validator its point-in-boundary check and makes
+the county name searchable.
+
+**Depth varies by branch, and grows down.** A place starts shallow and gains
+children only once it has the repeaters to carry them, split along community
+lines. Adding children later breaks nothing, since every node keeps the parent
+name; taking a level away leaves dead names on hardware. So North California and
+the Central Valley list their towns directly under the region, while the Bay Area
+and the southern counties, which have the density, have an area level in
+between. Both are correct and `region def` does not care — 62 of the 158 places sit on a
+five-token chain rather than six, which is a region-table entry back on every
 node in those branches.
 
 None of that is coded in. The tree in `data/regions.yaml` nests as deep as you
 like — a place has `children`, and those children may have children — up to
-MeshCore's eight-level chain limit, with the two root tokens counting toward it.
+MeshCore's eight-level chain limit, with the three root tokens counting toward it.
 Nothing in the page knows what a "county" is: the level names come from a `levels`
 list in the data, the map draws a boundary for any place that names one and a dot
 for any place that carries a lat/lon, and the picker just recurses.
@@ -448,24 +466,24 @@ the top of [`data/regions.yaml`](data/regions.yaml):
 
 ```jsonc
 {
-  "format": 1,                    // bumped only on a breaking change
+  "format": 2,                    // bumped only on a breaking change
   "name": "California",
-  "updated": "2026-07-31",
-  "limits": { "maxLineLength": 160, "maxRegionNames": 32, "maxDepth": 8 },
-  "root":   [ { "code": "west", "name": "Western US" }, … ],
+  "updated": "2026-10-24",
+  "limits": { "maxLineLength": 160, "maxRegionNames": 32, "maxDepth": 8, "maxCodeLength": 30 },
+  "root":   [ { "code": "us", "name": "United States" }, … ],
   "levels": [ { "name": "region", "plural": "regions" }, … ],
   "places": [
     {
-      "code": "cc",             // unique across the whole file
+      "code": "centralcoast",   // unique across the whole file
       "name": "Central Coast",
       "children": [
         {
           "code": "slo",
-          "name": "San Luis Obispo County",
+          "name": "SLO County",
           "outline": "San Luis Obispo",       // optional, a shape in outlines.json
           "children": [
             {
-              "code": "prb",
+              "code": "slonorth",
               "name": "North County",
               "lat": 35.627, "lon": -120.691, // optional
               "aliases": ["Paso Robles", "Atascadero", …]  // search terms only

@@ -95,7 +95,7 @@ pass &= check("a NorCal place keeps its own chain",
    "region def us west california norcal eureka", "region save"].join("\n"));
 
 // --- 6. searches that should resolve
-for (const [q, want] of [["Big Bear", "sbmountains"], ["Humboldt", "eureka"], ["Truckee", "truckee"],
+for (const [q, want] of [["Big Bear", "sbmountains"], ["Humboldt", "eureka"], ["Truckee", "tahoe"],
                          ["slo", "slocity"], ["Santa Cruz", "santacruz"], ["Bakersfield", "bakersfield"],
                          ["Yosemite", "mariposa"], ["Chula Vista", "sdsouth"],
                          ["Alameda County", "eastbay"], ["Paso Robles", "slonorth"],

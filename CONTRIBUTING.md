@@ -34,7 +34,7 @@ yours belongs to and add an entry to its `children` list:
   appears in a generated chain; it gives the validator its point-in-boundary
   check and makes the county name searchable.
 - **`aliases`** — search terms only. These never appear in the generated
-  commands; they exist so someone can type "Paso Robles" and land on `prb`. List
+  commands; they exist so someone can type "Paso Robles" and land on `slonorth`. List
   the towns people would actually type, including unincorporated ones.
 - **`lat` / `lon`** — a representative point, three decimal places. A connected
   repeater's advertised position is matched against these and the nearest few
@@ -146,13 +146,20 @@ it can be announced to the affected operators.
   names are global on any repeater that carries both trees, which rules out bare
   words like `valley` and any two-letter US state abbreviation.
 - Prefer something an operator would guess, spelled out: `bakersfield`,
-  `truckee`, `palmsprings`. The anchor town makes a good code even when the name
+  `stockton`, `palmsprings`. The anchor town makes a good code even when the name
   is the wider area — `palmsprings` is named "Coachella Valley".
 
 ## Boundaries and splits
 
-If an area has grown enough that one code no longer describes it, add children
-under it rather than redrawing anything above — the hierarchy is there to absorb
+A place should be a community first — somewhere people name and identify with.
+County and city lines usually match that and are the usual edge; where they
+don't, the community wins. Terrain and repeater density shape the edges too: a
+ridge can make two nearby towns separate meshes, and a place needs repeaters to
+carry its scope. But thin coverage alone is not a reason to fold one town into
+another, and a compass line through one community is not a split.
+
+Start shallow and grow down. If an area has grown enough that one code no longer
+describes it, add children under it rather than redrawing anything above — the hierarchy is there to absorb
 that. Open an issue first if you're not sure; someone else may already be running
 nodes under the existing name.
 
