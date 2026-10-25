@@ -72,6 +72,41 @@ window.RegionData.ready(function (DATA) {
 
   function clamp(v, lo, hi) { return Math.min(Math.max(v, lo), hi); }
 
+  /* A position inside a place's own boundary matches it outright. A county is
+   * too big for its one point to say how close a node in its far corner is:
+   * Ridgecrest is 150 km from Kern County's point and still in Kern County.
+   * The shapes are in projected map units, so the position is projected the
+   * same way before testing it. */
+  var shapeRings = {};
+  var proj = DATA.outlines && DATA.outlines.projection;
+  ((DATA.outlines && DATA.outlines.shapes) || []).forEach(function (s) {
+    shapeRings[s.name] = s.d.split("M").filter(Boolean).map(function (part) {
+      return part.replace(/Z$/, "").split("L").map(function (pair) { return pair.split(",").map(Number); });
+    });
+  });
+
+  function insideRings(rings, x, y) {
+    var hit = false;
+    rings.forEach(function (ring) {
+      for (var i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        if ((ring[i][1] > y) !== (ring[j][1] > y) &&
+            x < ((ring[j][0] - ring[i][0]) * (y - ring[i][1])) / (ring[j][1] - ring[i][1]) + ring[i][0]) {
+          hit = !hit;
+        }
+      }
+    });
+    return hit;
+  }
+
+  function standsOn(node, lat, lon) {
+    if (!proj || !node.outline) { return false; }
+    var x = (lon - proj.lon0) * proj.cos0 * proj.k;
+    var y = (proj.lat1 - lat) * proj.k;
+    return [].concat(node.outline).some(function (name) {
+      return shapeRings[name] && insideRings(shapeRings[name], x, y);
+    });
+  }
+
   function haversineKm(lat1, lon1, lat2, lon2) {
     var R = 6371;
     var toRad = function (d) { return (d * Math.PI) / 180; };
@@ -225,15 +260,19 @@ window.RegionData.ready(function (DATA) {
 
     // Places closest to a position, nearest first, for "where is this
     // repeater?". Only places that carry a point are candidates, at whatever
-    // level they sit. The points are approximate and can be a few km apart, so
-    // callers offer a shortlist rather than a single answer. `spreadKm` drops a
+    // level they sit. A position inside a place's own boundary counts as 0 km
+    // and is flagged `inside`; otherwise distance is to the place's one point,
+    // which is approximate, so callers offer a shortlist rather than a single
+    // answer. `spreadKm` drops a
     // runner-up that is further than that beyond the winner — past which it is no
     // longer a plausible alternative reading of the same position.
     nearestPlaces: function (lat, lon, count, spreadKm) {
       var hits = [];
       index.forEach(function (e) {
         if (typeof e.node.lat !== "number" || typeof e.node.lon !== "number") { return; }
-        hits.push({ entry: e, km: haversineKm(lat, lon, e.node.lat, e.node.lon) });
+        var inside = standsOn(e.node, lat, lon);
+        hits.push({ entry: e, inside: inside,
+                    km: inside ? 0 : haversineKm(lat, lon, e.node.lat, e.node.lon) });
       });
       hits.sort(function (a, b) { return a.km - b.km; });
       if (!hits.length) { return []; }
