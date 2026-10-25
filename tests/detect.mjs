@@ -13,7 +13,7 @@ function check(name, ok, detail) {
 
 function km(label) {
   const part = label.split("· ")[1];
-  return part.startsWith("under") ? 0 : parseFloat(part);
+  return part.startsWith("under") || part.startsWith("inside") ? 0 : parseFloat(part);
 }
 function ordered(labels) {
   for (let i = 1; i < labels.length; i++) { if (km(labels[i]) < km(labels[i - 1])) { return false; } }
@@ -64,11 +64,18 @@ async function scenario({ lat, lon, ver }) {
 // --- a real but different California spot
 {
   const r = await scenario({ lat: 37.8210, lon: -122.2590, ver: "v1.16.0 (Build: x)" });
-  check("Oakland position leads with Oakland / Berkeley",
-    /^Oakland \/ Berkeley ·/.test(r.choices[0] || ""), r.choices.join(" | "));
+  check("Oakland position leads with Alameda County",
+    /^Alameda County ·/.test(r.choices[0] || ""), r.choices.join(" | "));
   check("dense area offers alternatives too", r.choices.length > 1, r.choices.join(" | "));
   check("never more than three choices", r.choices.length <= 3, r.choices.join(" | "));
   check("choices are ordered nearest first", ordered(r.choices), r.choices.join(" | "));
+}
+
+// --- far from a county's point but inside its boundary
+{
+  const r = await scenario({ lat: 35.622, lon: -117.671, ver: "v1.16.0 (Build: x)" });
+  check("Ridgecrest is offered Kern County though its point is 150 km away",
+    /^Kern County · inside$/.test(r.choices[0] || ""), r.loc + " :: " + r.choices.join(" | "));
 }
 
 // --- a sparse area: the runner-up filter should drop distant ones

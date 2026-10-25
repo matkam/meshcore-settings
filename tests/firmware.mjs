@@ -107,25 +107,25 @@ await tick(page, "slonorth");
 await page.evaluate(() => { document.querySelector("details.advanced").open = false; });
 await page.screenshot({ path: shot("fw-old.png"), clip: { x: 0, y: 180, width: 1000, height: 1250 } });
 
-/* ---------- SoCal nesting ----------
- * Southern California is a region with counties underneath, so an area like
- * San Fernando Valley sits on a five-token chain.
+/* ---------- Bay Area nesting ----------
+ * The Bay Area groups its counties into North Bay and East Bay, so a county
+ * like Marin sits on a six-token chain.
  */
-await page.goto(SITE + "#sfv", { waitUntil: "networkidle" });
+await page.goto(SITE + "#marin", { waitUntil: "networkidle" });
 await page.selectOption("#opt-fw", "110");
-check("SoCal nesting expands the put/allowf chain on 1.10", await cmds(), [
+check("Bay Area nesting expands the put/allowf chain on 1.10", await cmds(), [
   "set flood.advert.interval 47",
   "region put us", "region allowf us",
   "region put west us", "region allowf west",
   "region put california west", "region allowf california",
-  "region put socal california", "region allowf socal",
-  "region put losangeles socal", "region allowf losangeles",
-  "region put sfv losangeles", "region allowf sfv",
+  "region put bayarea california", "region allowf bayarea",
+  "region put northbay bayarea", "region allowf northbay",
+  "region put marin northbay", "region allowf marin",
   "region save"].join("\n"));
 await page.selectOption("#opt-fw", "116");
 check("and the same nesting on 1.16 via region def", await cmds(), [
   "set path.hash.mode 1", "set flood.advert.interval 47", "set loop.detect moderate",
-  "region def us west california socal losangeles sfv", "region save"].join("\n"));
+  "region def us west california bayarea northbay marin", "region save"].join("\n"));
 await page.goto(SITE + "#slonorth", { waitUntil: "networkidle" });
 
 for (const w of [390, 768, 1200]) {

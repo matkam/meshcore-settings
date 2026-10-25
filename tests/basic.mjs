@@ -49,11 +49,11 @@ pass &= check("area-wide (East Bay)",
   ["set path.hash.mode 1", "set flood.advert.interval 47", "set loop.detect moderate",
    "region def us west california bayarea eastbay", "region save"].join("\n"));
 
-await tick(page, "oakland");
-pass &= check("area (Oakland)",
+await tick(page, "alameda");
+pass &= check("county (Alameda)",
   (await page.textContent("#commands")).trim(),
   ["set path.hash.mode 1", "set flood.advert.interval 47", "set loop.detect moderate",
-   "region def us west california bayarea eastbay oakland", "region save"].join("\n"));
+   "region def us west california bayarea eastbay alameda", "region save"].join("\n"));
 
 // --- 3. region-wide
 await untick(page, "eastbay");
@@ -64,7 +64,7 @@ pass &= check("region-wide (Bay Area)",
 
 // --- 4. options
 await clearPicks(page);
-await tick(page, "bayarea", "southbay", "sanjose");
+await tick(page, "bayarea", "northbay", "marin");
 await page.evaluate(() => { document.querySelector("details.advanced").open = true; });
 await page.check("#opt-home");
 await page.fill("#opt-duty", "50");
@@ -72,34 +72,34 @@ await page.selectOption("#opt-hash", "0");
 pass &= check("options applied",
   (await page.textContent("#commands")).trim(),
   ["set dutycycle 50", "set path.hash.mode 0", "set flood.advert.interval 47", "set loop.detect moderate",
-   "region def us west california bayarea southbay sanjose",
-   "region home sanjose", "region default sanjose", "region save"].join("\n"));
+   "region def us west california bayarea northbay marin",
+   "region home marin", "region default marin", "region save"].join("\n"));
 
 await page.uncheck("#opt-home");
 await page.fill("#opt-duty", "");
 await page.selectOption("#opt-hash", "1");
 
 // --- 5. deep link
-await page.goto(SITE + "#coachellavalley", { waitUntil: "networkidle" });
-pass &= check("deep link #coachellavalley under socal",
+await page.goto(SITE + "#riverside", { waitUntil: "networkidle" });
+pass &= check("deep link #riverside under socal",
   (await page.textContent("#commands")).trim(),
   ["set path.hash.mode 1", "set flood.advert.interval 47", "set loop.detect moderate",
-   "region def us west california socal riverside coachellavalley", "region save"].join("\n"));
+   "region def us west california socal riverside", "region save"].join("\n"));
 console.log("deep-link search box:", JSON.stringify(await page.inputValue("#search")));
 
 // --- 5b. places outside SoCal stay on their own chain
-await page.goto(SITE + "#eureka", { waitUntil: "networkidle" });
+await page.goto(SITE + "#humboldt", { waitUntil: "networkidle" });
 pass &= check("a NorCal place keeps its own chain",
   (await page.textContent("#commands")).trim(),
   ["set path.hash.mode 1", "set flood.advert.interval 47", "set loop.detect moderate",
-   "region def us west california norcal eureka", "region save"].join("\n"));
+   "region def us west california norcal humboldt", "region save"].join("\n"));
 
 // --- 6. searches that should resolve
-for (const [q, want] of [["Big Bear", "sbmountains"], ["Humboldt", "eureka"], ["Truckee", "tahoe"],
-                         ["slo", "slocity"], ["Santa Cruz", "santacruz"], ["Bakersfield", "bakersfield"],
-                         ["Yosemite", "mariposa"], ["Chula Vista", "sdsouth"],
-                         ["Alameda County", "eastbay"], ["Paso Robles", "slonorth"],
-                         ["Palm Springs", "coachellavalley"]]) {
+for (const [q, want] of [["Big Bear", "sanbernardino"], ["Humboldt", "humboldt"], ["Eureka", "humboldt"], ["Truckee", "tahoe"],
+                         ["slo", "slocity"], ["Santa Cruz", "santacruz"], ["Bakersfield", "kern"],
+                         ["Yosemite", "mariposa"], ["Chula Vista", "sandiego"],
+                         ["Alameda County", "alameda"], ["Paso Robles", "slonorth"],
+                         ["Palm Springs", "riverside"], ["Coachella Valley", "riverside"]]) {
   await page.fill("#search", "");
   await page.fill("#search", q);
   await page.waitForTimeout(60);
