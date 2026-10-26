@@ -504,27 +504,26 @@ places:
       - code: peninsula
         name: Peninsula
         kind: county
-        blurb: "San Mateo County, bay side and coast."
+        blurb: "San Mateo County, bay side and coast, plus Palo Alto and Stanford."
         outline: ["San Mateo"]
         county: San Mateo
         lat: 37.563
         lon: -122.326
         aliases: ["San Mateo County", "North Peninsula", "Daly City", "South San Francisco", "Pacifica",
           "Brisbane", "Colma", "Mid-Peninsula", "San Mateo", "Burlingame", "Millbrae", "San Bruno",
-          "Foster City", "Redwood City", "Menlo Park", "San Carlos", "Belmont", "Atherton", "Coastside",
-          "Half Moon Bay", "El Granada", "Pescadero", "Montara", "La Honda"]
+          "Foster City", "Redwood City", "Menlo Park", "Palo Alto", "Stanford", "San Carlos", "Belmont",
+          "Atherton", "Coastside", "Half Moon Bay", "El Granada", "Pescadero", "Montara", "La Honda"]
       - code: southbay
         name: South Bay
         kind: county
-        blurb: "Santa Clara County."
+        blurb: "Santa Clara County, apart from Palo Alto and Stanford."
         outline: ["Santa Clara"]
         county: Santa Clara
         lat: 37.339
         lon: -121.895
         aliases: ["Santa Clara County", "San Jose", "Milpitas", "Alviso", "Willow Glen", "Almaden",
-          "Palo Alto", "Mountain View", "Los Altos", "Stanford", "Sunnyvale", "Santa Clara", "West Valley",
-          "Cupertino", "Saratoga", "Los Gatos", "Campbell", "Monte Sereno", "Gilroy", "Morgan Hill",
-          "San Martin"]
+          "Mountain View", "Los Altos", "Sunnyvale", "Santa Clara", "West Valley", "Cupertino", "Saratoga",
+          "Los Gatos", "Campbell", "Monte Sereno", "Gilroy", "Morgan Hill", "San Martin"]
   - code: centralcoast
     name: Central Coast
     blurb: "Santa Cruz down through San Luis Obispo."
