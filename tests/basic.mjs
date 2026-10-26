@@ -99,7 +99,8 @@ for (const [q, want] of [["Big Bear", "sanbernardino"], ["Humboldt", "humboldt"]
                          ["slo", "slocity"], ["Santa Cruz", "santacruz"], ["Bakersfield", "kern"],
                          ["Yosemite", "mariposa"], ["Chula Vista", "sandiego"],
                          ["Alameda County", "alameda"], ["Paso Robles", "slonorth"],
-                         ["Palm Springs", "riverside"], ["Coachella Valley", "riverside"]]) {
+                         ["Palm Springs", "riverside"], ["Coachella Valley", "riverside"],
+                         ["Palo Alto", "peninsula"], ["Mountain View", "southbay"]]) {
   await page.fill("#search", "");
   await page.fill("#search", q);
   await page.waitForTimeout(60);
