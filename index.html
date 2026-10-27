@@ -109,12 +109,11 @@
     <figure class="map-figure">
       <div class="map-host" id="map-host"></div>
       <figcaption class="map-caption">
-        Click a dot for a local area, or a boundary for an area-wide scope. The
-        boundaries are real county lines, claimed by whichever place wholly
-        contains them; where a place crosses a county line — Lake Tahoe spans
-        three — nobody claims that shape and the dots inside carry the meaning.
-        Local areas are a community convention with no official shape, so
-        they're marked as points.
+        Click a county or its dot for a county-wide scope, or a region label for a
+        region-wide one. The boundaries are real county lines, claimed by
+        whichever place wholly contains them; where a place crosses a county
+        line — Lake Tahoe spans three — it claims none and is marked as a point.
+        Finer areas drawn by local operators, like SLO County's, are points too.
       </figcaption>
     </figure>
 
@@ -254,27 +253,28 @@
     <h2 id="how-heading">How the region tree works</h2>
     <p>
       <code>region def</code> walks a chain: each token becomes a child of the one before it.
-      So <code>region def west california centralcoast slo slonorth</code> builds this,
+      So <code>region def us west california centralcoast slo slonorth</code> builds this,
       top to bottom:
     </p>
 <pre class="tree">*
-└─ west                 Western US
-   └─ california        California
-      └─ centralcoast   Central Coast
-         └─ slo         SLO County
-            └─ slonorth Paso Robles, Atascadero and the North County</pre>
+└─ us                      United States
+   └─ west                 Western US
+      └─ california        California
+         └─ centralcoast   Central Coast
+            └─ slo         SLO County
+               └─ slonorth Paso Robles, Atascadero and the North County</pre>
     <p>
-      Your repeater now carries all five names. Traffic scoped <code>slonorth</code> stays
+      Your repeater now carries all six names. Traffic scoped <code>slonorth</code> stays
       in the north county. Traffic scoped <code>slo</code> covers the whole county.
       Traffic scoped <code>west</code> reaches every repeater in the western US that follows
       this convention.
     </p>
     <p>
-      Not every chain is five names. Depth follows how big the local mesh community is:
-      the North Coast lists its towns straight under the region because there is nothing
-      in between worth naming, and Los Angeles holds its local areas directly because the
-      county already <em>is</em> the mesh. Both are four names, and <code>region def</code>
-      does not care.
+      Not every chain is six names. The tree stops at counties and grows deeper only
+      where local operators have drawn finer areas, as SLO County's have. So most chains
+      end at a county, and the Bay Area puts North Bay and East Bay between region and
+      county because those are the communities people name. <code>region def</code>
+      does not care how deep a chain is.
     </p>
     <p>
       Region matching is <strong>per name, not per level</strong> — a repeater that only has
@@ -301,11 +301,11 @@
         up what <code>sjv</code> meant.
       </li>
       <li>
-        <strong>SoCal is counties, then areas.</strong> Under Southern California the
-        children are the eight counties, and under each county the named valleys and
-        basins — San Fernando Valley, Coachella Valley, Victor Valley, and so on —
-        not individual cities. Cities stay in search aliases so you can still type
-        them.
+        <strong>Counties first, finer areas from locals.</strong> The tree is seeded at
+        county level, because county lines need no guesswork and a scope only works once
+        the repeaters around you carry it too. Where operators want finer areas, they
+        propose them and the tree grows a level there. Towns and old area names stay in
+        search, so typing “Palm Springs” still finds Riverside County.
       </li>
       <li>
         <strong>Region names are one flat namespace.</strong> Two different places using the same

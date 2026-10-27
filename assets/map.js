@@ -569,6 +569,8 @@ window.RegionData.ready(function (DATA) {
 
   function enclosingOutlines(node) {
     var i;
+    // A place that claims its own shape stands on it.
+    if (outlineEls[node.id]) { return outlineEls[node.id]; }
     for (i = node.trail.length - 1; i >= 0; i--) {
       if (outlineEls[node.trail[i]] && covers(node.trail[i], node)) {
         return outlineEls[node.trail[i]];
