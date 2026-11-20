@@ -209,13 +209,13 @@ check("blank lines and padding are stripped",
   JSON.stringify(await page.evaluate(() => window.SettingsState.get().lines)));
 
 // The whole point: changing the selection must not destroy typed work.
-await page.evaluate(() => window.SettingsState.select("oakland"));
+await page.evaluate(() => window.SettingsState.select("alameda"));
 await page.waitForTimeout(150);
 check("changing the area does not overwrite an edit",
   (await page.inputValue("#commands-edit")).includes("set dutycycle 50"),
   await page.inputValue("#commands-edit"));
 check("the generated view still follows the selection",
-  (await cmds()).includes("region def us west california bayarea eastbay oakland"), await cmds());
+  (await cmds()).includes("region def us west california bayarea eastbay alameda"), await cmds());
 await page.selectOption("#opt-fw", "110");
 await page.waitForTimeout(150);
 check("changing firmware does not overwrite an edit either",

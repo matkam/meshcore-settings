@@ -56,7 +56,7 @@ check("so the settings panel stays away", await page.isHidden("#output-panel"));
 check("the toggle reports itself as open", (await isOpen("bayarea")) === "true");
 
 await expand(page, "eastbay");
-check("opening an area reveals its local areas", (await rowsAt(2)) === shape.childrenOf("eastbay"),
+check("opening an area reveals its counties", (await rowsAt(2)) === shape.childrenOf("eastbay"),
   await rowsAt(2));
 check("still nothing ticked", (await picks(page)).length === 0);
 
@@ -64,10 +64,10 @@ check("still nothing ticked", (await picks(page)).length === 0);
  * Checked with the row actually rendered: asserting the toggle is missing while
  * its row is collapsed out of the DOM would pass for the wrong reason. */
 
-check("the local area's row is on screen to be judged",
-  (await page.$$('input[data-code="oakland"]')).length === 1);
+check("the county's row is on screen to be judged",
+  (await page.$$('input[data-code="alameda"]')).length === 1);
 check("and a place with no children gets no toggle",
-  (await page.$$('.pick-toggle[data-code="oakland"]')).length === 0);
+  (await page.$$('.pick-toggle[data-code="alameda"]')).length === 0);
 
 /* ---------- descriptions ---------- */
 
@@ -80,17 +80,17 @@ check("a region describes itself with its blurb",
   (await descOf("bayarea")).text === "The nine Bay Area counties.",
   JSON.stringify(await descOf("bayarea")));
 
-check("a local area describes itself with its towns",
-  (await descOf("oakland")).text === "Oakland, Berkeley, Emeryville, Alameda, Piedmont, Albany",
-  JSON.stringify(await descOf("oakland")));
+check("a county describes itself with its towns",
+  (await descOf("alameda")).text.startsWith("Oakland, Berkeley, Emeryville, Alameda, Piedmont, Albany"),
+  JSON.stringify(await descOf("alameda")));
 
 check("the full text is on the element, since the visible text may be clipped",
-  (await descOf("oakland")).title === (await descOf("oakland")).text);
+  (await descOf("alameda")).title === (await descOf("alameda")).text);
 
 check("rows stay one line so the tree's shape survives",
-  await page.$eval('.pick-row:has(input[data-code="oakland"])',
+  await page.$eval('.pick-row:has(input[data-code="alameda"])',
     (r) => r.getBoundingClientRect().height < 40),
-  await page.$eval('.pick-row:has(input[data-code="oakland"])',
+  await page.$eval('.pick-row:has(input[data-code="alameda"])',
     (r) => r.getBoundingClientRect().height));
 
 /* ---------- closing, and what is remembered ---------- */
@@ -101,7 +101,7 @@ check("and says so", (await isOpen("bayarea")) === "false");
 
 await expand(page, "bayarea");
 check("reopening it remembers the area that was open inside",
-  (await rowsAt(2)) === 8, await rowsAt(2));
+  (await rowsAt(2)) === shape.childrenOf("eastbay"), await rowsAt(2));
 
 /* ---------- expand all ---------- */
 
@@ -206,7 +206,7 @@ check("the chain builds as before",
 const weightOf = (code) => page.$eval(`.pick-row:has(input[data-code="${code}"]) .pick-name`,
   (e) => getComputedStyle(e).fontWeight);
 check("a ticked row reads as chosen", (await weightOf("slonorth")) === "600", await weightOf("slonorth"));
-check("and an unticked one does not", (await weightOf("bigsur")) === "400", await weightOf("bigsur"));
+check("and an unticked one does not", (await weightOf("slocity")) === "400", await weightOf("slocity"));
 
 await untick(page, "slonorth");
 check("unticking does not close anything", (await isOpen("slo")) === "true");
@@ -253,7 +253,7 @@ await page.waitForSelector("#results li[role=option]");
 await page.click("#results li[role=option]:first-child");
 await page.waitForTimeout(200);
 check("and so does a search result",
-  await page.$eval('.pick-row:has(input[data-code="bakersfield"])', (r) => r.checkVisibility()));
+  await page.$eval('.pick-row:has(input[data-code="kern"])', (r) => r.checkVisibility()));
 
 /* ---------- the scope line ---------- */
 

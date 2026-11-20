@@ -93,11 +93,11 @@ pasting into a group chat when you're helping someone bring a node up.
 
 ## The map
 
-The picker opens with a map of California. Click a dot for a local area, a
-boundary for an area-wide scope, or a region label for a region-wide one — the
-levels of the scope chain, in the things you can click. Whatever is selected is
-reflected back: the region as a wash across the shapes inside it, an area as a
-solid fill, a local area as a marked dot. A selection made in the search box or
+The picker opens with a map of California. Click a county or its dot for a
+county-wide scope, or a region label for a region-wide one — the levels of the
+scope chain, in the things you can click. Whatever is selected is reflected back:
+the region as a wash across the shapes inside it, a county as a solid fill and a
+marked dot. A finer local area, where locals have drawn one, is a dot of its own. A selection made in the search box or
 the picker shows up on the map too, and vice versa.
 
 None of that is coded per level. A place is drawn as a boundary if it names an
@@ -116,10 +116,10 @@ Two deliberate limits on what it claims:
 
 - **County lines are real; area boundaries are not drawn.** The county outlines
   are Census TIGER boundaries, and a place claims every one it wholly contains —
-  the North Bay claims Marin, Sonoma, Napa and Solano. Where a place cuts across a
-  county line nobody claims that shape, so Lake Tahoe, the Mojave and Los Angeles
-  draw as dots on plain background. That is deliberate: tinting three whole
-  counties for the Tahoe basin would claim an extent the mesh doesn't have.
+  the North Bay claims Marin, Sonoma, Napa and Solano. A place that cuts across
+  county lines claims none of them, so Lake Tahoe draws as a dot on counties
+  that belong to its neighbours. That is deliberate: tinting three whole counties
+  for the Tahoe basin would claim an extent the mesh doesn't have.
 - **There is no colour per region.** Categorical fills on a map this size
   fail colour-blind separation, and they would compete with the one thing colour
   should mean here: what *you* have selected. Region identity comes from labels
@@ -239,11 +239,11 @@ by design — it just cuts off the devices that reach the mesh through you.
 
 `region def` walks a cursor, and the `name|jump` form creates `name` under the
 cursor then moves the cursor to `jump`. So several picks share their ancestry
-instead of repeating it — North County, San Luis Obispo and Oakland is one line,
-not three:
+instead of repeating it — North County, San Luis Obispo and Alameda County is one
+line, not three:
 
 ```
-region def west california centralcoast slo slonorth|slo slocity|california bayarea eastbay oakland
+region def us west california centralcoast slo slonorth|slo slocity|california bayarea eastbay alameda
 ```
 
 Each jump goes to the deepest name the next branch shares with where the cursor
@@ -282,34 +282,53 @@ A chain of names, matching how `region def` is walked — each token becomes a c
 of the one before it:
 
 ```
-west     →  california  →  centralcoast   →  slo         →  slonorth
-US West     California     Central Coast     SLO County     North County (Paso Robles, Atascadero)
+us     →  west     →  california  →  centralcoast   →  slo         →  slonorth
+US        US West     California     Central Coast     SLO County     North County (Paso Robles, Atascadero)
 ```
 
-California is split into 13 regions covering all 58 counties, with 161 local areas
-under them, and you can generate settings at any level: pick a region for a
-region-wide chain, an area for an area-wide one, or a local area for the full
-chain.
+California is split into 7 regions covering all 58 counties, with 59 places at
+the bottom of the tree — mostly counties — and you can generate settings at any
+level: pick a region for a region-wide chain, or a county for a county-wide one.
+Where local operators have drawn finer areas, as in SLO County, those go one
+level further.
 
-**The levels follow communities and RF propagation, not administrative lines.**
-County boundaries are ignored wherever they cut through a mesh — Lake Tahoe is one
-place across three counties, the Mojave gathers the high desert out of four, and
-Ventura County is split at the Conejo grade because its east half talks to Los
-Angeles and its west half talks up the coast. Counties survive as a `county` field
-on each local area, which never appears in a generated chain: it gives the
-validator its point-in-boundary check and makes the county name searchable.
+**A place is a community first.** Every place should be somewhere people name and
+identify with. Three things shape where its edges fall, and none of them
+overrides the community:
 
-**Depth varies by branch, deliberately.** Sparse country needs three levels to
-reach something meaningful, so the North Coast lists its towns directly under the
-region. A metro where the county already *is* the mesh needs two, so Los Angeles,
-Orange County and San Diego hold their local areas with nothing in between. Both
-are correct and `region def` does not care — 67 of the 161 places sit on a
-four-token chain rather than five, which is a region-table entry back on every
-node in those branches.
+- **Political boundaries.** County and city lines usually line up with
+  communities, so they are the usual edge. Where they don't, the community wins:
+  Lake Tahoe is one place across three counties, and Yuba City and Marysville are
+  one place across a county line and a river.
+- **RF propagation.** A ridge can make two communities a few kilometres apart
+  separate meshes — the San Lorenzo Valley sits in a canyon above Santa Cruz.
+  Flat ground with no barrier is a reason not to split one community into pieces.
+- **Mesh density.** A place needs repeaters to carry its scope. Plenty of
+  repeaters can justify splitting a place, and that split should follow
+  communities too. Thin coverage is a reason not to split further, not on its own
+  a reason to fold one town into another.
+
+San Francisco shows how that plays out. It has the repeaters for a split, but the
+east and west halves it once had were compass lines, not communities, so it is
+one place.
+
+Each place also records its county in a `county` field, which never appears
+in a generated chain: it gives the validator its point-in-boundary check and makes
+the county name searchable.
+
+**The tree is seeded at counties, and locals grow it.** County lines need no
+guesswork, so the tree stops there. Anything finer is drawn by the operators who
+run that mesh: a scope only works once the repeaters around you carry it too, so a
+local area guessed from outside mostly sits empty, and adding one later breaks
+nothing because every node keeps the parent name. SLO County is the first branch
+grown that way. Groupings between region and county stay only where they are
+communities people name — North Bay and East Bay in the Bay Area, Gold Country in
+the Sierra. 44 of the 59 places sit on a five-token chain rather than six, which is
+a region-table entry back on every node in those branches.
 
 None of that is coded in. The tree in `data/regions.yaml` nests as deep as you
 like — a place has `children`, and those children may have children — up to
-MeshCore's eight-level chain limit, with the two root tokens counting toward it.
+MeshCore's eight-level chain limit, with the three root tokens counting toward it.
 Nothing in the page knows what a "county" is: the level names come from a `levels`
 list in the data, the map draws a boundary for any place that names one and a dot
 for any place that carries a lat/lon, and the picker just recurses.
@@ -327,47 +346,48 @@ spot.
 
 ### Tags: a scope that cuts across the tree
 
-Some scopes don't fit the hierarchy. `socal` reaches Los Angeles, Orange County,
-the Inland Empire, the deserts and San Diego — six regions with no common parent,
-and giving them one would be wrong: they sit in four RF-separate basins, so a
-single region implying they hear each other is exactly what this scheme is trying
-to avoid.
+Some scopes don't fit the hierarchy. The Sacramento–San Joaquin Delta touches
+Sacramento, San Joaquin, Contra Costa, Solano and Yolo counties, which sit under
+three different regions. Giving them a common parent would be wrong: each
+already belongs to a region that is right for it, and the Delta is one more
+community some of their operators share, not a replacement for those.
+
+None is declared today; this is how one would work.
 
 A **tag** is the answer. It is a region name that is not a level: it hangs off the
 root as its own short chain, and a place opts into it rather than inheriting one
 by position. Everything beneath an opted-in place carries it too.
 
 ```
-region def west california losangeles dtla
-region put socal california
+region def us west california centralvalley sanjoaquin
+region put sacdelta california
 ```
 
 `region put`, not a second `region def`, even on firmware that has `def`. A tag is
 one extra name rather than a chain, so `put` says what it is; a `def` would
-re-assert `west` and `california` that the line above just placed, resetting their flags
+re-assert `us`, `west` and `california` that the line above just placed, resetting their flags
 on the way past; and this way the tag looks identical on every firmware version,
 where only the chain form differs. It flood-allows as it creates on 1.15+, so no
 `allowf` is needed there.
 
-The node ends up holding five names and matches traffic scoped to any of them.
+The node ends up holding six names and matches traffic scoped to any of them.
 
 Tags are declared once at the top of `data/regions.yaml` and referenced by the
 places that carry them:
 
 ```yaml
 tags:
-  - code: socal
-    name: Southern California
+  - code: sacdelta
+    name: Sacramento–San Joaquin Delta
 
 places:
-  - code: losangeles
-    tags: [socal]
+  - code: sanjoaquin
+    tags: [sacdelta]
 ```
 
 The cost is one region-table entry on the nodes that carry it, and **only** those
-nodes — which is the point. Making `socal` a level instead would have cost every
-node beneath it a table entry whether or not its operator wanted the wider scope,
-and would have pushed 44 southern places from a four-token chain to five.
+nodes — which is the point. A level would cost every node beneath it a table entry
+whether or not its operator wanted the wider scope.
 
 ### These codes are a convention, not a standard
 
@@ -383,8 +403,8 @@ airtime. The firmware's ceiling is 30 characters (`RegionEntry.name` is
 `char[31]`), and the longest chain this file generates is under 60 of the 160
 characters a serial line allows, so codes are words rather than abbreviations:
 `centralvalley` beats `cv` when nobody has to look it up. Established vernacular
-is the exception worth making — `sf`, `oc`, `ie`, `sfv` and `dtla` are what
-operators already type.
+is the exception worth making — `sf` and `slo` are what operators already
+type.
 Two-letter codes that collide with a US state abbreviation are avoided, which is
 why Los Angeles is not `la`.
 
@@ -397,8 +417,8 @@ serial line limit, the 30-character code limit and MeshCore's 8-level depth cap.
 The picker is a tree of checkboxes, and **opening a place is separate from
 choosing it**. Each place with something inside it has its own disclosure
 control, so you can read the whole scheme end to end without ticking anything —
-useful for "what is Mendocino County's code?" or "what did the group settle on
-for the Coachella Valley?". *Expand all* opens the lot; the box scrolls rather
+useful for "what is Mendocino County's code?" or "what are SLO County's local
+areas?". *Expand all* opens the lot; the box scrolls rather
 than the page growing.
 
 The box grows with the window up to about 720px — roughly nineteen rows — and
@@ -410,7 +430,7 @@ exactly the point you'd reach for it. Phones cap lower, since a row is two lines
 there and 70% of the screen would push the map out of sight.
 
 Every row carries its code first, then its name, then a description — a region's
-blurb, or for a local area the towns it covers, which is the same alias list that
+blurb, or for a county or local area the towns it covers, which is the same alias list that
 makes it findable by search. Counties have no description in the data and need
 none. Descriptions are clipped to one line so a row stays a row and the tree's
 shape stays scannable; the full text is in the tooltip, and on a narrow screen it
@@ -448,24 +468,24 @@ the top of [`data/regions.yaml`](data/regions.yaml):
 
 ```jsonc
 {
-  "format": 1,                    // bumped only on a breaking change
+  "format": 2,                    // bumped only on a breaking change
   "name": "California",
-  "updated": "2026-07-31",
-  "limits": { "maxLineLength": 160, "maxRegionNames": 32, "maxDepth": 8 },
-  "root":   [ { "code": "west", "name": "Western US" }, … ],
+  "updated": "2026-10-24",
+  "limits": { "maxLineLength": 160, "maxRegionNames": 32, "maxDepth": 8, "maxCodeLength": 30 },
+  "root":   [ { "code": "us", "name": "United States" }, … ],
   "levels": [ { "name": "region", "plural": "regions" }, … ],
   "places": [
     {
-      "code": "cc",             // unique across the whole file
+      "code": "centralcoast",   // unique across the whole file
       "name": "Central Coast",
       "children": [
         {
           "code": "slo",
-          "name": "San Luis Obispo County",
+          "name": "SLO County",
           "outline": "San Luis Obispo",       // optional, a shape in outlines.json
           "children": [
             {
-              "code": "prb",
+              "code": "slonorth",
               "name": "North County",
               "lat": 35.627, "lon": -120.691, // optional
               "aliases": ["Paso Robles", "Atascadero", …]  // search terms only
@@ -526,12 +546,13 @@ Firefox support neither API**, so copy-paste stays the primary path for everyone
 Once connected, the repeater can answer both questions the page otherwise asks you:
 
 - **Location** comes from the advertised lat/lon in the companion's contact record,
-  so it needs no login. Each area is represented by a single centroid, so the
-  nearest one is a guess rather than an answer — some areas genuinely sit a few km
-  apart (Yuba City and Marysville face each other across the river), and a large
-  area's point can be well away from where a node actually is. So the page
-  offers a **shortlist of up to three, closest first, with distances** and you
-  click the right one; nothing is applied silently. Runners-up are only listed
+  so it needs no login. A position inside a county's boundary matches that county
+  outright, marked *inside* — a county is too big for its one point to judge by
+  distance, and Ridgecrest is 150 km from Kern County's point. Places without a
+  boundary of their own, like SLO County's local areas and Lake Tahoe, are matched
+  by distance to their one point, which is a guess rather than an answer. So the
+  page offers a **shortlist of up to three, closest first** and you click the
+  right one; nothing is applied silently. Runners-up are only listed
   while they're within 25 km of the closest match, so a genuinely isolated area
   offers just itself. The choices stay on screen after you pick, so a wrong guess
   is one click to correct. If even the closest match is further than 25 km it's
@@ -677,8 +698,9 @@ token, which is not worth a preview.
 
 ## Adding or fixing an area
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Short version: add an entry under the
-right area in `data/regions.yaml`, name the county it sits in, run
+See [CONTRIBUTING.md](CONTRIBUTING.md). Short version: the tree stops at counties
+until the operators there want finer areas. To propose some, add `children` under
+your county in `data/regions.yaml` with the names your group uses, run
 `npm run validate:built`, and open a PR — changing `data/regions.yaml` alone is
 enough, because CI builds the JSON from it.
 

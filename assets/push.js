@@ -52,10 +52,10 @@ const els = {
  * A repeater tells us two things we currently ask the user for.
  *
  * Position comes from the contact record's advertised lat/lon, so it needs no
- * login — but it is matched against area centroids, which is a guess. Some areas
- * genuinely sit a couple of km apart (Yuba City / Marysville), and a centroid is
- * one point standing in for a whole area, so the nearest one is often not the
- * right one. Hence a shortlist to choose from, never a silent application.
+ * login. A position inside a county's boundary matches that county outright;
+ * otherwise it is matched against each place's one representative point, which
+ * is a guess, so the nearest one is often not the right one. Hence a shortlist
+ * to choose from, never a silent application.
  *
  * Firmware version comes from running `ver` after login. That is the device
  * stating a fact about itself, so it is applied directly.
@@ -105,12 +105,12 @@ function detectLocation(contact) {
   }
 
   els.detectLoc.textContent = near.length > 1
-    ? "Repeater reports " + where + " — nearest areas, closest first. These are matched " +
-      "against one point per area, so check the distances against where the node really is:"
+    ? "Repeater reports " + where + " — nearest areas, closest first. Distances are to one " +
+      "point per area, so check them against where the node really is:"
     : "Repeater reports " + where + " — only one area is close to that:";
 
   near.forEach((hit) => {
-    const btn = el("button", "action small", hit.entry.name + " · " + fmtKm(hit.km));
+    const btn = el("button", "action small", hit.entry.name + " · " + (hit.inside ? "inside" : fmtKm(hit.km)));
     btn.type = "button";
     btn.title = hit.entry.context;
     btn.setAttribute("aria-pressed", "false");

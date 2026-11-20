@@ -108,9 +108,9 @@ async function pointFor(code) {
   check("selected area's own outline is marked on",
     await page.$eval('.map-county[data-place="slo"]', (c) => c.classList.contains("is-on")));
   check("selected area's region is washed in",
-    await page.$eval('.map-county[data-place="montereybay"]', (c) => c.classList.contains("is-in-region")));
+    await page.$eval('.map-county[data-place="monterey"]', (c) => c.classList.contains("is-in-region")));
   check("a shape outside the region is not washed in",
-    await page.$eval('.map-county[data-place="eastbay"]', (c) => !c.classList.contains("is-in-region")));
+    await page.$eval('.map-county[data-place="contracosta"]', (c) => !c.classList.contains("is-in-region")));
 }
 
 // --- a hovered dot lights ground its own place claims
@@ -133,11 +133,15 @@ async function pointFor(code) {
       const node = D.byId[dot.dataset.id];
       const mine = [].concat(node.county || []);
       if (!mine.length) { continue; }
-      // The nearest ancestor claiming a county this place is in.
+      // The place itself if it claims its county, else the nearest ancestor
+      // claiming a county this place is in — counting only places that end up
+      // drawing a shape, since a claim a deeper place takes over draws nothing.
       let want = null;
-      for (let i = node.trail.length - 1; i >= 0 && !want; i--) {
-        const anc = D.byId[node.trail[i]];
-        if (anc && anc.outline && [].concat(anc.outline).some((c) => mine.includes(c))) {
+      const line = node.trail.concat(node.id);
+      for (let i = line.length - 1; i >= 0 && !want; i--) {
+        const anc = D.byId[line[i]];
+        if (anc && anc.outline && [].concat(anc.outline).some((c) => mine.includes(c)) &&
+            document.querySelector(`.map-county[data-id="${anc.id}"]`)) {
           want = anc.id;
         }
       }
@@ -168,7 +172,7 @@ async function pointFor(code) {
   await clearPicks(page);
   await tick(page, "bayarea");
   check("selecting a region elsewhere washes it in on the map",
-    await page.$eval('.map-county[data-place="eastbay"]', (c) => c.classList.contains("is-in-region")));
+    await page.$eval('.map-county[data-place="contracosta"]', (c) => c.classList.contains("is-in-region")));
   check("the old selection is cleared",
     await page.$eval('.map-dot[data-place="slonorth"]', (d) => !d.classList.contains("is-on")));
   check("that region's label lights up",

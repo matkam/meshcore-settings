@@ -4,12 +4,27 @@ The useful contribution here is local knowledge: which areas actually have
 repeaters, what the operators around you already call them, and where the
 boundaries really fall.
 
-## Adding a local area
+## Proposing a finer area
 
-Everything lives in [`data/regions.yaml`](data/regions.yaml). Find the area
-yours belongs to and add an entry to its `children` list:
+The tree is seeded at counties on purpose. Finer areas come from the operators
+who run that mesh, because a scope only works once the repeaters around you carry
+it too, and nobody outside your mesh knows where it divides. If your county wants
+local areas, open an issue or a PR with:
+
+- the names your group already uses, and roughly which towns each covers,
+- about how many repeaters each has (a [CoreScope](https://corescope.stonekitty.net)
+  map is a good source), and
+- whether the other operators in the county agree.
+
+Everything lives in [`data/regions.yaml`](data/regions.yaml). A county becomes a
+parent by gaining a `children` list — SLO County is the worked example:
 
 ```yaml
+      - code: slo
+        name: SLO County
+        kind: county
+        outline: ["San Luis Obispo"]
+        children:
           - code: slonorth
             name: North County
             county: San Luis Obispo
@@ -18,13 +33,16 @@ yours belongs to and add an entry to its `children` list:
             aliases: ["Paso Robles", "Atascadero", "Templeton", "San Miguel", "Shandon"]
 ```
 
+Move the county's `lat`/`lon` onto its children when it gains them: a parent
+with a point of its own competes with them in location detection.
+
 - **`code`** — the region name. Lowercase `a-z0-9`, 1–30 characters, and unique
   across the whole file. 30 is the firmware's ceiling (`RegionEntry.name` is
   `char[31]`), and length costs nothing on the air: a scoped packet carries a
   16-bit transport code derived from the name, never the name itself. So prefer
   the word people say over an abbreviation they have to look up — `slonorth`,
-  not `prb`. Established vernacular is the exception worth making: `sf`, `oc`,
-  `ie`, `sfv` and `dtla` are what operators already type. Avoid two-letter codes
+  not `prb`. Established vernacular is the exception worth making: `sf` and
+  `slo` are what operators already type. Avoid two-letter codes
   that collide with a US state abbreviation, since the namespace spans states —
   that is why Los Angeles is not `la`.
 - **`name`** — what a human picks from the list. It has to stand on its own:
@@ -34,7 +52,7 @@ yours belongs to and add an entry to its `children` list:
   appears in a generated chain; it gives the validator its point-in-boundary
   check and makes the county name searchable.
 - **`aliases`** — search terms only. These never appear in the generated
-  commands; they exist so someone can type "Paso Robles" and land on `prb`. List
+  commands; they exist so someone can type "Paso Robles" and land on `slonorth`. List
   the towns people would actually type, including unincorporated ones.
 - **`lat` / `lon`** — a representative point, three decimal places. A connected
   repeater's advertised position is matched against these and the nearest few
@@ -83,11 +101,10 @@ from them.
 ## Adding a level
 
 The tree is not fixed at regions > areas > local areas, and it is deliberately
-ragged: the North Coast lists its towns straight under the region because there
-is nothing in between worth naming, while the Bay Area has North Bay, East Bay,
-Peninsula and South Bay in between. A place may have `children`, and those
-children may have children, up to MeshCore's eight-level chain limit (the two
-root tokens count toward it). If you add a level, add a name for it to the
+ragged: North California lists its counties straight under the region, while the
+Bay Area puts North Bay and East Bay in between because those are communities
+people name. A place may have `children`, and those children may have children,
+up to MeshCore's eight-level chain limit (the three root tokens count toward it). If you add a level, add a name for it to the
 `levels` list at the top of the file — that's what the interface calls it — and
 check that `npm run validate` doesn't warn the tree has outgrown that list.
 
@@ -145,14 +162,22 @@ it can be announced to the affected operators.
 - Try not to collide with codes other states' meshes are likely to want. Region
   names are global on any repeater that carries both trees, which rules out bare
   words like `valley` and any two-letter US state abbreviation.
-- Prefer something an operator would guess, spelled out: `bakersfield`,
-  `truckee`, `palmsprings`. The anchor town makes a good code even when the name
-  is the wider area — `palmsprings` is named "Coachella Valley".
+- Prefer something an operator would guess, spelled out, and make it describe the
+  whole area the place covers: `coachellavalley` for the Coachella Valley, not
+  `palmsprings`. A town's name on a wider area tells the operators in every other
+  town that the scope isn't theirs.
 
 ## Boundaries and splits
 
-If an area has grown enough that one code no longer describes it, add children
-under it rather than redrawing anything above — the hierarchy is there to absorb
+A place should be a community first — somewhere people name and identify with.
+County and city lines usually match that and are the usual edge; where they
+don't, the community wins. Terrain and repeater density shape the edges too: a
+ridge can make two nearby towns separate meshes, and a place needs repeaters to
+carry its scope. But thin coverage alone is not a reason to fold one town into
+another, and a compass line through one community is not a split.
+
+Start shallow and grow down. If an area has grown enough that one code no longer
+describes it, add children under it rather than redrawing anything above — the hierarchy is there to absorb
 that. Open an issue first if you're not sure; someone else may already be running
 nodes under the existing name.
 
