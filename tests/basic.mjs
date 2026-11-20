@@ -80,11 +80,11 @@ await page.fill("#opt-duty", "");
 await page.selectOption("#opt-hash", "1");
 
 // --- 5. deep link
-await page.goto(SITE + "#coachellavalley", { waitUntil: "networkidle" });
-pass &= check("deep link #coachellavalley under socal",
+await page.goto(SITE + "#coachella", { waitUntil: "networkidle" });
+pass &= check("deep link #coachella under socal",
   (await page.textContent("#commands")).trim(),
   ["set path.hash.mode 1", "set flood.advert.interval 47", "set loop.detect moderate",
-   "region def us west california socal riverside coachellavalley", "region save"].join("\n"));
+   "region def us west california socal coachella", "region save"].join("\n"));
 console.log("deep-link search box:", JSON.stringify(await page.inputValue("#search")));
 
 // --- 5b. places outside SoCal stay on their own chain
@@ -95,11 +95,11 @@ pass &= check("a NorCal place keeps its own chain",
    "region def us west california norcal eureka", "region save"].join("\n"));
 
 // --- 6. searches that should resolve
-for (const [q, want] of [["Big Bear", "sbmountains"], ["Humboldt", "eureka"], ["Truckee", "truckee"],
+for (const [q, want] of [["Big Bear", "ie"], ["Humboldt", "eureka"], ["Truckee", "truckee"],
                          ["slo", "slocity"], ["Santa Cruz", "santacruz"], ["Bakersfield", "bakersfield"],
-                         ["Yosemite", "mariposa"], ["Chula Vista", "sdsouth"],
+                         ["Yosemite", "mariposa"], ["Long Beach", "southbay"],
                          ["Alameda County", "eastbay"], ["Paso Robles", "slonorth"],
-                         ["Palm Springs", "coachellavalley"]]) {
+                         ["Palm Springs", "coachella"]]) {
   await page.fill("#search", "");
   await page.fill("#search", q);
   await page.waitForTimeout(60);

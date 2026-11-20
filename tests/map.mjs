@@ -209,6 +209,8 @@ async function pointFor(code) {
       return [b.x + b.width / 2, b.y + b.height / 2];
     });
     for (const path of document.querySelectorAll(".map-county")) {
+      // Skip shapes nobody claims (split counties left as background).
+      if (!path.dataset.place) { continue; }
       const r = path.getBoundingClientRect();
       if (r.width < 20 || r.height < 20) { continue; }
       for (let fy = 0.15; fy <= 0.85; fy += 0.05) {
@@ -272,6 +274,10 @@ async function pointFor(code) {
  * pin down the fix.
  */
 {
+  // Drop any earlier selection so a washed-in outline cannot steal a grid
+  // cell from the hover hit-test (SoCal no longer claims county shapes, so
+  // open-ground clicks land elsewhere and would otherwise linger here).
+  await clearPicks(page);
   await mapInView();
   const box = await page.evaluate(() => {
     const b = document.querySelector(".map-svg").getBoundingClientRect();
@@ -304,7 +310,9 @@ async function pointFor(code) {
         c: !!document.querySelector(".map-county.is-hover"),
         d: !!document.querySelector(".map-dot.is-hover")
       }));
-      if (st.c) { lit++; }
+      // A nearby dot may own the cell (nearest-dot rule); that still highlights
+      // a place, so count it. The next check keeps county-ground in the majority.
+      if (st.c || st.d) { lit++; }
       if (st.c && !st.d) { countyOnly++; }
     }
   }

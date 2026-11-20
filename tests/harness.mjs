@@ -38,7 +38,7 @@ export function shot(name) {
 
 /*
  * A place is named by its code where that is unambiguous, and by its full path
- * — "socal/losangeles/southbay" — where it is not. Two places far enough apart
+ * — "socal/southbay" — where it is not. Two places far enough apart
  * are allowed to share a code, and when both their rows are open a data-code
  * selector matches two elements; passing the path says which one is meant.
  */
