@@ -143,6 +143,9 @@ await page.addInitScript(() => {
       writable
     })
   }});
+  // This path is Serial-only; leave BLE unsupported so the USB button is the
+  // one under test (Chromium may expose bluetooth in newer Playwright builds).
+  Object.defineProperty(navigator, "bluetooth", { get: () => undefined, configurable: true });
 });
 
 await page.goto(SITE + "#slonorth", { waitUntil: "networkidle" });

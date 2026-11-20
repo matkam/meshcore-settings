@@ -136,7 +136,6 @@ levels:
 
 # Extra region names carried alongside a place's chain. Not levels: nothing
 # nests under a tag, and a place opts in rather than inheriting one by position.
-# (None declared.)
 tags: []
 
 places:
@@ -681,11 +680,16 @@ places:
   # on one county in a way that reads as labelling that county, not the region.
   - code: socal
     name: Southern California
-    blurb: "The eight southern counties."
+    blurb: The eight southern counties, plus draft terrain regions.
     short: SOCAL
     aliases: ["SoCal", "Southern California"]
+    # Out into the bight rather than onto a county or subregion: at its
+    # centroid the label covers inland valleys in a way that reads as
+    # labelling one of them rather than the region.
     nudge: [-8, 50]
     children:
+      # County references (legacy political boundaries), then the draft
+      # terrain regions — same order as meshcore-region-map.
       - code: santabarbara
         name: Santa Barbara County
         kind: county
@@ -727,7 +731,7 @@ places:
           "Agoura Hills", "Santa Clarita Valley", "Santa Clarita", "Valencia", "Newhall", "Castaic",
           "Stevenson Ranch", "Antelope Valley", "Lancaster", "Palmdale", "Quartz Hill", "Acton", "Rosamond",
           "Catalina Island", "Avalon", "Two Harbors", "Santa Catalina"]
-      - code: orangecounty
+      - code: orange
         name: Orange County
         kind: county
         outline: ["Orange"]
@@ -789,3 +793,74 @@ places:
           "Alpine", "Spring Valley", "South Bay", "Chula Vista", "National City", "Imperial Beach", "Bonita",
           "San Ysidro", "Backcountry", "Ramona", "Julian", "Descanso", "Campo", "Warner Springs",
           "Mountain Empire", "Borrego Valley", "Borrego Springs", "Ocotillo Wells", "Anza-Borrego"]
+      - code: smv
+        name: Santa Maria & Nipomo
+        blurb: Santa Maria, Guadalupe and Nipomo — a possible bridge toward the Central Coast.
+        lat: 35.014
+        lon: -120.221
+        aliases: ["Santa Maria", "Nipomo", "Guadalupe", "Orcutt", "Los Alamos"]
+      - code: conejo
+        name: Conejo & Simi Valleys
+        blurb: Conejo and Simi valleys, separated by the Simi Hills and Santa Monica Mountains.
+        lat: 34.223
+        lon: -118.811
+        aliases: ["Thousand Oaks", "Newbury Park", "Westlake Village", "Agoura", "Simi Valley", "Moorpark", "Conejo"]
+      - code: scv
+        name: Santa Clarita Valley
+        blurb: Santa Clarita and the upper Santa Clara River valley.
+        lat: 34.391
+        lon: -118.542
+        aliases: ["Santa Clarita", "Valencia", "Newhall", "Castaic", "Stevenson Ranch"]
+      - code: sfv
+        name: San Fernando Valley
+        blurb: San Fernando Valley, Burbank and Glendale.
+        lat: 34.187
+        lon: -118.451
+        aliases: ["Van Nuys", "Burbank", "Glendale", "Sherman Oaks", "Northridge", "Woodland Hills", "San Fernando Valley"]
+      - code: sgv
+        name: San Gabriel & Pomona Valleys
+        blurb: San Gabriel and Pomona valleys, between the San Gabriels and Puente/Chino hills.
+        lat: 34.100
+        lon: -117.950
+        aliases: ["Pasadena", "Alhambra", "El Monte", "West Covina", "Arcadia", "Monrovia", "Pomona", "Claremont", "La Verne", "San Dimas", "Diamond Bar"]
+      # Shares a code with the Bay Area's South Bay, which is deliberate:
+      # both are what operators there say, and no repeater will ever carry
+      # both. The site tells them apart by path, not by code.
+      - code: southbay
+        name: South Bay & Long Beach
+        blurb: Palos Verdes, South Bay, Harbor and Long Beach coastal communities.
+        lat: 33.770
+        lon: -118.250
+        aliases: ["Torrance", "Redondo Beach", "Hermosa Beach", "Manhattan Beach", "El Segundo", "San Pedro", "Long Beach", "Signal Hill", "Lakewood", "Palos Verdes"]
+      - code: antval
+        name: Antelope Valley
+        blurb: Lancaster, Palmdale and the western Antelope Valley.
+        # North of Lancaster so the dot sits in the valley floor, clear of the
+        # Central Valley outline along the Tehachapi grade.
+        lat: 34.80
+        lon: -118.10
+        aliases: ["Lancaster", "Palmdale", "Quartz Hill", "Acton", "Rosamond", "Antelope Valley"]
+      - code: highdesert
+        name: High Desert
+        blurb: Victor Valley, Barstow, and the desert east of Antelope Valley.
+        lat: 34.536
+        lon: -117.291
+        aliases: ["Victorville", "Apple Valley", "Hesperia", "Adelanto", "Phelan", "Barstow", "High Desert"]
+      - code: ie
+        name: Inland Empire
+        blurb: San Bernardino–Riverside basin and the Perris–Temecula corridor.
+        lat: 33.953
+        lon: -117.396
+        aliases: ["Inland Empire", "Riverside", "San Bernardino", "Corona", "Moreno Valley", "Perris", "Temecula", "Murrieta", "Ontario", "Rancho Cucamonga", "Fontana", "Redlands", "Big Bear", "Big Bear Lake", "Lake Arrowhead"]
+      - code: coachella
+        name: Coachella Valley
+        blurb: Coachella Valley between the San Jacinto and Santa Rosa ranges.
+        lat: 33.830
+        lon: -116.545
+        aliases: ["Palm Springs", "Palm Desert", "Indio", "La Quinta", "Cathedral City", "Coachella", "Coachella Valley"]
+      - code: mojave
+        name: Eastern Mojave
+        blurb: Eastern Mojave basins and desert ranges, including the Colorado River corridor.
+        lat: 34.848
+        lon: -114.614
+        aliases: ["Needles", "Twentynine Palms", "Yucca Valley", "Joshua Tree", "Baker", "Eastern Mojave", "Mojave"]

@@ -80,11 +80,11 @@ await page.fill("#opt-duty", "");
 await page.selectOption("#opt-hash", "1");
 
 // --- 5. deep link
-await page.goto(SITE + "#riverside", { waitUntil: "networkidle" });
-pass &= check("deep link #riverside under socal",
+await page.goto(SITE + "#coachella", { waitUntil: "networkidle" });
+pass &= check("deep link #coachella under socal",
   (await page.textContent("#commands")).trim(),
   ["set path.hash.mode 1", "set flood.advert.interval 47", "set loop.detect moderate",
-   "region def us west california socal riverside", "region save"].join("\n"));
+   "region def us west california socal coachella", "region save"].join("\n"));
 console.log("deep-link search box:", JSON.stringify(await page.inputValue("#search")));
 
 // --- 5b. places outside SoCal stay on their own chain

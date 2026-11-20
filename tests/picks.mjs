@@ -302,13 +302,13 @@ check("clearing everything hides the output", await page.isHidden("#output-panel
   // taller picker can bring it into view without scrolling at all, and
   // scrollTop > 0 never proved the row was among what the scroll revealed.
   check("a pick made by search is brought into view",
-    await page.$eval('.pick-row:has(input[data-code="sanbernardino"])', (r) => {
+    await page.$eval('.pick-row:has(input[data-code="ie"])', (r) => {
       const row = r.getBoundingClientRect();
       const box = r.closest(".picker").getBoundingClientRect();
       return row.top >= box.top - 1 && row.bottom <= box.bottom + 1;
     }));
   check("and ticks its ancestors so the row is reachable",
-    (await picks(page)).join(",") === "socal,sanbernardino", (await picks(page)).join(","));
+    (await picks(page)).join(",") === "socal,ie", (await picks(page)).join(","));
   check("Clear appears once something is picked", await page.isVisible("#clear-picks"));
 
   await page.click("#clear-picks");
