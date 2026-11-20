@@ -1157,7 +1157,7 @@
           "aliases": ["Los Angeles County", "LA County"]
         },
         {
-          "code": "orange",
+          "code": "orangecounty",
           "name": "Orange County",
           "blurb": "North County down to San Clemente.",
           "outline": ["Orange"],
