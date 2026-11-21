@@ -652,7 +652,7 @@
     {
       "code": "socal",
       "name": "Southern California",
-      "blurb": "The eight southern counties.",
+      "blurb": "The eight southern counties, plus draft terrain regions.",
       "short": "SOCAL",
       "nudge": [-8, 50],
       "aliases": ["SoCal", "Southern California"],
@@ -688,7 +688,7 @@
           "aliases": ["LA County", "LA Basin", "Downtown", "Hollywood", "Koreatown", "Echo Park", "Silver Lake", "Boyle Heights", "Central LA", "Westside", "Santa Monica", "Venice", "Culver City", "Westwood", "Brentwood", "Marina del Rey", "San Fernando Valley", "Van Nuys", "Burbank", "Glendale", "Sherman Oaks", "Northridge", "Woodland Hills", "San Gabriel Valley", "Pasadena", "Alhambra", "El Monte", "West Covina", "Arcadia", "Monrovia", "Pomona Valley", "Pomona", "Claremont", "La Verne", "San Dimas", "Diamond Bar", "South Bay", "Torrance", "Redondo Beach", "Hermosa Beach", "Manhattan Beach", "El Segundo", "San Pedro", "Harbor Area", "Long Beach", "Signal Hill", "Lakewood", "Cerritos", "San Pedro Harbor", "Gateway Cities", "Downey", "Whittier", "Norwalk", "Compton", "Bellflower", "Paramount", "Santa Monica Mountains", "Malibu", "Topanga", "Calabasas", "Agoura Hills", "Santa Clarita Valley", "Santa Clarita", "Valencia", "Newhall", "Castaic", "Stevenson Ranch", "Antelope Valley", "Lancaster", "Palmdale", "Quartz Hill", "Acton", "Rosamond", "Catalina Island", "Avalon", "Two Harbors", "Santa Catalina"]
         },
         {
-          "code": "orangecounty",
+          "code": "orange",
           "name": "Orange County",
           "kind": "county",
           "outline": ["Orange"],
@@ -736,6 +736,94 @@
           "lat": 32.716,
           "lon": -117.161,
           "aliases": ["Metro", "San Diego", "La Jolla", "Pacific Beach", "Point Loma", "Mission Valley", "North Park", "North County Coastal", "Oceanside", "Carlsbad", "Encinitas", "Del Mar", "Solana Beach", "Vista", "North County Inland", "Escondido", "San Marcos", "Poway", "Rancho Bernardo", "Fallbrook", "Valley Center", "El Cajon", "Santee", "La Mesa", "Lakeside", "Alpine", "Spring Valley", "South Bay", "Chula Vista", "National City", "Imperial Beach", "Bonita", "San Ysidro", "Backcountry", "Ramona", "Julian", "Descanso", "Campo", "Warner Springs", "Mountain Empire", "Borrego Valley", "Borrego Springs", "Ocotillo Wells", "Anza-Borrego"]
+        },
+        {
+          "code": "smv",
+          "name": "Santa Maria & Nipomo",
+          "blurb": "Santa Maria, Guadalupe and Nipomo — a possible bridge toward the Central Coast.",
+          "lat": 35.014,
+          "lon": -120.221,
+          "aliases": ["Santa Maria", "Nipomo", "Guadalupe", "Orcutt", "Los Alamos"]
+        },
+        {
+          "code": "conejo",
+          "name": "Conejo & Simi Valleys",
+          "blurb": "Conejo and Simi valleys, separated by the Simi Hills and Santa Monica Mountains.",
+          "lat": 34.223,
+          "lon": -118.811,
+          "aliases": ["Thousand Oaks", "Newbury Park", "Westlake Village", "Agoura", "Simi Valley", "Moorpark", "Conejo"]
+        },
+        {
+          "code": "scv",
+          "name": "Santa Clarita Valley",
+          "blurb": "Santa Clarita and the upper Santa Clara River valley.",
+          "lat": 34.391,
+          "lon": -118.542,
+          "aliases": ["Santa Clarita", "Valencia", "Newhall", "Castaic", "Stevenson Ranch"]
+        },
+        {
+          "code": "sfv",
+          "name": "San Fernando Valley",
+          "blurb": "San Fernando Valley, Burbank and Glendale.",
+          "lat": 34.187,
+          "lon": -118.451,
+          "aliases": ["Van Nuys", "Burbank", "Glendale", "Sherman Oaks", "Northridge", "Woodland Hills", "San Fernando Valley"]
+        },
+        {
+          "code": "sgv",
+          "name": "San Gabriel & Pomona Valleys",
+          "blurb": "San Gabriel and Pomona valleys, between the San Gabriels and Puente/Chino hills.",
+          "lat": 34.1,
+          "lon": -117.95,
+          "aliases": ["Pasadena", "Alhambra", "El Monte", "West Covina", "Arcadia", "Monrovia", "Pomona", "Claremont", "La Verne", "San Dimas", "Diamond Bar"]
+        },
+        {
+          "code": "southbay",
+          "name": "South Bay & Long Beach",
+          "blurb": "Palos Verdes, South Bay, Harbor and Long Beach coastal communities.",
+          "lat": 33.77,
+          "lon": -118.25,
+          "aliases": ["Torrance", "Redondo Beach", "Hermosa Beach", "Manhattan Beach", "El Segundo", "San Pedro", "Long Beach", "Signal Hill", "Lakewood", "Palos Verdes"]
+        },
+        {
+          "code": "antval",
+          "name": "Antelope Valley",
+          "blurb": "Lancaster, Palmdale and the western Antelope Valley.",
+          "lat": 34.8,
+          "lon": -118.1,
+          "aliases": ["Lancaster", "Palmdale", "Quartz Hill", "Acton", "Rosamond", "Antelope Valley"]
+        },
+        {
+          "code": "highdesert",
+          "name": "High Desert",
+          "blurb": "Victor Valley, Barstow, and the desert east of Antelope Valley.",
+          "lat": 34.536,
+          "lon": -117.291,
+          "aliases": ["Victorville", "Apple Valley", "Hesperia", "Adelanto", "Phelan", "Barstow", "High Desert"]
+        },
+        {
+          "code": "ie",
+          "name": "Inland Empire",
+          "blurb": "San Bernardino–Riverside basin and the Perris–Temecula corridor.",
+          "lat": 34.097,
+          "lon": -117.396,
+          "aliases": ["Inland Empire", "Riverside", "San Bernardino", "Corona", "Moreno Valley", "Perris", "Temecula", "Murrieta", "Ontario", "Rancho Cucamonga", "Fontana", "Redlands", "Big Bear", "Big Bear Lake", "Lake Arrowhead"]
+        },
+        {
+          "code": "coachella",
+          "name": "Coachella Valley",
+          "blurb": "Coachella Valley between the San Jacinto and Santa Rosa ranges.",
+          "lat": 33.83,
+          "lon": -116.545,
+          "aliases": ["Palm Springs", "Palm Desert", "Indio", "La Quinta", "Cathedral City", "Coachella", "Coachella Valley"]
+        },
+        {
+          "code": "mojave",
+          "name": "Eastern Mojave",
+          "blurb": "Eastern Mojave basins and desert ranges, including the Colorado River corridor.",
+          "lat": 34.848,
+          "lon": -114.614,
+          "aliases": ["Needles", "Twentynine Palms", "Yucca Valley", "Joshua Tree", "Baker", "Eastern Mojave", "Mojave"]
         }
       ]
     }

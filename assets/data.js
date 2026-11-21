@@ -52,7 +52,7 @@
    * Walk once, and give every place the three things the rest of the site asks
    * for: an identity, how deep it sits, and what its ancestors are.
    *
-   * `id` is the place's path — "socal/losangeles/southbay" — because a *code*
+   * `id` is the place's path — "socal/southbay" — because a *code*
    * is not an identity. Two places far enough apart that no repeater will ever
    * carry both are allowed to share a code, so a code can name more than one
    * place while a path names exactly one.
